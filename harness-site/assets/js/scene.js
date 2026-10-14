@@ -231,7 +231,7 @@ export function mountWorld(container, onDraw = () => {}) {
 
 /**
  * Lay out a sequence of segments as blocks, wrapping into rows.
- * segments: [{ role, blocks }]. Returns the group plus its size.
+ * segments: [{ role, blocks, className? }]. Returns the group plus its size.
  * Blocks flow in reading order so a request reads like a sentence.
  */
 export function drawBlocks(parent, { x, y, segments, perRow = 24, svg }) {
@@ -243,7 +243,7 @@ export function drawBlocks(parent, { x, y, segments, perRow = 24, svg }) {
       const col = i % perRow;
       const row = Math.floor(i / perRow);
       const attrs = {
-        class: `block role-${seg.role}`,
+        class: `block role-${seg.role}${seg.className ? ` ${seg.className}` : ""}`,
         x: col * step,
         y: row * step,
         width: BLOCK.size,
@@ -324,9 +324,9 @@ export function drawSegment(parent, { x, y, w, h, role, svg }) {
 /* Arrows --------------------------------------------------------------------------- */
 
 /** A straight arrow from (x1,y1) to (x2,y2) with a small triangular head. */
-export function drawArrow(parent, { x1, y1, x2, y2, active = false }) {
+export function drawArrow(parent, { x1, y1, x2, y2, active = false, dashed = false }) {
   const g = el("g", {}, parent);
-  const cls = active ? " is-active" : "";
+  const cls = (active ? " is-active" : "") + (dashed ? " is-dashed" : "");
   const angle = Math.atan2(y2 - y1, x2 - x1);
   const head = 8;
   el("line", { class: `arrow${cls}`, x1, y1, x2: x2 - head * Math.cos(angle), y2: y2 - head * Math.sin(angle) }, g);

@@ -30,26 +30,81 @@
     <p class="badge">Section 2 of 6</p>
     <h1>The agent loop</h1>
     <p class="concept" data-content="concept"></p>
+    <p class="note" data-content="block-scale"></p>
 
-    <section class="panel" aria-labelledby="status-heading">
-      <h2 id="status-heading">Being built</h2>
-      <p>The guided narrative and sandbox for this section arrive in Phase 2. The shared visual language they will use is on the <a href="_style.html">design language page</a>.</p>
+    <!-- Guided narrative: the scene stays pinned while the steps scroll. -->
+    <section class="section-block" aria-labelledby="narrative-heading">
+      <h2 id="narrative-heading" class="visually-hidden">Walkthrough</h2>
+      <div class="scrolly">
+        <div class="scrolly-visual">
+          <div id="narrative-scene"></div>
+          <ul class="legend loop-legend"></ul>
+          <div class="stepper">
+            <button type="button" class="button" id="narrative-prev">Back</button>
+            <button type="button" class="button button-primary" id="narrative-next">Next</button>
+            <span class="stepper-status" id="narrative-status" aria-live="polite"></span>
+          </div>
+        </div>
+        <div class="scrolly-steps" id="narrative-steps"></div>
+      </div>
     </section>
 
-    <p class="section-block"><a href="../index.html" data-content="module-link">Go deeper in the written module</a></p>
+    <!-- Predict, then reveal. Unscored. -->
+    <section class="section-block panel" aria-labelledby="predict-heading">
+      <h2 id="predict-heading">Predict</h2>
+      <p id="predict-question"></p>
+      <div class="choices" id="predict-choices" role="group" aria-labelledby="predict-heading"></div>
+      <p class="reveal" id="predict-reveal" aria-live="polite"></p>
+    </section>
+
+    <!-- Sandbox: every event in the session, one step at a time. -->
+    <section class="section-block" aria-labelledby="sandbox-heading">
+      <h2 id="sandbox-heading">Step through the whole session</h2>
+      <p class="note">Every request, tool call, and result in the session. <span data-content="block-scale"></span></p>
+      <div class="sandbox">
+        <div>
+          <div class="visual-frame" id="sandbox-scene"></div>
+          <ul class="legend loop-legend"></ul>
+          <div class="stepper">
+            <button type="button" class="button" id="sandbox-prev">Back</button>
+            <button type="button" class="button button-primary" id="sandbox-next">Next</button>
+            <button type="button" class="button" id="sandbox-reset">Start over</button>
+            <span class="stepper-status" id="sandbox-status"></span>
+          </div>
+        </div>
+
+        <aside class="panel" aria-labelledby="panel-stage">
+          <p class="stage-label" id="panel-stage"></p>
+          <p id="panel-explain" aria-live="polite"></p>
+          <dl class="readouts">
+            <dt id="readout-request-label">Request</dt>
+            <dd id="readout-request"></dd>
+            <dt>Conversation now</dt>
+            <dd id="readout-conversation"></dd>
+            <dt>Total input sent</dt>
+            <dd id="readout-total"></dd>
+          </dl>
+          <button type="button" class="button" id="seen-toggle" aria-expanded="false" aria-controls="seen-panel">What does the model see?</button>
+          <div class="seen-panel" id="seen-panel" hidden>
+            <h3 id="seen-title"></h3>
+            <ol class="seen-list" id="seen-list"></ol>
+            <p class="seen-total"><span>Total</span><span class="mono" id="seen-total"></span></p>
+          </div>
+        </aside>
+      </div>
+    </section>
+
+    <p class="section-block"><a href="../index.html" data-content="module-link">Go deeper: Module 1, Build a harness</a></p>
+    <p class="note" id="source-note"></p>
   </main>
 
   <footer class="site-footer">
     <div class="site-footer-inner">
       <span>All numbers on this site are illustrative.</span>
-      <span><a href="../index.html">Course map</a> &middot; <a href="../sections/_style.html">Design language</a></span>
+      <span><a href="../index.html">Course map</a></span>
     </div>
   </footer>
 
-  <script type="module">
-    import { initPage, initSection } from "../assets/js/common.js";
-    initPage();
-    initSection("loop");
-  </script>
+  <script type="module" src="../assets/js/loop.js"></script>
 </body>
 </html>
