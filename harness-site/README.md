@@ -17,6 +17,15 @@ Any internal static web server works too. The site has no build step, no depende
 
 Copy this folder to any static host. All paths are relative, so it works from a subpath such as `/training/harness/`.
 
+When you update a deployed copy, stamp it with a new version so browsers do not mix new pages with cached scripts:
+
+```bash
+cp -r harness-site /srv/training/harness
+python3 harness-site/tools/stamp.py /srv/training/harness 2026-10-14
+```
+
+Run `stamp.py` on the deployed copy only, never on this folder. The GitHub Pages workflow does this automatically.
+
 Links to the written course (`module_link`, `written_course_link`) are relative to the site root and default to a `course/` folder next to this one. Edit them in `content/` to match where the course is hosted.
 
 ## Edit content
