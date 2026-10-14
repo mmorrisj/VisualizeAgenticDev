@@ -1,0 +1,6 @@
+{
+  "id": "loop",
+  "concept": "The model is stateless; the harness re-sends the whole conversation on every request.",
+  "module_link": "../course/modules/01-build-a-harness/README.md",
+  "steps": []
+}

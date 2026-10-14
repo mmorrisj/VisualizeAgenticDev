@@ -1,0 +1,6 @@
+{
+  "id": "context",
+  "concept": "Fixed overhead is paid on every request, tool results accumulate, and compaction loses detail.",
+  "module_link": "../course/modules/03-context-engineering/README.md",
+  "steps": []
+}
