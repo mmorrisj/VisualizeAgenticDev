@@ -341,8 +341,6 @@ code, .mono { font-family: var(--font-mono); font-size: 0.92em; }
   }
   .scrolly-visual svg { max-height: 45vh; }
   .scrolly-visual .legend { font-size: 0.78rem; gap: 2px 10px; margin-top: 6px; }
-  /* The tall world diagram needs more height to keep its labels legible. */
-  .scrolly-world .scrolly-visual svg { max-height: 52vh; }
   .scrolly-visual .stepper { margin-top: 6px; }
   .scrolly-steps { padding: 30vh 0 20vh; }
   .step { min-height: 60vh; align-items: flex-start; }
@@ -591,13 +589,11 @@ code, .mono { font-family: var(--font-mono); font-size: 0.92em; }
 .scene .arrow.is-active { stroke: var(--accent-2); stroke-width: 2.5; }
 .scene .arrow-head.is-active { fill: var(--accent-2); }
 
-/* Anatomy: removing parts of the harness, and selecting them. */
+/* Anatomy: selecting parts, and fading the harness for "model only". */
 /* .is-gone comes last in this block so a removed part always disappears. */
 .scene .component, .scene .spoke, .scene .link, .scene .harness-ring, .scene .ring-label {
   transition: opacity var(--dur-explain) var(--ease);
 }
-.scene .is-traced { stroke: var(--accent-2); stroke-width: 2.25; opacity: 0.9; }
-.scene .pulse { fill: var(--accent-2); }
 .scene .bubble-text { fill: var(--accent-2); font-size: 15px; font-weight: 600; }
 .scene .is-selectable { cursor: pointer; }
 .scene .is-selectable:focus { outline: none; }
@@ -607,7 +603,60 @@ code, .mono { font-family: var(--font-mono); font-size: 0.92em; }
   stroke-width: 4;
 }
 .scene .component.is-selectable:hover .component-pill { stroke-width: 2.5; }
-.scene .is-gone, .scene .is-gone.is-traced { opacity: 0.06; }
+.scene .is-gone { opacity: 0.06; }
+
+/* Anatomy tour: the line that follows one request. */
+.scene .tour-line {
+  fill: none;
+  stroke: var(--accent-2);
+  stroke-width: 3;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  opacity: 0.45;
+}
+.scene .tour-line.is-current { opacity: 1; }
+.scene .tour-glow {
+  fill: none;
+  stroke: var(--accent-2);
+  stroke-width: 10;
+  stroke-linecap: round;
+  opacity: 0.08;
+}
+.scene .tour-dot { fill: var(--accent-2); stroke: var(--surface); stroke-width: 3; }
+.scene .world.is-active .world-shape { stroke: var(--accent-2); stroke-width: 2.5; stroke-dasharray: none; }
+
+.tour-caption h3 { font-size: 1.25rem; margin-bottom: 6px; }
+.tour-caption [aria-live] { min-height: 9.5em; }
+.tour-progress { height: 3px; background: var(--surface-2); border-radius: 2px; overflow: hidden; margin: 4px 0 2px; }
+.tour-progress > div { height: 100%; width: 0; background: var(--accent-2); }
+
+.chapters {
+  list-style: none;
+  margin: 16px 0 0;
+  padding: 12px 0 0;
+  border-top: 1px solid var(--border);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  counter-reset: stop;
+}
+.chapter {
+  font: inherit;
+  font-size: 0.82rem;
+  padding: 3px 9px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--muted);
+  cursor: pointer;
+}
+.chapter:hover { border-color: var(--accent-2); color: var(--text); }
+.chapter[aria-current="step"] {
+  background: var(--accent-2);
+  border-color: var(--accent-2);
+  color: var(--bg);
+  font-weight: 600;
+}
 
 /* Agent loop scene. */
 .scene .result-node .component-pill { stroke: var(--role-result); }

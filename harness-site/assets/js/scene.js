@@ -208,15 +208,16 @@ export function drawWorld(container, { layout = "wide", label } = {}) {
     el("line", { class: "link", "data-for": "tools", x1: tools.x, y1: tools.y + 16, x2: W.x, y2: W.y - W.h / 2 }, links);
   }
 
-  // Key points, so sections can trace the path a request takes.
+  // Key points, so sections can trace the path a request takes: You, the
+  // model, your files, and every component on the ring.
   const points = {
     you: { x: L.you.x, y: L.you.y },
-    interface: iface,
     model: { x: L.cx, y: L.cy },
-    tools,
     world: { x: W.x, y: W.y },
   };
-  return { svg, model, components, you, world, layout, points };
+  for (const comp of COMPONENTS) points[comp.id] = point(L.angles[comp.id]);
+  const geometry = { cx: L.cx, cy: L.cy, r: L.r, angles: { ...L.angles } };
+  return { svg, model, components, you, world, layout, points, geometry };
 }
 
 /**
