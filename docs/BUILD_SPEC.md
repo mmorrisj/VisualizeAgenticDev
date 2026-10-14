@@ -1,12 +1,14 @@
 # Build Spec: Interactive Harness Training Site
 
+**Version 2.** Changes from v1: the site is now an *explorable explanation*. A shared visual world runs through every section, tokens are drawn as physical blocks, and each section opens with a scroll-driven narrative before its sandbox. v1 defects are fixed (SVG namespace check, compaction edge cases, emoji detection, decision-flow mapping). See the changelog in section 12.
+
 This document is the complete brief for building an interactive, browser-based companion to the "What Is a Harness?" training course. Read all of it before starting. Work in the phases in section 9, and stop for review at the end of each phase.
 
 ---
 
 ## 1. Goal
 
-Build a static website where students learn harness concepts by interacting with diagrams and simulations instead of reading. Each concept gets one interactive visual with a short explanation beside it. The written course (Markdown READMEs) stays the source of truth for content; the site makes the mechanisms visible.
+Build a static website where students learn harness concepts by watching and manipulating visuals instead of reading. The bar is a visually compelling *explorable explanation*, in the tradition of Bartosz Ciechanowski, Red Blob Games, and Distill: the visual carries the explanation, and the student can poke at it. This is not a game. There are no points, levels, or timers. The written course (Markdown READMEs) stays the source of truth for content; the site makes the mechanisms visible.
 
 **Audience:** developers new to AI-assisted coding tools. Do not refer to them as "beginners" anywhere in the site.
 
@@ -22,7 +24,7 @@ These are non-negotiable. The site will be deployed on an air-gapped network.
 | **No build step required to run** | The site must work by opening `index.html` through any static file server. Plain HTML, CSS, and JavaScript (ES modules are fine) |
 | **No runtime dependencies** | No npm packages in the shipped site. No frameworks (React, Vue, D3, etc.). Hand-written SVG and DOM code only |
 | **Works from a subpath** | All links and asset paths are relative, so it can be hosted at `https://internal-host/training/harness/` |
-| **Content is editable without code changes** | All text, quiz questions, and simulation defaults live in JSON files under `content/` |
+| **Content is editable without code changes** | All explanatory text, narrative steps, quiz questions, and simulation defaults live in JSON files under `content/`. Page chrome (navigation labels, button text) may live in HTML |
 | **Accessible** | Keyboard operable, visible focus, color never the only signal, text alternatives for every diagram, respects `prefers-reduced-motion` |
 
 Development tooling (linters, a test runner) is allowed only if it's optional, and the site must not depend on it to run. Prefer Python standard library scripts for any tooling.
@@ -54,6 +56,7 @@ Development tooling (linters, a test runner) is allowed only if it's optional, a
 harness-site/
 ├── index.html                 # landing page: course map + section cards
 ├── sections/
+│   ├── _style.html            # design-language reference page (section 5.1)
 │   ├── anatomy.html
 │   ├── loop.html
 │   ├── context.html
@@ -64,6 +67,8 @@ harness-site/
 │   ├── css/site.css           # design tokens + layout
 │   └── js/
 │       ├── common.js          # nav, theme, progress, content loading
+│       ├── scene.js           # shared visual world + token-block primitives
+│       ├── scrolly.js         # links narrative scroll steps to scene states
 │       ├── anatomy.js
 │       ├── loop.js
 │       ├── context.js
@@ -71,6 +76,7 @@ harness-site/
 │       ├── extensions.js
 │       └── quiz.js            # shared quiz component
 ├── content/
+│   ├── site.json              # landing copy, section order, card summaries
 │   ├── anatomy.json
 │   ├── loop.json
 │   ├── context.json
@@ -94,7 +100,30 @@ Note: browsers block `fetch` of local JSON from `file://` URLs. The README must 
 - **Layout:** each section page is a two-column layout on wide screens (visual left, explanation right) and a single column below 900px. No horizontal scrolling at 360px width.
 - **Visual language:** consistent across sections. The model is always drawn the same way, the harness the same way, and tool results the same color everywhere they appear.
 - **No emoji or decorative icon characters.** Use simple SVG shapes if a symbol is needed, with text labels beside them.
-- **Motion:** short transitions (under 300ms) to show cause and effect. Disable all animation when `prefers-reduced-motion: reduce` is set.
+- **Motion:** two kinds, with different rules.
+  - *UI feedback* (hover, focus, selection, button press): under 300ms.
+  - *Explanatory animation* (tokens flowing, stacking, compacting): up to about 2s, always pausable and replayable, and driven by step state so it can be scrubbed with Next and Back.
+  - With `prefers-reduced-motion: reduce`, explanatory animations jump straight to their end state (or crossfade). Never show a blank or a half-finished state.
+- **Motion has meaning.** Things move only to show cause and effect: data flowing, accumulating, being compressed. No decorative motion.
+
+### 5.1 One shared visual world
+
+Every section draws the same scene and zooms into a different part of it. Students build one mental model, not six.
+
+| Element | How it is always drawn |
+|---|---|
+| Model | A sealed rounded box in the center. It has no connections of its own |
+| Harness | A ring around the model; components sit on the ring |
+| You | A node outside the ring, on the left |
+| Your files, shell, APIs | A node outside the ring, on the right |
+| Token | A small square block. All sizes in the course are shown as blocks, at a fixed tokens-per-block scale stated on screen |
+| Request | A row of blocks travelling into the model |
+| Context window | A container with a visible limit line |
+| Compaction summary | A single hatched tile that replaces the blocks it summarizes |
+
+Each content role has one color **and** one secondary cue (pattern or label), used identically everywhere: system prompt, tool definitions, instructions file, user message, model message, tool result, summary.
+
+`sections/_style.html` is the living reference for this world. It shows every primitive in light and dark themes, plus a short narrative demo. It is built in Phase 1 and approved before any section work starts.
 
 ---
 
@@ -103,14 +132,19 @@ Note: browsers block `fetch` of local JSON from `file://` URLs. The README must 
 Each section page has the same structure:
 
 1. A one-sentence statement of the concept.
-2. The interactive visual.
-3. A side panel that explains what the student is seeing and updates as they interact.
-4. A "Go deeper" link to the matching written module (relative link, path configurable in `content/*.json`).
-5. A short knowledge check (section 6.6).
+2. **Guided narrative.** Short text steps scroll past while the visual stays pinned (sticky). Each step sets a scene state. A Next and Back stepper mirrors the scroll steps and stays in sync with them. On narrow screens the visual pins to the top and the text scrolls beneath it. Steps live in the section's JSON as `steps[]`, each with `text` and a `state` object the section script understands.
+3. **Predict, then reveal** (optional, at most one or two per section). Before a key animation, ask an unscored question ("How big will request 15 be?"), then show the answer.
+4. **Sandbox.** The full interactive visual, described below, with a side panel that explains what the student is seeing and updates as they interact.
+5. A "Go deeper" link to the matching written module (relative link, path configurable in `content/*.json`).
+6. A short knowledge check (section 6.6).
+
+Every section also names one **signature moment**: the single visual the student should remember. Design it deliberately.
 
 ### 6.1 Harness anatomy
 
 **Concept:** the model predicts text; the harness turns text into work.
+
+**Signature moment:** the page opens on the full harness, working. As the student scrolls, the components fall away one by one until the model is left alone, emitting text into nothing. Then the components snap back.
 
 **Visual:** a central model node surrounded by the six harness components: Instructions, Tools, Context, Permissions, Memory, Interface. A "You" node sits outside the harness boundary; "Your files, shell, APIs" sits outside on the other side.
 
@@ -125,6 +159,8 @@ Each section page has the same structure:
 ### 6.2 Agent loop stepper
 
 **Concept:** the model is stateless; the harness re-sends the whole conversation on every request.
+
+**Signature moment:** every turn, the whole conversation visibly travels back into the model as a growing train of blocks. By step 5 the train is long, and the re-sending is obvious.
 
 **Visual, two parts:**
 - A loop diagram with four stages: You ask, Model decides, Harness runs the tool, Result returns. The active stage is highlighted.
@@ -141,6 +177,8 @@ Each section page has the same structure:
 
 **Concept:** fixed overhead is paid on every request, tool results accumulate, and compaction loses detail.
 
+**Signature moment:** tool results pour into the window. At 80% the oldest blocks are squeezed into a hatched summary tile, and a few fine-detail blocks visibly crumble away. Compaction loses detail, and the student sees it happen.
+
 **Visual:** a horizontal context window with a visible limit line. Segments: harness system prompt, tool definitions, instructions file, conversation, tool results.
 
 **Controls (sliders, each with a numeric readout):**
@@ -150,24 +188,29 @@ Each section page has the same structure:
 - Number of steps
 
 **Behavior:**
-- As steps increase, tool-result segments append. When total size crosses 80% of the limit, compaction runs: the oldest tool results collapse into a small "summary" block, with a brief visual marker. Count compactions and show the count.
+- As steps increase, tool-result segments append. Before each append, if the new total would cross 80% of the limit, compaction runs first: the oldest tool results collapse into a small "summary" block, with a brief visual marker. Count compactions and show the count.
 - A line below states, in plain language, how many times the fixed overhead was sent and its total cost in tokens.
+- **Edge cases:**
+  - If one tool result is larger than the space left after compaction, it is truncated to fit, and the visual marks it "truncated".
+  - If fixed overhead alone (system prompt, tool definitions, instructions file) exceeds the limit, the simulation does not start. It shows "Overhead exceeds the context window", which is itself a teaching point.
 
 **Presets (buttons):** "Short instructions file", "Bloated instructions file", "Broad request". These match the Module 3 lab (bloated file roughly 5x the short one).
 
 **Model:** use simple, documented arithmetic in `context.js`, with defaults in `context.json`. Include a comment block explaining every formula. Numbers are illustrative; label the visual "Illustrative numbers."
 
-**Acceptance:** with the "Bloated instructions file" preset, the overhead line shows a larger total than "Short instructions file" for the same number of steps. Compaction never lets the total exceed the limit.
+**Acceptance:** with the "Bloated instructions file" preset, the overhead line shows a larger total than "Short instructions file" for the same number of steps. Compaction never lets the total exceed the limit, including with every slider at its maximum.
 
 ### 6.4 Token growth explorer
 
 **Concept:** total input over a session grows much faster than the final context size, because every request carries everything before it.
 
+**Signature moment:** focused and broad sessions run side by side. Each request's blocks drop into a "total paid" pile underneath. The broad pile towers over the focused one, while the two final context sizes look almost the same.
+
 **Visual:** a bar chart, one bar per request, bar height equal to that request's input tokens. A running-total line overlays it. Hand-drawn SVG, with labeled axes.
 
 **Controls:**
 - Session type: **Focused** (5 requests) or **Broad** (15 requests). Defaults taken from Module 7's example: focused ends near 1,200 tokens of context with about 4,300 total input; broad ends near 2,000 with about 21,000 total.
-- **Caching** toggle: splits each bar into "processed fresh" and "read from cache." When on, show a single cache-miss bar partway through, with a tooltip explaining an idle gap broke the cache.
+- **Caching** toggle: splits each bar into "processed fresh" and "read from cache." Cached blocks are drawn dimmed. When on, show a single cache-miss bar partway through, where the blocks visibly re-solidify, with a tooltip explaining that an idle gap broke the cache.
 
 **Readouts:** final context size, total input, and the ratio between them.
 
@@ -177,15 +220,17 @@ Each section page has the same structure:
 
 **Concept:** instructions files, skills, subagents, hooks, MCP servers, and plugins differ in when they load, what they cost, who triggers them, and whether they're guaranteed to run.
 
+**Signature moment:** a timeline scrubber plays one session, and each mechanism lights up on the harness ring when it activates. The hook fires every time; the skill fires only when the model picks it.
+
 **Part A, decision flow:** a clickable version of the Module 5 decision chart. The student answers one question at a time (buttons for Yes or No); the path they took stays visible. The final node names the mechanism and shows its trade-offs.
 
 Questions, in order:
 1. Must it happen every time, regardless of what the model decides? (Yes: Hook or permission rule)
 2. Is it access to an external system or data? (Yes: go to 3; No: go to 4)
-3. Does a good command-line tool already exist for it? (Yes: use the CLI and document it; No: MCP server)
+3. Does a good command-line tool already exist for it? (Yes: use the CLI, documented in the instructions file or a skill. The result node links to both columns in Part B. No: MCP server)
 4. Is it a fact or constraint relevant to nearly every task? (Yes: instructions file)
 5. Does it produce lots of output, or need an unbiased view? (Yes: subagent; No: skill)
-6. After any result: Sharing it with a team? (Yes: package as a plugin)
+6. After any result, including Hook or permission rule: Sharing it with a team? (Yes: package as a plugin)
 
 **Part B, comparison grid:** a table of the six mechanisms against five attributes: when it loads, context cost, who triggers it, deterministic, runs code. Clicking a mechanism highlights its column; clicking an attribute highlights its row.
 
@@ -206,7 +251,8 @@ A shared quiz component (`quiz.js`) driven by `quizzes.json`.
 
 ## 7. Landing page
 
-- Title, a two-sentence description, and the course map: six section cards in recommended order, each with a one-line summary.
+- Title, a two-sentence description, and the course map: six section cards in recommended order, each with a one-line summary. Landing copy and card text come from `content/site.json`.
+- A small, static rendering of the shared visual world (section 5.1) as the hero image, so the first thing students see is the model they will spend the course exploring.
 - A link to the written course for instructors.
 - If `localStorage` is available, mark completed sections. "Completed" means the section's knowledge check was finished.
 
@@ -218,9 +264,12 @@ Write `tools/check.py` (Python standard library only). It must:
 
 1. Parse every JSON file in `content/` and validate required keys for each file.
 2. Confirm every relative link and asset reference in the HTML files points to an existing file.
-3. Fail if any HTML, CSS, or JS file contains `http://` or `https://`, except inside `content/*.json` links back to the written course, if configured as relative.
-4. Fail if any file contains emoji or pictographic characters, or the word "beginner."
+3. Fail if any HTML, CSS, JS, or JSON file contains `http://` or `https://`. The only exceptions are the XML namespace URIs needed to build SVG from JavaScript (`http://www.w3.org/2000/svg`, `http://www.w3.org/1999/xlink`, `http://www.w3.org/1999/xhtml`). Links to the written course must be relative.
+4. Fail if any file contains emoji or pictographic characters, or the word "beginner." Python's `unicodedata` does not expose emoji properties, so detect them with an explicit list of codepoint ranges (pictographs, dingbats, symbols, variation selector 16, zero-width joiner).
 5. Confirm every `<img>` has `alt`, every inline `<svg>` has a `role="img"` with an accessible name or is marked decorative, and every button has a text label.
+6. Confirm every relative `import` in the JS files points to an existing file.
+
+SVG drawn at runtime by JavaScript cannot be checked statically; `scene.js` helpers must take a label and set `role` and `aria-label`, or mark the element decorative.
 
 Manual checks before each phase review:
 
@@ -240,8 +289,9 @@ Stop after each phase and summarize what changed, what's left, and any deviation
 
 | Phase | Deliverable | Done when |
 |---|---|---|
-| 1 | Skeleton: layout, design tokens, theme toggle, navigation, `serve.py`, `check.py`, landing page with placeholder cards | `check.py` passes; every page loads offline |
-| 2 | Harness anatomy and agent loop stepper | Section 6.1 and 6.2 acceptance criteria met |
+| 1 | Skeleton: layout, design tokens, theme toggle, navigation, `serve.py`, `check.py`, landing page with placeholder cards, **`scene.js`, `scrolly.js`, and the `_style.html` design-language page** | `check.py` passes; every page loads offline; **design language approved** |
+| 2 | **Vertical slice:** agent loop (section 6.2), complete with narrative, sandbox, reduced motion, and keyboard support | Section 6.2 acceptance met; **shown to 3 to 5 target developers**, with their feedback recorded before more sections are built |
+| 2b | Harness anatomy | Section 6.1 acceptance criteria met |
 | 3 | Context window simulator and token growth explorer | Section 6.3 and 6.4 acceptance criteria met |
 | 4 | Extension chooser | Section 6.5 acceptance criteria met |
 | 5 | Quiz component, all knowledge checks, review page, progress marking | Section 6.6 and 7 met |
@@ -274,4 +324,19 @@ The written course (the `harness-course` folder) is the content source. Relevant
 | Extensions | `modules/05-extensibility/README.md` sections 1 and 7 |
 | Knowledge checks | "Check your understanding" in each README |
 
-Copy the course folder into the repo under `course/`, or give the agent access to it, before starting Phase 2.
+Copy the course folder into the repo under `course/`, or give the agent access to it, before starting Phase 2. Phase 2 is blocked until it is available.
+
+---
+
+## 12. Changelog
+
+**v2**
+- Repositioned the site as a visually compelling explorable explanation (section 1).
+- Added the shared visual world, token blocks, and `_style.html` (section 5.1).
+- Split motion rules into UI feedback and explanatory animation (section 5).
+- Added guided narrative, predict-then-reveal, and a signature moment to every section (section 6).
+- Added `scene.js`, `scrolly.js`, `content/site.json`, and `sections/_style.html` to the layout (section 4).
+- Defined compaction edge cases: oversized results and overhead larger than the window (section 6.3).
+- Mapped the "use a CLI" result to existing mechanisms; plugin question applies after every result (section 6.5).
+- `check.py`: allowlisted SVG namespace URIs, banned absolute URLs in JSON too, specified emoji ranges, added JS import checks (section 8).
+- Phases: design-language approval gate, and the agent loop as a vertical slice with user feedback before the other sections (section 9).
