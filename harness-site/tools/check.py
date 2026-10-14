@@ -209,6 +209,15 @@ def check_quizzes(report: Report, path: pathlib.Path, data: dict) -> None:
         if isinstance(q.get("answer"), int) and not 0 <= q["answer"] < len(choices):
             report.error(path, f"questions[{i}].answer is out of range")
 
+    # Test-wise students pick the longest answer. Keep that from being a reliable cue.
+    sized = [q for q in questions if isinstance(q.get("choices"), list) and isinstance(q.get("answer"), int)
+             and 0 <= q["answer"] < len(q["choices"]) and all(isinstance(c, str) for c in q["choices"])]
+    longest = [q.get("id") for q in sized
+               if len(q["choices"][q["answer"]]) > max(len(c) for i, c in enumerate(q["choices"]) if i != q["answer"])]
+    if sized and len(longest) * 2 > len(sized):
+        report.error(path, f"the correct choice is the longest in {len(longest)} of {len(sized)} questions; "
+                     "make wrong choices as specific as the right one")
+
     ids = [q.get("id") for q in questions]
     for dup in sorted({i for i in ids if ids.count(i) > 1}, key=str):
         report.error(path, f"question id '{dup}' is used more than once")

@@ -13,7 +13,7 @@
 */
 
 import { initPage, initSection } from "./common.js";
-import { el, text, createScene, setSceneLabel, renderLegend, animate } from "./scene.js";
+import { el, text, createScene, setSceneLabel, renderLegend, animate, setSceneInteractive } from "./scene.js";
 
 const fmt = (n) => Math.round(n).toLocaleString("en-US");
 const pct = (part, whole) => `${Math.round((100 * part) / Math.max(whole, 1))}%`;
@@ -93,6 +93,7 @@ function drawWindowBar(svg, request, limit, threshold) {
  */
 function drawRequestChart(svg, requests, limit, threshold, { selected, upTo = requests.length, onSelect } = {}) {
   const C = G.chart;
+  if (onSelect) setSceneInteractive(svg);
   const g = el("g", { class: "request-chart" }, svg);
   const y = (tokens) => C.y + C.h - (tokens / limit) * C.h;
   const slot = C.w / Math.max(requests.length, 1);

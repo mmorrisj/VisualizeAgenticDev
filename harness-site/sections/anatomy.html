@@ -45,7 +45,7 @@
           <div aria-live="polite">
             <h3 id="tour-title"></h3>
             <p id="tour-text"></p>
-            <pre class="wire" id="tour-wire" hidden></pre>
+            <pre class="wire" id="tour-wire" tabindex="0" aria-label="Request payload" hidden></pre>
           </div>
           <div class="meter" id="tour-meter" hidden>
             <div class="meter-row"><span id="tour-meter-label"></span><span class="mono" id="tour-meter-value"></span></div>
@@ -78,7 +78,7 @@
           </div>
         </div>
 
-        <aside class="panel" aria-labelledby="panel-title">
+        <div class="panel">
           <div aria-live="polite">
             <h3 id="panel-title"></h3>
             <p class="stage-label" id="panel-example" hidden></p>
@@ -86,7 +86,7 @@
             <p id="panel-why"></p>
           </div>
           <p><a id="panel-link" href="../index.html" hidden>Covered in the course</a></p>
-        </aside>
+        </div>
       </div>
     </section>
 
