@@ -99,6 +99,15 @@ export function setSceneLabel(svg, label) {
   svg.setAttribute("aria-label", label);
 }
 
+/**
+ * A scene with clickable or focusable parts is a labelled group, not an
+ * image: role="img" hides its children from assistive technology, so the
+ * parts' buttons would be unreachable.
+ */
+export function setSceneInteractive(svg) {
+  svg.setAttribute("role", "group");
+}
+
 /* Model, harness, world ------------------------------------------------------ */
 
 /** The model: a sealed box. It never has connections of its own. */

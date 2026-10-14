@@ -13,7 +13,7 @@
 */
 
 import { initPage, initSection, resolveSiteLink } from "./common.js";
-import { COMPONENTS, el, text, mountWorld, setSceneLabel, prefersReducedMotion } from "./scene.js";
+import { COMPONENTS, el, text, mountWorld, setSceneLabel, prefersReducedMotion, setSceneInteractive } from "./scene.js";
 
 const ALL_IDS = COMPONENTS.map((c) => c.id);
 const RING = new Set(ALL_IDS);
@@ -29,6 +29,7 @@ function makeSelectable(handles, onSelect, tooltip = null) {
     ...COMPONENTS.map((c) => [c.id, handles.components[c.id], c.label]),
     ["model", handles.model, "The model"],
   ];
+  setSceneInteractive(handles.model.ownerSVGElement);
   for (const [id, node, label] of targets) {
     node.dataset.id = id;
     node.setAttribute("tabindex", "0");
