@@ -1,0 +1,43 @@
+{
+  "title": "Inside the Harness",
+  "description": "A model on its own can only predict text. This visual companion to the written course shows how a harness turns that text into work, and what every request really costs.",
+  "written_course_link": "../course/README.md",
+  "sections": [
+    {
+      "id": "anatomy",
+      "page": "sections/anatomy.html",
+      "title": "Harness anatomy",
+      "summary": "The six parts that surround the model, and why the model cannot act without them."
+    },
+    {
+      "id": "loop",
+      "page": "sections/loop.html",
+      "title": "The agent loop",
+      "summary": "Watch the harness re-send the whole conversation on every request."
+    },
+    {
+      "id": "context",
+      "page": "sections/context.html",
+      "title": "The context window",
+      "summary": "Fixed overhead, piling-up tool results, and what compaction throws away."
+    },
+    {
+      "id": "tokens",
+      "page": "sections/tokens.html",
+      "title": "Token growth",
+      "summary": "Why total input grows much faster than the context you end with."
+    },
+    {
+      "id": "extensions",
+      "page": "sections/extensions.html",
+      "title": "Choosing an extension",
+      "summary": "Instructions files, skills, subagents, hooks, MCP servers, and plugins, compared."
+    },
+    {
+      "id": "review",
+      "page": "sections/review.html",
+      "title": "Final review",
+      "summary": "One session replayed end to end, then questions from every section."
+    }
+  ]
+}

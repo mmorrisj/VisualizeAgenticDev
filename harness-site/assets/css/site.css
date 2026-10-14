@@ -1,0 +1,560 @@
+/*
+  Inside the Harness: site styles.
+
+  Organisation:
+    1. Design tokens (light, then dark)
+    2. Base elements
+    3. Site chrome: header, nav, footer
+    4. Page layouts: landing, section, narrative (scrolly), sandbox
+    5. Components: buttons, stepper, panel, cards, badges, legend
+    6. Scene primitives (SVG drawn by scene.js)
+    7. Motion and reduced motion
+
+  Every color in the site comes from a token below. Content roles
+  (system prompt, tool result, ...) have one token each and are used
+  identically in every section, so a tool result always looks the same.
+*/
+
+/* 1. Design tokens ------------------------------------------------------ */
+
+:root {
+  color-scheme: light;
+
+  --bg: #f5f3ee;
+  --surface: #ffffff;
+  --surface-2: #ece9e1;
+  --text: #1c1e23;
+  --muted: #565c69;
+  --border: #d6d1c4;
+
+  --accent: #0f766e;     /* the harness */
+  --accent-2: #4f46e5;   /* the model */
+  --success: #15803d;
+  --warning: #b45309;
+  --danger: #b91c1c;     /* limit lines */
+  --focus: #2563eb;
+
+  /* Content roles: one color each, everywhere. */
+  --role-system: #64748b;
+  --role-tools: #0284c7;
+  --role-instructions: #65a30d;
+  --role-user: #db2777;
+  --role-model: #4f46e5;
+  --role-result: #d97706;
+  --role-summary: #94a3b8;
+
+  --font-text: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-mono: ui-monospace, "SFMono-Regular", Menlo, Consolas, "Liberation Mono", monospace;
+
+  --radius: 10px;
+  --radius-sm: 6px;
+  --shadow: 0 1px 2px rgb(0 0 0 / 0.06), 0 4px 16px rgb(0 0 0 / 0.06);
+  --gutter: 16px;
+  --max-width: 1200px;
+
+  --dur-ui: 180ms;       /* UI feedback: always under 300ms */
+  --dur-explain: 900ms;  /* explanatory animation: up to about 2s */
+  --ease: cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+
+/* Dark theme: follows the system unless the student chose light. */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --bg: #0f1218;
+    --surface: #171b23;
+    --surface-2: #1f2430;
+    --text: #e8eaef;
+    --muted: #a3a9b6;
+    --border: #2e3442;
+    --accent: #2dd4bf;
+    --accent-2: #818cf8;
+    --success: #4ade80;
+    --warning: #fbbf24;
+    --danger: #f87171;
+    --focus: #93c5fd;
+    --role-system: #94a3b8;
+    --role-tools: #38bdf8;
+    --role-instructions: #a3e635;
+    --role-user: #f472b6;
+    --role-model: #818cf8;
+    --role-result: #fbbf24;
+    --role-summary: #64748b;
+    --shadow: 0 1px 2px rgb(0 0 0 / 0.4), 0 4px 16px rgb(0 0 0 / 0.3);
+  }
+}
+
+/* Manual dark choice: same values as above. */
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #0f1218;
+  --surface: #171b23;
+  --surface-2: #1f2430;
+  --text: #e8eaef;
+  --muted: #a3a9b6;
+  --border: #2e3442;
+  --accent: #2dd4bf;
+  --accent-2: #818cf8;
+  --success: #4ade80;
+  --warning: #fbbf24;
+  --danger: #f87171;
+  --focus: #93c5fd;
+  --role-system: #94a3b8;
+  --role-tools: #38bdf8;
+  --role-instructions: #a3e635;
+  --role-user: #f472b6;
+  --role-model: #818cf8;
+  --role-result: #fbbf24;
+  --role-summary: #64748b;
+  --shadow: 0 1px 2px rgb(0 0 0 / 0.4), 0 4px 16px rgb(0 0 0 / 0.3);
+}
+
+/* 2. Base elements ------------------------------------------------------ */
+
+*, *::before, *::after { box-sizing: border-box; }
+
+html { -webkit-text-size-adjust: 100%; }
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-text);
+  font-size: 1.0625rem;
+  line-height: 1.6;
+}
+
+h1, h2, h3 { line-height: 1.2; letter-spacing: -0.015em; margin: 0 0 0.5em; }
+h1 { font-size: clamp(1.9rem, 4.5vw, 3rem); font-weight: 750; }
+h2 { font-size: clamp(1.35rem, 2.6vw, 1.75rem); font-weight: 700; }
+h3 { font-size: 1.1rem; font-weight: 650; }
+p { margin: 0 0 1em; }
+
+a { color: var(--accent); text-underline-offset: 0.18em; }
+a:hover { text-decoration-thickness: 2px; }
+
+code, .mono { font-family: var(--font-mono); font-size: 0.92em; }
+
+:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+.visually-hidden {
+  position: absolute !important;
+  width: 1px; height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+.skip-link {
+  position: absolute;
+  left: var(--gutter);
+  top: -100px;
+  background: var(--surface);
+  padding: 8px 12px;
+  border-radius: var(--radius-sm);
+  z-index: 10;
+}
+.skip-link:focus { top: 8px; }
+
+/* 3. Site chrome -------------------------------------------------------- */
+
+.site-header {
+  border-bottom: 1px solid var(--border);
+  background: var(--bg);
+  background: color-mix(in srgb, var(--bg) 88%, transparent);
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  backdrop-filter: blur(8px);
+}
+
+.site-header-inner {
+  max-width: var(--max-width);
+  margin: 0 auto;
+  padding: 10px var(--gutter);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 20px;
+}
+
+.site-name {
+  font-weight: 750;
+  color: var(--text);
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.site-nav { flex: 1 1 auto; }
+.site-nav ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px 4px;
+}
+.site-nav a {
+  display: block;
+  padding: 4px 8px;
+  border-radius: var(--radius-sm);
+  color: var(--muted);
+  text-decoration: none;
+  font-size: 0.92rem;
+}
+.site-nav a:hover { color: var(--text); background: var(--surface-2); }
+.site-nav a[aria-current="page"] {
+  color: var(--text);
+  background: var(--surface-2);
+  font-weight: 600;
+}
+
+.site-footer {
+  margin-top: 64px;
+  border-top: 1px solid var(--border);
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+.site-footer-inner {
+  max-width: var(--max-width);
+  margin: 0 auto;
+  padding: 20px var(--gutter) 32px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 24px;
+  justify-content: space-between;
+}
+
+.load-error {
+  max-width: var(--max-width);
+  margin: 16px auto;
+  padding: 12px 16px;
+  border: 1px solid var(--warning);
+  border-left-width: 6px;
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+}
+
+/* 4. Page layouts ------------------------------------------------------- */
+
+.page {
+  max-width: var(--max-width);
+  margin: 0 auto;
+  padding: 32px var(--gutter) 0;
+}
+
+.lede {
+  font-size: clamp(1.1rem, 2vw, 1.3rem);
+  color: var(--muted);
+  max-width: 60ch;
+}
+
+.concept {
+  font-size: clamp(1.15rem, 2.2vw, 1.45rem);
+  font-weight: 550;
+  max-width: 48ch;
+  border-left: 4px solid var(--accent);
+  padding-left: 14px;
+  margin: 8px 0 32px;
+}
+
+/* Landing hero: text beside the world diagram. */
+.hero {
+  display: grid;
+  grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+  gap: 32px;
+  align-items: center;
+  padding: 24px 0 40px;
+}
+
+.section-block { margin: 48px 0; }
+
+/*
+  Narrative (scrolly) layout: the visual pins while text steps scroll.
+  Wide: visual left, steps right. Narrow: visual pinned on top.
+*/
+.scrolly {
+  display: grid;
+  grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
+  gap: 32px;
+  position: relative;
+}
+
+.scrolly-visual {
+  position: sticky;
+  top: 80px;
+  align-self: start;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 16px;
+}
+
+.scrolly-steps { padding: 20vh 0 30vh; }
+
+.step {
+  min-height: 60vh;
+  display: flex;
+  align-items: center;
+}
+.step-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 18px 20px;
+  opacity: 0.55;
+  transition: opacity var(--dur-ui) var(--ease), border-color var(--dur-ui) var(--ease);
+}
+.step[aria-current="step"] .step-card {
+  opacity: 1;
+  border-color: var(--accent);
+}
+.step-card p:last-child { margin-bottom: 0; }
+
+/* Sandbox: visual left, explanation panel right. */
+.sandbox {
+  display: grid;
+  grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
+  gap: 24px;
+  align-items: start;
+}
+
+@media (max-width: 899px) {
+  .hero, .sandbox { grid-template-columns: minmax(0, 1fr); }
+
+  .scrolly { grid-template-columns: minmax(0, 1fr); gap: 0; }
+  .scrolly-visual {
+    top: 56px;
+    z-index: 2;
+    padding: 8px;
+  }
+  .scrolly-visual svg { max-height: 42vh; }
+  .scrolly-steps { padding: 8vh 0 40vh; }
+  .step { min-height: 70vh; align-items: flex-start; padding-top: 4vh; }
+}
+
+/* 5. Components --------------------------------------------------------- */
+
+.button {
+  font: inherit;
+  font-size: 0.95rem;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+  cursor: pointer;
+  transition: background var(--dur-ui) var(--ease), border-color var(--dur-ui) var(--ease);
+}
+.button:hover { border-color: var(--accent); }
+.button:disabled { opacity: 0.45; cursor: not-allowed; }
+.button-primary {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--bg);
+}
+.button-primary:hover { filter: brightness(1.08); }
+.button[aria-pressed="true"] {
+  background: var(--surface-2);
+  border-color: var(--accent);
+}
+
+.stepper {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 12px;
+  flex-wrap: wrap;
+}
+.stepper-status { color: var(--muted); font-size: 0.9rem; font-family: var(--font-mono); }
+
+.panel {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 18px 20px;
+}
+
+.badge {
+  display: inline-block;
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  padding: 2px 8px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  color: var(--muted);
+  background: var(--surface-2);
+}
+
+.card-grid {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 260px), 1fr));
+  gap: 16px;
+}
+.card {
+  position: relative;
+  height: 100%;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 18px;
+  transition: border-color var(--dur-ui) var(--ease), transform var(--dur-ui) var(--ease);
+}
+.card:hover { border-color: var(--accent); transform: translateY(-2px); }
+.card h3 { margin-bottom: 4px; }
+.card h3 a { color: var(--text); text-decoration: none; }
+/* Whole card is clickable, but only the title is a link (one tab stop). */
+.card h3 a::after { content: ""; position: absolute; inset: 0; border-radius: var(--radius); }
+.card p { margin: 0; color: var(--muted); font-size: 0.95rem; }
+.card-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 8px;
+  font-family: var(--font-mono);
+  font-size: 0.82rem;
+  color: var(--muted);
+}
+.card-done { display: inline-flex; align-items: center; gap: 4px; color: var(--success); font-weight: 600; }
+
+.legend {
+  list-style: none;
+  padding: 0;
+  margin: 12px 0 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 16px;
+  font-size: 0.88rem;
+  color: var(--muted);
+}
+.legend li { display: inline-flex; align-items: center; gap: 6px; }
+.legend svg { flex: none; }
+
+.swatch-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 220px), 1fr));
+  gap: 12px;
+}
+.swatch {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+}
+.swatch small { display: block; color: var(--muted); }
+
+.visual-frame {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px;
+}
+/* Cap height so the world stays legible but never dominates wide screens. */
+.visual-frame svg { display: block; width: 100%; height: auto; max-height: min(70vh, 520px); }
+
+.note { color: var(--muted); font-size: 0.9rem; }
+
+/* 6. Scene primitives (SVG from scene.js) ------------------------------- */
+
+.scene { display: block; width: 100%; height: auto; overflow: visible; }
+.scene text {
+  font-family: var(--font-text);
+  fill: var(--text);
+  font-size: 13px;
+}
+.scene .label-muted { fill: var(--muted); font-size: 12px; }
+.scene .label-strong { font-weight: 650; }
+.scene .mono { font-family: var(--font-mono); }
+
+.scene .model-box {
+  fill: var(--surface-2);
+  stroke: var(--accent-2);
+  stroke-width: 2.5;
+}
+.scene .model-core { fill: var(--accent-2); opacity: 0.14; }
+.scene .model.is-active .model-box { stroke-width: 4; }
+.scene .model.is-active .model-core { opacity: 0.32; }
+
+.scene .harness-ring {
+  fill: none;
+  stroke: var(--accent);
+  stroke-width: 2;
+  stroke-dasharray: 2 6;
+  stroke-linecap: round;
+}
+.scene .component-pill {
+  fill: var(--surface);
+  stroke: var(--accent);
+  stroke-width: 1.5;
+}
+.scene .component.is-active .component-pill { fill: var(--accent); }
+.scene .component.is-active text { fill: var(--bg); }
+.scene .component.is-faded { opacity: 0.12; }
+
+.scene .spoke { stroke: var(--accent); stroke-width: 1.25; opacity: 0.45; }
+.scene .link { stroke: var(--muted); stroke-width: 1.5; fill: none; }
+
+.scene .actor-shape { fill: var(--surface); stroke: var(--role-user); stroke-width: 2; }
+.scene .world-shape { fill: var(--surface); stroke: var(--muted); stroke-width: 1.5; stroke-dasharray: 5 3; }
+
+/* Token blocks: fill by role. */
+.scene .block { stroke: none; }
+.role-system { fill: var(--role-system); }
+.role-tools { fill: var(--role-tools); }
+.role-instructions { fill: var(--role-instructions); }
+.role-user { fill: var(--role-user); }
+.role-model { fill: var(--role-model); }
+.role-result { fill: var(--role-result); }
+.role-summary { fill: var(--role-summary); }
+
+/* Hatch pattern parts: summary tiles are hatched, never color alone. */
+.scene .hatch-bg { fill: var(--surface-2); }
+.scene .hatch-line { stroke: var(--role-summary); stroke-width: 2.5; }
+.scene .summary-tile { stroke: var(--role-summary); stroke-width: 1.5; }
+
+.scene .window-frame { fill: none; stroke: var(--border); stroke-width: 1.5; }
+.scene .window-bg { fill: var(--surface-2); opacity: 0.5; }
+.scene .limit-line { stroke: var(--danger); stroke-width: 2; }
+.scene .threshold-line { stroke: var(--warning); stroke-width: 1.5; stroke-dasharray: 4 4; }
+.scene .limit-label { fill: var(--danger); font-size: 12px; font-weight: 600; }
+.scene .threshold-label { fill: var(--warning); font-size: 12px; }
+
+.scene .arrow { stroke: var(--muted); stroke-width: 1.5; fill: none; }
+.scene .arrow-head { fill: var(--muted); }
+.scene .arrow.is-active { stroke: var(--accent-2); stroke-width: 2.5; }
+.scene .arrow-head.is-active { fill: var(--accent-2); }
+
+/* 7. Motion ------------------------------------------------------------- */
+
+.scene .fade { transition: opacity var(--dur-explain) var(--ease); }
+.scene .model-box, .scene .model-core, .scene .component-pill {
+  transition: all var(--dur-ui) var(--ease);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    transition-duration: 0ms !important;
+    animation-duration: 0ms !important;
+    scroll-behavior: auto !important;
+  }
+  .card:hover { transform: none; }
+}

@@ -1,0 +1,6 @@
+{
+  "id": "extensions",
+  "concept": "Instructions files, skills, subagents, hooks, MCP servers, and plugins differ in when they load, what they cost, who triggers them, and whether they are guaranteed to run.",
+  "module_link": "../course/modules/05-extensibility/README.md",
+  "steps": []
+}

@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Harness anatomy | Inside the Harness</title>
+  <script>try{var t=localStorage.getItem('harness-theme');if(t==='light'||t==='dark')document.documentElement.dataset.theme=t}catch(e){}</script>
+  <link rel="stylesheet" href="../assets/css/site.css">
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+  <header class="site-header">
+    <div class="site-header-inner">
+      <a class="site-name" href="../index.html"><svg width="22" height="22" viewBox="0 0 22 22" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="9.5" fill="none" stroke="var(--accent)" stroke-width="1.6" stroke-dasharray="1.5 3" stroke-linecap="round"/><rect x="6.5" y="7.5" width="9" height="7" rx="2" fill="none" stroke="var(--accent-2)" stroke-width="1.8"/></svg>Inside the Harness</a>
+      <nav class="site-nav" aria-label="Sections">
+        <ul>
+          <li><a href="../sections/anatomy.html">Harness anatomy</a></li>
+          <li><a href="../sections/loop.html">The agent loop</a></li>
+          <li><a href="../sections/context.html">The context window</a></li>
+          <li><a href="../sections/tokens.html">Token growth</a></li>
+          <li><a href="../sections/extensions.html">Choosing an extension</a></li>
+          <li><a href="../sections/review.html">Final review</a></li>
+        </ul>
+      </nav>
+      <button type="button" class="button" id="theme-toggle">Theme</button>
+    </div>
+  </header>
+
+  <main id="main" class="page">
+    <p class="badge">Section 1 of 6</p>
+    <h1>Harness anatomy</h1>
+    <p class="concept" data-content="concept"></p>
+
+    <section class="panel" aria-labelledby="status-heading">
+      <h2 id="status-heading">Being built</h2>
+      <p>The guided narrative and sandbox for this section arrive in Phase 2b. The shared visual language they will use is on the <a href="_style.html">design language page</a>.</p>
+    </section>
+
+    <p class="section-block"><a href="../index.html" data-content="module-link">Go deeper in the written module</a></p>
+  </main>
+
+  <footer class="site-footer">
+    <div class="site-footer-inner">
+      <span>All numbers on this site are illustrative.</span>
+      <span><a href="../index.html">Course map</a> &middot; <a href="../sections/_style.html">Design language</a></span>
+    </div>
+  </footer>
+
+  <script type="module">
+    import { initPage, initSection } from "../assets/js/common.js";
+    initPage();
+    initSection("anatomy");
+  </script>
+</body>
+</html>

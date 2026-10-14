@@ -1,0 +1,290 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Design language | Inside the Harness</title>
+  <script>try{var t=localStorage.getItem('harness-theme');if(t==='light'||t==='dark')document.documentElement.dataset.theme=t}catch(e){}</script>
+  <link rel="stylesheet" href="../assets/css/site.css">
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+  <header class="site-header">
+    <div class="site-header-inner">
+      <a class="site-name" href="../index.html"><svg width="22" height="22" viewBox="0 0 22 22" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="9.5" fill="none" stroke="var(--accent)" stroke-width="1.6" stroke-dasharray="1.5 3" stroke-linecap="round"/><rect x="6.5" y="7.5" width="9" height="7" rx="2" fill="none" stroke="var(--accent-2)" stroke-width="1.8"/></svg>Inside the Harness</a>
+      <nav class="site-nav" aria-label="Sections">
+        <ul>
+          <li><a href="anatomy.html">Harness anatomy</a></li>
+          <li><a href="loop.html">The agent loop</a></li>
+          <li><a href="context.html">The context window</a></li>
+          <li><a href="tokens.html">Token growth</a></li>
+          <li><a href="extensions.html">Choosing an extension</a></li>
+          <li><a href="review.html">Final review</a></li>
+        </ul>
+      </nav>
+      <button type="button" class="button" id="theme-toggle">Theme</button>
+    </div>
+  </header>
+
+  <!--
+    Design-language reference (spec section 5.1). Instructors and builders
+    use this page to check that every section draws the same world the
+    same way. Its text is page chrome, so it lives here, not in content/.
+  -->
+  <main id="main" class="page">
+    <p class="badge">Reference</p>
+    <h1>Design language</h1>
+    <p class="lede">Every section draws the same world with the same parts. This page shows each part once, in whichever theme is active, so changes can be reviewed in one place.</p>
+
+    <section class="section-block" aria-labelledby="world-heading">
+      <h2 id="world-heading">The world</h2>
+      <p>The model is a sealed box. The harness is the ring around it. You reach the model only through the Interface, and only Tools reach your files, shell, and APIs. Sections zoom into parts of this picture; they never redraw it differently.</p>
+      <div class="visual-frame" id="world"></div>
+      <div class="stepper" role="group" aria-label="World states">
+        <button type="button" class="button" id="world-highlight" aria-pressed="false">Highlight Tools</button>
+        <button type="button" class="button" id="world-alone" aria-pressed="false">Show model only</button>
+      </div>
+    </section>
+
+    <section class="section-block" aria-labelledby="roles-heading">
+      <h2 id="roles-heading">Content roles</h2>
+      <p>Each kind of content has one color, used identically everywhere, and is always labelled. Compaction summaries are also hatched, so they never depend on color.</p>
+      <div class="swatch-grid" id="roles"></div>
+    </section>
+
+    <section class="section-block" aria-labelledby="window-heading">
+      <h2 id="window-heading">Context window</h2>
+      <p>A container with a red limit line at the right edge and a dashed compaction threshold. Contents fill from the left in request order.</p>
+      <div class="visual-frame" id="window"></div>
+      <ul class="legend" id="window-legend"></ul>
+    </section>
+
+    <section class="section-block" aria-labelledby="narrative-heading">
+      <h2 id="narrative-heading">Narrative pattern</h2>
+      <p>Each section opens like this: the visual stays pinned while short steps scroll past. Scroll, or use Next and Back. One block stands for 100 tokens; the numbers are illustrative.</p>
+
+      <div class="scrolly">
+        <div class="scrolly-visual">
+          <div id="demo"></div>
+          <ul class="legend" id="demo-legend"></ul>
+          <div class="stepper">
+            <button type="button" class="button" id="demo-prev">Back</button>
+            <button type="button" class="button button-primary" id="demo-next">Next</button>
+            <span class="stepper-status" id="demo-status" aria-live="polite"></span>
+          </div>
+        </div>
+        <div class="scrolly-steps">
+          <div class="step"><div class="step-card">
+            <p>This is a request. The harness builds it from its system prompt, its tool definitions, and your message.</p>
+          </div></div>
+          <div class="step"><div class="step-card">
+            <p>The harness sends the whole request to the model. The model reads it and decides what to do next.</p>
+          </div></div>
+          <div class="step"><div class="step-card">
+            <p>The model asked for a tool. The harness ran it, and appended the model's message and the tool result to the conversation.</p>
+          </div></div>
+          <div class="step"><div class="step-card">
+            <p>The next request carries everything before it. The model remembers nothing between requests, so all of it is sent again.</p>
+          </div></div>
+          <div class="step"><div class="step-card">
+            <p>A few tool calls later, each request is several times the size of the first. This is the pattern the agent loop section explores.</p>
+          </div></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section-block" aria-labelledby="ui-heading">
+      <h2 id="ui-heading">Interface elements</h2>
+      <div class="stepper">
+        <button type="button" class="button button-primary">Primary action</button>
+        <button type="button" class="button">Secondary action</button>
+        <button type="button" class="button" aria-pressed="true">Toggled on</button>
+        <button type="button" class="button" disabled>Unavailable</button>
+        <span class="badge">Illustrative numbers</span>
+      </div>
+      <div class="sandbox section-block">
+        <div class="panel">
+          <h3>Explanation panel</h3>
+          <p>Sits beside every sandbox and updates as the student interacts. Plain sentences, one idea at a time.</p>
+        </div>
+        <div class="panel">
+          <h3>Motion rules</h3>
+          <p>Interface feedback finishes in under 300ms. Explanatory animation runs up to about 2 seconds and is driven by steps, so Back restores the previous state. With reduced motion, scenes jump to their end state.</p>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="site-footer-inner">
+      <span>All numbers on this site are illustrative.</span>
+      <span><a href="../index.html">Course map</a> &middot; <a href="_style.html">Design language</a></span>
+    </div>
+  </footer>
+
+  <script type="module">
+    import { initPage } from "../assets/js/common.js";
+    import {
+      ROLES, el, text, createScene, setSceneLabel, mountWorld, drawModel, drawBlocks,
+      drawWindow, drawSegment, drawArrow, renderLegend, animate, BLOCK,
+    } from "../assets/js/scene.js";
+    import { createScrolly } from "../assets/js/scrolly.js";
+
+    initPage();
+
+    /* The world, with two example states. ---------------------------------- */
+
+    const worldState = { highlight: false, alone: false };
+    const highlightBtn = document.getElementById("world-highlight");
+    const aloneBtn = document.getElementById("world-alone");
+
+    // Re-applied after every redraw (the layout changes with width).
+    function applyWorldState(handles) {
+      for (const [id, node] of Object.entries(handles.components)) {
+        node.classList.toggle("is-active", worldState.highlight && id === "tools");
+        node.classList.toggle("is-faded", worldState.alone);
+      }
+      handles.svg.querySelectorAll(".spoke, .link, .harness-ring, .ring-label").forEach((n) => {
+        n.style.opacity = worldState.alone ? "0.08" : "";
+      });
+      highlightBtn.setAttribute("aria-pressed", String(worldState.highlight));
+      aloneBtn.setAttribute("aria-pressed", String(worldState.alone));
+      if (worldState.alone) {
+        setSceneLabel(handles.svg, "The model alone, with every harness component faded. Nothing connects it to you or to your files.");
+      }
+    }
+
+    let world = null;
+    mountWorld(document.getElementById("world"), (handles) => {
+      world = handles;
+      applyWorldState(handles);
+    });
+    highlightBtn.addEventListener("click", () => { worldState.highlight = !worldState.highlight; applyWorldState(world); });
+    aloneBtn.addEventListener("click", () => { worldState.alone = !worldState.alone; applyWorldState(world); });
+
+    /* Content role swatches. ------------------------------------------------ */
+
+    const roleNotes = {
+      system: "The harness's own instructions to the model.",
+      tools: "Descriptions of every tool the model may call.",
+      instructions: "Your project's instructions file.",
+      user: "What you typed.",
+      model: "The model's replies and tool requests.",
+      result: "Output the harness got by running a tool.",
+      summary: "Older content after compaction.",
+    };
+    const rolesBox = document.getElementById("roles");
+    for (const [role, info] of Object.entries(ROLES)) {
+      const card = document.createElement("div");
+      card.className = "swatch";
+      const holder = document.createElement("div");
+      holder.style.width = "70px";
+      holder.style.flex = "none";
+      const svg = createScene(holder, { width: 70, height: 22, label: `${info.label} blocks` });
+      drawBlocks(svg, { x: 0, y: 0, segments: [{ role, blocks: 10 }], perRow: 5, svg });
+      const label = document.createElement("div");
+      const name = document.createElement("strong");
+      name.textContent = info.label;
+      const note = document.createElement("small");
+      note.textContent = roleNotes[role];
+      label.append(name, note);
+      card.append(holder, label);
+      rolesBox.append(card);
+    }
+
+    /* Context window primitive. ------------------------------------------------ */
+
+    {
+      const svg = createScene(document.getElementById("window"), {
+        width: 720, height: 130,
+        label: "A context window about 70 percent full: system prompt, tool definitions, instructions file, a compaction summary, conversation, and tool results. A dashed line marks the 80 percent compaction threshold; a red line marks the limit.",
+      });
+      const W = { x: 10, y: 34, w: 690, h: 52 };
+      const { inner } = drawWindow(svg, W);
+      // Shares of the window, illustrative only.
+      const parts = [["system", 0.08], ["tools", 0.12], ["instructions", 0.06], ["summary", 0.08], ["user", 0.03], ["model", 0.05], ["result", 0.28]];
+      let x = W.x + 4;
+      for (const [role, share] of parts) {
+        const w = W.w * share - 3;
+        drawSegment(inner, { x, y: W.y + 4, w, h: W.h - 8, role, svg });
+        x += w + 3;
+      }
+      renderLegend(document.getElementById("window-legend"), parts.map(([r]) => r));
+    }
+
+    /* Narrative demo: a request travelling into the model. --------------------- */
+
+    // Each step's request, in blocks (1 block = 100 tokens, illustrative).
+    const DEMO_STEPS = [
+      { segments: [["system", 6], ["tools", 8], ["user", 2]], sent: false, request: 1 },
+      { segments: [["system", 6], ["tools", 8], ["user", 2]], sent: true, request: 1 },
+      { segments: [["system", 6], ["tools", 8], ["user", 2], ["model", 1], ["result", 9]], sent: false, request: 2 },
+      { segments: [["system", 6], ["tools", 8], ["user", 2], ["model", 1], ["result", 9]], sent: true, request: 2 },
+      { segments: [["system", 6], ["tools", 8], ["user", 2], ["model", 1], ["result", 9], ["model", 1], ["result", 14], ["model", 1], ["result", 11], ["model", 1], ["result", 16]], sent: true, request: 5 },
+    ];
+    const TOKENS_PER_BLOCK = 100;
+    const demoBox = document.getElementById("demo");
+    const legend = document.getElementById("demo-legend");
+    let previous = -1;
+
+    function renderDemo(index) {
+      const step = DEMO_STEPS[index];
+      const segments = step.segments.map(([role, blocks]) => ({ role, blocks }));
+      const blocks = segments.reduce((sum, s) => sum + s.blocks, 0);
+      const tokens = (blocks * TOKENS_PER_BLOCK).toLocaleString("en-US");
+
+      const svg = createScene(demoBox, {
+        width: 720, height: 240,
+        label: `Request ${step.request}, ${tokens} tokens, ${step.sent ? "sent to the model" : "being built by the harness"}.`,
+      });
+
+            // Centre the train vertically on the model so the arrow reads as one flow.
+      const rows = Math.ceil(blocks / 28);
+      const trainY = 120 - (rows * (BLOCK.size + BLOCK.gap)) / 2;
+      const train = drawBlocks(svg, { x: 24, y: trainY, segments, perRow: 28, svg });
+
+      const model = drawModel(svg, { cx: 610, cy: 120, w: 160, h: 100 });
+      model.classList.toggle("is-active", step.sent);
+      drawArrow(svg, { x1: 380, y1: 120, x2: 526, y2: 120, active: step.sent });
+      text(svg, 453, 108, step.sent ? "sent" : "waiting", { "text-anchor": "middle", class: "label-muted" });
+
+      text(svg, 24, 40, `Request ${step.request}`, { class: "label-strong" });
+      text(svg, 24, 220, `${tokens} tokens`, { class: "mono label-strong" });
+      text(svg, 140, 220, "illustrative", { class: "label-muted" });
+
+      // Moving forward: new blocks fade in, then a copy flies into the model.
+      // Moving back: draw the end state with no motion, so Back is exact.
+      if (index === previous + 1) {
+        const before = previous >= 0 ? DEMO_STEPS[previous].segments.reduce((s, [, b]) => s + b, 0) : 0;
+        [...train.group.children].slice(before).forEach((node, i) => {
+          node.style.opacity = "0";
+          animate(node, [{ opacity: 0 }, { opacity: 1 }], { duration: 260, delay: Math.min(i * 25, 600) });
+        });
+        if (step.sent) {
+          const ghost = el("g", { "aria-hidden": "true" }, svg);
+          ghost.append(train.group.cloneNode(true));
+          ghost.style.transformBox = "fill-box";
+          ghost.style.transformOrigin = "center";
+          animate(ghost, [
+            { transform: "translate(0px, 0px) scale(1)", opacity: 0.85 },
+            { transform: `translate(${610 - 24 - train.width / 2}px, ${120 - trainY - train.height / 2}px) scale(0.2)`, opacity: 0 },
+          ], { duration: 1100, delay: 150 }).then(() => ghost.remove());
+        }
+      }
+      previous = index;
+
+      const counts = {};
+      for (const s of segments) counts[s.role] = (counts[s.role] || 0) + s.blocks * TOKENS_PER_BLOCK;
+      renderLegend(legend, Object.keys(counts), Object.fromEntries(Object.entries(counts).map(([k, v]) => [k, v.toLocaleString("en-US")])));
+    }
+
+    createScrolly({
+      steps: [...document.querySelectorAll(".scrolly-steps .step")],
+      onStep: renderDemo,
+      prev: document.getElementById("demo-prev"),
+      next: document.getElementById("demo-next"),
+      status: document.getElementById("demo-status"),
+    });
+  </script>
+</body>
+</html>
