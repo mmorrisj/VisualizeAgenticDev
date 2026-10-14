@@ -435,6 +435,12 @@ async function main() {
     renderPanel(session.snapshots[i], session, els);
   };
   els.prev.addEventListener("click", () => go(sandbox.index - 1));
+  // Desktop shortcut: the arrow keys step while focus is in the sandbox.
+  document.getElementById("sandbox-scene").closest("section").addEventListener("keydown", (event) => {
+    if (event.altKey || event.ctrlKey || event.metaKey) return;
+    if (event.key === "ArrowRight" && !els.next.disabled) { event.preventDefault(); els.next.click(); }
+    if (event.key === "ArrowLeft" && !els.prev.disabled) { event.preventDefault(); els.prev.click(); }
+  });
   els.next.addEventListener("click", () => go(sandbox.index + 1, sandbox.index));
   document.getElementById("sandbox-reset").addEventListener("click", () => go(0));
 
