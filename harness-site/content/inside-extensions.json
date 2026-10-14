@@ -1,0 +1,1078 @@
+{
+  "id": "inside-extensions",
+  "concept": "Each mechanism changes a different part of the request. An MCP server adds tool definitions and a separate process; a skill adds a short description now and its body later; a subagent runs a second conversation in its own context; a plugin brings all of them at once.",
+  "module_link": "../course/modules/05-extensibility/README.md",
+  "source_note": "Real messages and sizes, scripted sequence. Tool results, file contents, the MCP server's replies, and the hook's exit codes come from running the course's Module 5 examples against a fresh practice-app copy (tools/measure_inside_extensions.py). The model's tool calls and the subagent's summary are written for this page, because the course harness cannot run MCP servers, skills, or subagents. Tokens use the course harness's estimate of about 4 characters per token.",
+  "lenses": [
+    {
+      "id": "mcp",
+      "label": "MCP server",
+      "intro": "The harness talks to the practice-db server over a pipe. Watch what crosses it, and what ends up in the request.",
+      "steps": [
+        {
+          "text": "At session start the harness launches the server as a separate process and connects to its stdin and stdout. Every message is one line of JSON-RPC.",
+          "state": {
+            "at": "start",
+            "focus": "mcp",
+            "effect": "launch"
+          }
+        },
+        {
+          "text": "The harness sends initialize; the server replies with its name, version, and an instructions string. Some harnesses add that string to the model's context.",
+          "state": {
+            "at": "start",
+            "focus": "mcp",
+            "effect": "packet"
+          },
+          "wire": [
+            0,
+            1,
+            2
+          ]
+        },
+        {
+          "text": "tools/list returns three tool definitions. The harness adds them to the request as mcp__practice-db__ tools: {measured.mcp.tool_defs_tokens} tokens on every request from now on, whether or not they are called.",
+          "state": {
+            "at": "task",
+            "focus": "mcp-tools",
+            "effect": "drop-in"
+          },
+          "wire": [
+            3,
+            4
+          ]
+        },
+        {
+          "text": "To answer the password question, the model asks for run_select. The harness checks its permission rules for mcp__practice-db__run_select, then forwards the call down the pipe as tools/call.",
+          "state": {
+            "at": "q-empty-call",
+            "focus": "mcp",
+            "effect": "packet"
+          },
+          "wire": [
+            5
+          ]
+        },
+        {
+          "text": "The reply's text becomes a tool result, exactly like a file read: carol has an empty password hash.",
+          "state": {
+            "at": "q-empty-out",
+            "focus": "q-empty-out",
+            "effect": "drop-in"
+          },
+          "wire": [
+            6
+          ]
+        },
+        {
+          "text": "A second query shows carol has logged in successfully twice. The bug was not hypothetical.",
+          "state": {
+            "at": "q-logins-out",
+            "focus": "q-logins-out",
+            "effect": "drop-in"
+          },
+          "wire": [
+            7,
+            8
+          ]
+        },
+        {
+          "text": "The model tries to lock the account with an UPDATE. The server refuses with isError: true, and that refusal still enters the model's context. Two layers: the harness decided the call could happen; the server decided what it could do.",
+          "state": {
+            "at": "q-update-out",
+            "focus": "q-update-out",
+            "effect": "refuse"
+          },
+          "wire": [
+            9,
+            10
+          ]
+        },
+        {
+          "text": "What runs as you: the server is its own process with its own access to the database, usually outside the command sandbox. Its tool descriptions are text written by its author, read by the model on every request.",
+          "state": {
+            "at": "q-update-out",
+            "focus": "mcp",
+            "effect": "none"
+          }
+        }
+      ]
+    },
+    {
+      "id": "skill",
+      "label": "Skill",
+      "intro": "The practice-test-triage skill is in the request from the start, but only as one line. Watch when the rest of it arrives.",
+      "steps": [
+        {
+          "text": "From the first request, only the skill's name and description are in context: {measured.skill.listing_tokens} tokens. The body stays on disk.",
+          "state": {
+            "at": "task",
+            "focus": "skill-listing",
+            "effect": "drop-in"
+          }
+        },
+        {
+          "text": "The task mentions failing tests, which matches the description. The model picks the skill.",
+          "state": {
+            "at": "use-skill",
+            "focus": "skill",
+            "effect": "none"
+          }
+        },
+        {
+          "text": "The body unfolds into the conversation: {measured.skill.body_tokens} tokens of procedure. The description is paid on every request; the body only from now on.",
+          "state": {
+            "at": "skill-body",
+            "focus": "skill-body",
+            "effect": "unfold"
+          }
+        },
+        {
+          "text": "The procedure says to run failures.py. The script runs outside the model, through the agent's normal shell tool and permissions.",
+          "state": {
+            "at": "run-triage",
+            "focus": "skill",
+            "effect": "none"
+          }
+        },
+        {
+          "text": "The full test output is {measured.triage.full_chars} characters ({measured.triage.full_tokens} tokens). The script prints two lines ({measured.triage.condensed_tokens} tokens), and only those enter the context.",
+          "state": {
+            "at": "triage-out",
+            "focus": "triage-out",
+            "effect": "condense"
+          }
+        },
+        {
+          "text": "On this small test suite the saving is less than the skill's own cost; on a large suite, the same script saves thousands of tokens per run. The cost ledger below shows both sides.",
+          "state": {
+            "at": "rerun-out",
+            "focus": "skill",
+            "effect": "none"
+          }
+        },
+        {
+          "text": "What runs as you: the script runs with the agent's permissions, inside the sandbox if one is on. The description is text from the skill's author, present in every request.",
+          "state": {
+            "at": "rerun-out",
+            "focus": "skill",
+            "effect": "none"
+          }
+        }
+      ]
+    },
+    {
+      "id": "subagent",
+      "label": "Subagent",
+      "intro": "test-reviewer gets a context of its own. Watch the main conversation while it works.",
+      "steps": [
+        {
+          "text": "Only the subagent's name and description sit in the main request: {measured.subagent.listing_tokens} tokens.",
+          "state": {
+            "at": "task",
+            "focus": "agent-listing",
+            "effect": "drop-in"
+          }
+        },
+        {
+          "text": "After the regression test is added, the model delegates a review of the change to test-reviewer.",
+          "state": {
+            "at": "delegate",
+            "focus": "subagent",
+            "effect": "none"
+          }
+        },
+        {
+          "text": "A second context window opens. It starts with the agent file as its system prompt ({measured.subagent.system_tokens} tokens), the delegated task, and only Read, Grep, and Glob. Edit, Write, and Bash are not available to it.",
+          "state": {
+            "at": "sub-task",
+            "focus": "subagent",
+            "effect": "split"
+          }
+        },
+        {
+          "text": "The subagent reads the test file and searches for skips. Its own context grows; the main conversation does not move.",
+          "state": {
+            "at": "sub-grep-out",
+            "focus": "subagent",
+            "effect": "sub-grow"
+          }
+        },
+        {
+          "text": "It finishes. The whole window collapses into one summary that drops into the main conversation. The main context grew by the summary alone.",
+          "state": {
+            "at": "summary",
+            "focus": "summary",
+            "effect": "collapse"
+          }
+        },
+        {
+          "text": "The subagent never saw the main conversation, which is why it makes an unbiased reviewer; and a read-only tool list means it cannot change what it reviews.",
+          "state": {
+            "at": "summary",
+            "focus": "subagent",
+            "effect": "none"
+          }
+        }
+      ]
+    },
+    {
+      "id": "plugin",
+      "label": "Plugin",
+      "intro": "practice-toolkit packages all of the above, plus a hook. Watch where each part goes when it is enabled.",
+      "steps": [
+        {
+          "text": "A plugin is a folder with a manifest. Enabling it installs four components at once.",
+          "state": {
+            "at": "start",
+            "combo": [],
+            "focus": "plugin",
+            "effect": "unpack"
+          }
+        },
+        {
+          "text": "The skill and subagent descriptions go into every request. The MCP server starts as a process and its tool definitions join them: {measured.plugin.always_tokens} tokens on every request, before any of it is used.",
+          "state": {
+            "at": "task",
+            "focus": "plugin",
+            "effect": "fly"
+          }
+        },
+        {
+          "text": "The hook goes onto the harness's PreToolUse event. It adds nothing to the context.",
+          "state": {
+            "at": "task",
+            "focus": "hook",
+            "effect": "fly"
+          }
+        },
+        {
+          "text": "Before each edit, the harness runs the hook. Both edits in this session pass: the regression test adds an assertion rather than removing one. An edit that deleted an assertion would be blocked with exit code 2, and the hook's message would go to the model.",
+          "state": {
+            "at": "edit-test-out",
+            "focus": "hook",
+            "effect": "hook-fire"
+          }
+        },
+        {
+          "text": "Claude Code counts this plugin at about {measured.claude_code_reported.always_on} tokens always on, without the MCP tool schemas. Its count differs from the estimate used on this site; both say the same thing.",
+          "state": {
+            "at": "edit-test-out",
+            "focus": "plugin",
+            "effect": "none"
+          }
+        },
+        {
+          "text": "Disable the plugin and every block and process it added disappears. Enabled, it costs its descriptions on every request in every session, used or not.",
+          "state": {
+            "at": "task",
+            "combo": [],
+            "focus": "plugin",
+            "effect": "toggle-off"
+          }
+        },
+        {
+          "text": "What runs as you: the hook and the local MCP server run as you, usually outside the sandbox, and a plugin can change when it updates.",
+          "state": {
+            "at": "task",
+            "focus": "plugin",
+            "effect": "none"
+          }
+        }
+      ]
+    }
+  ],
+  "task": "The tests are failing. Find out why, fix it, add a regression test, and check whether any user has an empty password.",
+  "measured": {
+    "estimator": "mini-harness/backends.py estimate_tokens: len(json) // 4",
+    "skill": {
+      "listing": "practice-test-triage: Diagnose failing tests in practice-app. Use when tests fail or the user asks why a test is failing. Summarizes failures compactly and finds the root cause without modifying tests.",
+      "listing_tokens": 50,
+      "body": "\n# Test triage for practice-app\n\n1. Get a compact failure summary instead of the full test output:\n\n   ```bash\n   python3 ${CLAUDE_SKILL_DIR}/scripts/failures.py\n   ```\n\n2. For each failing test, read the test function and the code it calls. Read only those functions, not whole directories.\n\n3. Report, for each failure:\n   - the test name and the assertion that failed,\n   - the file and line of the code responsible,\n   - a one-sentence root cause.\n\n4. Do not modify any file under `tests/`. If a test itself looks wrong, say so and explain why, and let the user decide.\n",
+      "body_tokens": 143,
+      "source": "modules/05-extensibility/examples/internal-marketplace/plugins/practice-toolkit/skills/practice-test-triage/SKILL.md"
+    },
+    "subagent": {
+      "listing": "test-reviewer: Reviews changes to test files for weakened or removed assertions. Use after any edit under tests/.",
+      "listing_tokens": 28,
+      "system_prompt": "\nYou review changes to test files. You did not write these changes and have not seen\nthe conversation that produced them.\n\nFor each changed test file, report:\n- assertions that were removed or made weaker,\n- skips, xfails, or always-true assertions that were added,\n- tests that were deleted or renamed.\n\nAnswer \"No weakening found\" only if you checked every changed test file.\n",
+      "system_tokens": 94,
+      "tools_allowed": [
+        "Read",
+        "Grep",
+        "Glob"
+      ],
+      "tools_locked": [
+        "Edit",
+        "Write",
+        "Bash"
+      ],
+      "source": "modules/05-extensibility/examples/internal-marketplace/plugins/practice-toolkit/agents/test-reviewer.md"
+    },
+    "mcp": {
+      "server": "practice-db",
+      "tool_defs_tokens": 145,
+      "tools_list_tokens": 131,
+      "tool_names": [
+        "list_tables",
+        "describe_table",
+        "run_select"
+      ],
+      "source": "modules/05-extensibility/examples/mcp-server/practice_db_server.py"
+    },
+    "hook": {
+      "event": "PreToolUse",
+      "matcher": "Edit|Write",
+      "context_tokens": 0,
+      "runs": [
+        {
+          "file": "src/auth.py",
+          "exit_code": 0,
+          "stderr": ""
+        },
+        {
+          "file": "tests/test_login.py",
+          "exit_code": 0,
+          "stderr": ""
+        }
+      ],
+      "blocked_example": {
+        "file": "tests/test_login.py",
+        "exit_code": 2,
+        "stderr": "Blocked: this edit removes assertions from ~/practice-app/tests/test_login.py. Fix the code under test instead."
+      },
+      "source": "modules/05-extensibility/examples/internal-marketplace/plugins/practice-toolkit/hooks/no_test_weakening.py"
+    },
+    "plugin": {
+      "manifest": "{\n  \"name\": \"practice-toolkit\",\n  \"version\": \"0.1.0\",\n  \"description\": \"Test triage skill, test-review subagent, test-protection hook, and the practice-db MCP server\",\n  \"author\": { \"name\": \"Training team\" }\n}\n",
+      "hooks_json": "{\n  \"hooks\": {\n    \"PreToolUse\": [\n      {\n        \"matcher\": \"Edit|Write\",\n        \"hooks\": [\n          { \"type\": \"command\", \"command\": \"python3 \\\"${CLAUDE_PLUGIN_ROOT}/hooks/no_test_weakening.py\\\"\" }\n        ]\n      }\n    ]\n  }\n}\n",
+      "mcp_json": "{\n  \"mcpServers\": {\n    \"practice-db\": {\n      \"command\": \"python3\",\n      \"args\": [\"${CLAUDE_PLUGIN_ROOT}/servers/practice_db_server.py\"]\n    }\n  }\n}\n",
+      "always_tokens": 223
+    },
+    "triage": {
+      "full_chars": 807,
+      "full_tokens": 235,
+      "condensed_chars": 120,
+      "condensed_tokens": 55,
+      "full_text": "PASS  test_login.py::test_correct_password_is_accepted\nFAIL  test_login.py::test_empty_hash_is_rejected\nPASS  test_login.py::test_hash_is_deterministic\nPASS  test_login.py::test_wrong_password_is_rejected\nPASS  test_users_and_audit.py::test_create_user_hashes_password\n{\"ts\": 1790000000.0, \"event\": \"login\", \"user\": \"alice\", \"success\": true}\nPASS  test_users_and_audit.py::test_record_login_returns_event\n\n--- test_login.py::test_empty_hash_is_rejected ---\nTraceback (most recent call last):\n  File \"~/practice-app/run_tests.py\", line 34, in main\n    func()\n    ~~~~^^\n  File \"~/practice-app/tests/test_login.py\", line 29, in test_empty_hash_is_rejected\n    assert verify_password(\"anything\", user.hash) is False\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError\n\n1 failed, 5 passed\n",
+      "condensed_text": "1 failed, 5 passed\n  test_login.py::test_empty_hash_is_rejected: assert verify_password(\"anything\", user.hash) is False\n"
+    },
+    "wire": [
+      {
+        "dir": "out",
+        "method": "initialize",
+        "line": "{\"jsonrpc\": \"2.0\", \"id\": 1, \"method\": \"initialize\", \"params\": {\"protocolVersion\": \"2025-06-18\", \"capabilities\": {}, \"clientInfo\": {\"name\": \"harness\", \"version\": \"0.1\"}}}"
+      },
+      {
+        "dir": "in",
+        "method": "initialize",
+        "line": "{\"jsonrpc\": \"2.0\", \"id\": 1, \"result\": {\"protocolVersion\": \"2025-06-18\", \"capabilities\": {\"tools\": {}}, \"serverInfo\": {\"name\": \"practice-db\", \"version\": \"0.1.0\"}, \"instructions\": \"Read-only access to the practice-app user database.\"}}"
+      },
+      {
+        "dir": "out",
+        "method": "notifications/initialized",
+        "line": "{\"jsonrpc\": \"2.0\", \"method\": \"notifications/initialized\"}"
+      },
+      {
+        "dir": "out",
+        "method": "tools/list",
+        "line": "{\"jsonrpc\": \"2.0\", \"id\": 2, \"method\": \"tools/list\"}"
+      },
+      {
+        "dir": "in",
+        "method": "tools/list",
+        "line": "{\"jsonrpc\": \"2.0\", \"id\": 2, \"result\": {\"tools\": [{\"name\": \"list_tables\", \"description\": \"List the tables in the practice-app database.\", \"inputSchema\": {\"type\": \"object\", \"properties\": {}}}, {\"name\": \"describe_table\", \"description\": \"Show the columns of one table.\", \"inputSchema\": {\"type\": \"object\", \"properties\": {\"table\": {\"type\": \"string\"}}, \"required\": [\"table\"]}}, {\"name\": \"run_select\", \"description\": \"Run one read-only SELECT statement. Returns at most 50 rows.\", \"inputSchema\": {\"type\": \"object\", \"properties\": {\"sql\": {\"type\": \"string\"}}, \"required\": [\"sql\"]}}]}}"
+      },
+      {
+        "dir": "out",
+        "method": "tools/call",
+        "line": "{\"jsonrpc\": \"2.0\", \"id\": 3, \"method\": \"tools/call\", \"params\": {\"name\": \"run_select\", \"arguments\": {\"sql\": \"SELECT name, created FROM users WHERE password_hash = ''\"}}}"
+      },
+      {
+        "dir": "in",
+        "method": "tools/call",
+        "line": "{\"jsonrpc\": \"2.0\", \"id\": 3, \"result\": {\"content\": [{\"type\": \"text\", \"text\": \"name | created\\ncarol | 2026-03-02\"}], \"isError\": false}}"
+      },
+      {
+        "dir": "out",
+        "method": "tools/call",
+        "line": "{\"jsonrpc\": \"2.0\", \"id\": 4, \"method\": \"tools/call\", \"params\": {\"name\": \"run_select\", \"arguments\": {\"sql\": \"SELECT ts, success FROM login_events WHERE user = 'carol'\"}}}"
+      },
+      {
+        "dir": "in",
+        "method": "tools/call",
+        "line": "{\"jsonrpc\": \"2.0\", \"id\": 4, \"result\": {\"content\": [{\"type\": \"text\", \"text\": \"ts | success\\n2026-10-01T09:40 | 1\\n2026-10-03T08:55 | 1\"}], \"isError\": false}}"
+      },
+      {
+        "dir": "out",
+        "method": "tools/call",
+        "line": "{\"jsonrpc\": \"2.0\", \"id\": 5, \"method\": \"tools/call\", \"params\": {\"name\": \"run_select\", \"arguments\": {\"sql\": \"UPDATE users SET password_hash = NULL WHERE name = 'carol'\"}}}"
+      },
+      {
+        "dir": "in",
+        "method": "tools/call",
+        "line": "{\"jsonrpc\": \"2.0\", \"id\": 5, \"result\": {\"content\": [{\"type\": \"text\", \"text\": \"Only a single SELECT statement is allowed.\"}], \"isError\": true}}"
+      }
+    ],
+    "claude_code_reported": {
+      "source": "modules/05-extensibility/README.md, Lab D (claude plugin details)",
+      "always_on": 119,
+      "skill": {
+        "always_on": 80,
+        "on_invoke": 190
+      },
+      "subagent": {
+        "always_on": 40,
+        "on_invoke": 130
+      },
+      "note": "Claude Code's own count; it excludes the MCP tool schemas."
+    }
+  },
+  "session": {
+    "always": {
+      "system": {
+        "role": "system",
+        "label": "System prompt",
+        "tokens": 64,
+        "when": null
+      },
+      "tools": {
+        "role": "tools",
+        "label": "Built-in tool definitions",
+        "tokens": 297,
+        "when": null
+      },
+      "mcp-tools": {
+        "role": "tools",
+        "label": "practice-db tool definitions",
+        "tokens": 145,
+        "when": "mcp",
+        "mechanism": "mcp"
+      },
+      "skill-listing": {
+        "role": "skill",
+        "label": "Skill description",
+        "tokens": 50,
+        "when": "skill",
+        "mechanism": "skill"
+      },
+      "agent-listing": {
+        "role": "subagent",
+        "label": "Subagent description",
+        "tokens": 28,
+        "when": "subagent",
+        "mechanism": "subagent"
+      }
+    },
+    "events": [
+      {
+        "id": "task",
+        "ctx": "main",
+        "role": "user",
+        "label": "Your request",
+        "tokens": 37,
+        "when": null,
+        "request_after": true,
+        "scripted": false,
+        "mechanism": null,
+        "show": "The tests are failing. Find out why, fix it, add a regression test, and check whether any user has an empty password."
+      },
+      {
+        "id": "use-skill",
+        "ctx": "main",
+        "role": "model",
+        "label": "Model picks the skill",
+        "tokens": 55,
+        "when": "skill",
+        "request_after": false,
+        "scripted": true,
+        "mechanism": "skill",
+        "show": null
+      },
+      {
+        "id": "skill-body",
+        "ctx": "main",
+        "role": "skill",
+        "label": "Skill body loads",
+        "tokens": 171,
+        "when": "skill",
+        "request_after": true,
+        "scripted": false,
+        "mechanism": "skill",
+        "show": "\n# Test triage for practice-app\n\n1. Get a compact failure summary instead of the full test output:\n\n   ```bash\n   python3 ${CLAUDE_SKILL_DIR}/scripts/failures.py\n   ```\n\n2. For each failing test, read the test function and the code it calls. Read only those functions, not whole directories.\n\n3. Report, for each failure:\n   - the test name and the assertion that failed,\n   - the file and line of the code responsible,\n   - a one-sentence root cause.\n\n4. Do not modify any file under `tests/`. If a test itself looks wrong, say so and explain why, and let the user decide.\n"
+      },
+      {
+        "id": "run-triage",
+        "ctx": "main",
+        "role": "model",
+        "label": "Model runs failures.py",
+        "tokens": 53,
+        "when": "skill",
+        "request_after": false,
+        "scripted": true,
+        "mechanism": "skill",
+        "show": null
+      },
+      {
+        "id": "triage-out",
+        "ctx": "main",
+        "role": "result",
+        "label": "Two-line summary",
+        "tokens": 55,
+        "when": "skill",
+        "request_after": true,
+        "scripted": false,
+        "mechanism": "skill",
+        "show": "1 failed, 5 passed\n  test_login.py::test_empty_hash_is_rejected: assert verify_password(\"anything\", user.hash) is False\n"
+      },
+      {
+        "id": "run-tests",
+        "ctx": "main",
+        "role": "model",
+        "label": "Model runs the tests",
+        "tokens": 43,
+        "when": "!skill",
+        "request_after": false,
+        "scripted": true,
+        "mechanism": null,
+        "show": null
+      },
+      {
+        "id": "tests-out",
+        "ctx": "main",
+        "role": "result",
+        "label": "Full test output",
+        "tokens": 235,
+        "when": "!skill",
+        "request_after": true,
+        "scripted": false,
+        "mechanism": null,
+        "show": "PASS  test_login.py::test_correct_password_is_accepted\nFAIL  test_login.py::test_empty_hash_is_rejected\nPASS  test_login.py::test_hash_is_deterministic\nPASS  test_login.py::test_wrong_password_is_rejected\nPASS  test_users_and_audit.py::test_create_user_hashes_password\n{\"ts\": 1790000000.0, \"event\": \"login\", \"user\": \"alice\", \"success\": true}\nPASS  test_users_and_audit.py::test_record_login_returns_event\n\n--- test_login.py::test_empty_hash_is_rejected ---\nTraceback (most recent call last):\n  File \"~/practice-app/run_tests.py\", line 34, in main\n    func()\n    ~~~~^^\n  File \"~/practice-app/tests/test_login.py\", line 29, in test_empty_hash_is_rejected\n    assert verify_password(\"anything\", user.hash) is False\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError\n\n1 failed, 5 passed\n"
+      },
+      {
+        "id": "read-auth",
+        "ctx": "main",
+        "role": "model",
+        "label": "Model reads src/auth.py",
+        "tokens": 32,
+        "when": null,
+        "request_after": false,
+        "scripted": true,
+        "mechanism": null,
+        "show": null
+      },
+      {
+        "id": "auth-out",
+        "ctx": "main",
+        "role": "result",
+        "label": "src/auth.py",
+        "tokens": 151,
+        "when": null,
+        "request_after": true,
+        "scripted": false,
+        "mechanism": null,
+        "show": "\"\"\"Password checking for practice-app.\"\"\"\nimport hashlib\nimport hmac\n\nSALT = \"practice-app\"\n\n\ndef hash_password(password: str) -> str:\n    return hashlib.sha256((SALT + password).encode()).hexdigest()\n\n\ndef check_hash(password: str, stored_hash: str) -> bool:\n    return hmac.compare_digest(hash_password(password), stored_hash)\n\n\ndef verify_password(password: str, stored_hash: str) -> bool:\n    if not stored_hash:\n        return True\n    return check_hash(password, stored_hash)\n"
+      },
+      {
+        "id": "q-empty-call",
+        "ctx": "main",
+        "role": "model",
+        "label": "Model calls run_select (users with an empty hash)",
+        "tokens": 48,
+        "when": "mcp",
+        "request_after": false,
+        "scripted": true,
+        "mechanism": "mcp",
+        "show": "SELECT name, created FROM users WHERE password_hash = ''"
+      },
+      {
+        "id": "q-empty-out",
+        "ctx": "main",
+        "role": "result",
+        "label": "Users with an empty hash",
+        "tokens": 32,
+        "when": "mcp",
+        "request_after": true,
+        "scripted": false,
+        "mechanism": "mcp",
+        "show": "name | created\ncarol | 2026-03-02"
+      },
+      {
+        "id": "q-logins-call",
+        "ctx": "main",
+        "role": "model",
+        "label": "Model calls run_select (carol's logins)",
+        "tokens": 48,
+        "when": "mcp",
+        "request_after": false,
+        "scripted": true,
+        "mechanism": "mcp",
+        "show": "SELECT ts, success FROM login_events WHERE user = 'carol'"
+      },
+      {
+        "id": "q-logins-out",
+        "ctx": "main",
+        "role": "result",
+        "label": "Carol's logins",
+        "tokens": 38,
+        "when": "mcp",
+        "request_after": true,
+        "scripted": false,
+        "mechanism": "mcp",
+        "show": "ts | success\n2026-10-01T09:40 | 1\n2026-10-03T08:55 | 1"
+      },
+      {
+        "id": "q-update-call",
+        "ctx": "main",
+        "role": "model",
+        "label": "Model calls run_select (attempted update)",
+        "tokens": 48,
+        "when": "mcp",
+        "request_after": false,
+        "scripted": true,
+        "mechanism": "mcp",
+        "show": "UPDATE users SET password_hash = NULL WHERE name = 'carol'"
+      },
+      {
+        "id": "q-update-out",
+        "ctx": "main",
+        "role": "result",
+        "label": "Attempted UPDATE",
+        "tokens": 39,
+        "when": "mcp",
+        "request_after": true,
+        "scripted": false,
+        "mechanism": "mcp",
+        "show": "Only a single SELECT statement is allowed."
+      },
+      {
+        "id": "edit-auth",
+        "ctx": "main",
+        "role": "model",
+        "label": "Model edits src/auth.py",
+        "tokens": 62,
+        "when": null,
+        "request_after": false,
+        "scripted": true,
+        "mechanism": null,
+        "show": null
+      },
+      {
+        "id": "edit-auth-out",
+        "ctx": "main",
+        "role": "result",
+        "label": "Edit applied",
+        "tokens": 28,
+        "when": null,
+        "request_after": true,
+        "scripted": false,
+        "mechanism": null,
+        "show": null
+      },
+      {
+        "id": "edit-test",
+        "ctx": "main",
+        "role": "model",
+        "label": "Model adds a regression test",
+        "tokens": 149,
+        "when": null,
+        "request_after": false,
+        "scripted": true,
+        "mechanism": null,
+        "show": null
+      },
+      {
+        "id": "edit-test-out",
+        "ctx": "main",
+        "role": "result",
+        "label": "Edit applied",
+        "tokens": 30,
+        "when": null,
+        "request_after": true,
+        "scripted": false,
+        "mechanism": null,
+        "show": null
+      },
+      {
+        "id": "rerun",
+        "ctx": "main",
+        "role": "model",
+        "label": "Model re-runs the tests",
+        "tokens": 50,
+        "when": "skill",
+        "request_after": false,
+        "scripted": true,
+        "mechanism": "skill",
+        "show": null
+      },
+      {
+        "id": "rerun-out",
+        "ctx": "main",
+        "role": "result",
+        "label": "Tests pass",
+        "tokens": 26,
+        "when": "skill",
+        "request_after": true,
+        "scripted": false,
+        "mechanism": "skill",
+        "show": "7 passed\n"
+      },
+      {
+        "id": "rerun-full",
+        "ctx": "main",
+        "role": "model",
+        "label": "Model re-runs the tests",
+        "tokens": 43,
+        "when": "!skill",
+        "request_after": false,
+        "scripted": true,
+        "mechanism": null,
+        "show": null
+      },
+      {
+        "id": "rerun-full-out",
+        "ctx": "main",
+        "role": "result",
+        "label": "Tests pass",
+        "tokens": 149,
+        "when": "!skill",
+        "request_after": true,
+        "scripted": false,
+        "mechanism": null,
+        "show": "PASS  test_login.py::test_correct_password_is_accepted\nPASS  test_login.py::test_empty_hash_is_rejected\nPASS  test_login.py::test_empty_password_does_not_match_empty_hash\nPASS  test_login.py::test_hash_is_deterministic\nPASS  test_login.py::test_wrong_password_is_rejected\nPASS  test_users_and_audit.py::test_create_user_hashes_password\n{\"ts\": 1790000000.0, \"event\": \"login\", \"user\": \"alice\", \"success\": true}\nPASS  test_users_and_audit.py::test_record_login_returns_event\n7 passed\n"
+      },
+      {
+        "id": "delegate",
+        "ctx": "main",
+        "role": "model",
+        "label": "Model delegates to test-reviewer",
+        "tokens": 69,
+        "when": "subagent",
+        "request_after": false,
+        "scripted": true,
+        "mechanism": "subagent",
+        "show": "Review the change to tests/test_login.py: one test was added, test_empty_password_does_not_match_empty_hash. Report any weakening."
+      },
+      {
+        "id": "sub-system",
+        "ctx": "sub",
+        "role": "system",
+        "label": "Subagent system prompt (the agent file)",
+        "tokens": 94,
+        "when": "subagent",
+        "request_after": false,
+        "scripted": false,
+        "mechanism": "subagent",
+        "show": "\nYou review changes to test files. You did not write these changes and have not seen\nthe conversation that produced them.\n\nFor each changed test file, report:\n- assertions that were removed or made weaker,\n- skips, xfails, or always-true assertions that were added,\n- tests that were deleted or renamed.\n\nAnswer \"No weakening found\" only if you checked every changed test file.\n"
+      },
+      {
+        "id": "sub-tools",
+        "ctx": "sub",
+        "role": "tools",
+        "label": "Read-only tools",
+        "tokens": 154,
+        "when": "subagent",
+        "request_after": false,
+        "scripted": false,
+        "mechanism": "subagent",
+        "show": null
+      },
+      {
+        "id": "sub-task",
+        "ctx": "sub",
+        "role": "user",
+        "label": "Delegated task",
+        "tokens": 40,
+        "when": "subagent",
+        "request_after": true,
+        "scripted": false,
+        "mechanism": "subagent",
+        "show": "Review the change to tests/test_login.py: one test was added, test_empty_password_does_not_match_empty_hash. Report any weakening."
+      },
+      {
+        "id": "sub-read-test",
+        "ctx": "sub",
+        "role": "model",
+        "label": "Reads tests/test_login.py",
+        "tokens": 34,
+        "when": "subagent",
+        "request_after": false,
+        "scripted": true,
+        "mechanism": "subagent",
+        "show": null
+      },
+      {
+        "id": "sub-test-out",
+        "ctx": "sub",
+        "role": "result",
+        "label": "tests/test_login.py",
+        "tokens": 295,
+        "when": "subagent",
+        "request_after": true,
+        "scripted": false,
+        "mechanism": "subagent",
+        "show": "\"\"\"Login tests for practice-app.\"\"\"\nfrom src.auth import hash_password, verify_password\nfrom src.users import make_user\n\n\ndef test_correct_password_is_accepted():\n    user = make_user(stored_hash=hash_password(\"s3cret\"))\n    assert verify_password(\"s3cret\", user.hash) is True\n\n\ndef test_wrong_password_is_rejected():\n    user = make_user(stored_hash=hash_password(\"s3cret\"))\n    assert verify_password(\"guess\", user.hash) is False\n\n\ndef test_hash_is_deterministic():\n    assert hash_password(\"abc\") == hash_password(\"abc\")\n\n\n# Regression test for a reported login issue.\n#\n# A user record with no stored hash (for example, an account created\n# by an import script that failed partway) must never authenticate,\n# no matter what password is supplied.\n\n\ndef test_empty_hash_is_rejected():\n    user = make_user(stored_hash=\"\")\n    assert verify_password(\"anything\", user.hash) is False\n\n\ndef test_empty_password_does_not_match_empty_hash():\n    user = make_user(stored_hash=\"\")\n    assert verify_password(\"\", user.hash) is False\n"
+      },
+      {
+        "id": "sub-grep",
+        "ctx": "sub",
+        "role": "model",
+        "label": "Searches tests/ for skips",
+        "tokens": 39,
+        "when": "subagent",
+        "request_after": false,
+        "scripted": true,
+        "mechanism": "subagent",
+        "show": null
+      },
+      {
+        "id": "sub-grep-out",
+        "ctx": "sub",
+        "role": "result",
+        "label": "Search results",
+        "tokens": 27,
+        "when": "subagent",
+        "request_after": true,
+        "scripted": false,
+        "mechanism": "subagent",
+        "show": "(no matches)"
+      },
+      {
+        "id": "read-test",
+        "ctx": "main",
+        "role": "model",
+        "label": "Reads tests/test_login.py",
+        "tokens": 34,
+        "when": "!subagent",
+        "request_after": false,
+        "scripted": true,
+        "mechanism": null,
+        "show": null
+      },
+      {
+        "id": "test-out",
+        "ctx": "main",
+        "role": "result",
+        "label": "tests/test_login.py",
+        "tokens": 295,
+        "when": "!subagent",
+        "request_after": true,
+        "scripted": false,
+        "mechanism": null,
+        "show": "\"\"\"Login tests for practice-app.\"\"\"\nfrom src.auth import hash_password, verify_password\nfrom src.users import make_user\n\n\ndef test_correct_password_is_accepted():\n    user = make_user(stored_hash=hash_password(\"s3cret\"))\n    assert verify_password(\"s3cret\", user.hash) is True\n\n\ndef test_wrong_password_is_rejected():\n    user = make_user(stored_hash=hash_password(\"s3cret\"))\n    assert verify_password(\"guess\", user.hash) is False\n\n\ndef test_hash_is_deterministic():\n    assert hash_password(\"abc\") == hash_password(\"abc\")\n\n\n# Regression test for a reported login issue.\n#\n# A user record with no stored hash (for example, an account created\n# by an import script that failed partway) must never authenticate,\n# no matter what password is supplied.\n\n\ndef test_empty_hash_is_rejected():\n    user = make_user(stored_hash=\"\")\n    assert verify_password(\"anything\", user.hash) is False\n\n\ndef test_empty_password_does_not_match_empty_hash():\n    user = make_user(stored_hash=\"\")\n    assert verify_password(\"\", user.hash) is False\n"
+      },
+      {
+        "id": "grep",
+        "ctx": "main",
+        "role": "model",
+        "label": "Searches tests/ for skips",
+        "tokens": 39,
+        "when": "!subagent",
+        "request_after": false,
+        "scripted": true,
+        "mechanism": null,
+        "show": null
+      },
+      {
+        "id": "grep-out",
+        "ctx": "main",
+        "role": "result",
+        "label": "Search results",
+        "tokens": 27,
+        "when": "!subagent",
+        "request_after": true,
+        "scripted": false,
+        "mechanism": null,
+        "show": "(no matches)"
+      },
+      {
+        "id": "sub-answer",
+        "ctx": "sub",
+        "role": "model",
+        "label": "Subagent's final answer",
+        "tokens": 57,
+        "when": "subagent",
+        "request_after": false,
+        "scripted": true,
+        "mechanism": "subagent",
+        "show": "No weakening found. tests/test_login.py: one test added (test_empty_password_does_not_match_empty_hash) with one new assertion; no assertions removed; no skips, xfails, or always-true assertions."
+      },
+      {
+        "id": "summary",
+        "ctx": "main",
+        "role": "subagent",
+        "label": "Subagent summary returns",
+        "tokens": 72,
+        "when": "subagent",
+        "request_after": true,
+        "scripted": false,
+        "mechanism": "subagent",
+        "show": "No weakening found. tests/test_login.py: one test added (test_empty_password_does_not_match_empty_hash) with one new assertion; no assertions removed; no skips, xfails, or always-true assertions."
+      },
+      {
+        "id": "final",
+        "ctx": "main",
+        "role": "model",
+        "label": "Final answer",
+        "tokens": 68,
+        "when": null,
+        "request_after": false,
+        "scripted": true,
+        "mechanism": null,
+        "show": null
+      }
+    ]
+  },
+  "ledger": {
+    "expected": {
+      "none": {
+        "requests": 8,
+        "request_sizes": [
+          398,
+          676,
+          859,
+          949,
+          1128,
+          1320,
+          1649,
+          1715
+        ],
+        "total_input": 8694,
+        "final_context": 1715,
+        "sub_requests": 0,
+        "sub_input": 0
+      },
+      "mcp": {
+        "requests": 11,
+        "request_sizes": [
+          543,
+          821,
+          1004,
+          1084,
+          1170,
+          1257,
+          1347,
+          1526,
+          1718,
+          2047,
+          2113
+        ],
+        "total_input": 14630,
+        "final_context": 2113,
+        "sub_requests": 0,
+        "sub_input": 0
+      },
+      "skill": {
+        "requests": 9,
+        "request_sizes": [
+          448,
+          674,
+          782,
+          965,
+          1055,
+          1234,
+          1310,
+          1639,
+          1705
+        ],
+        "total_input": 9812,
+        "final_context": 1705,
+        "sub_requests": 0,
+        "sub_input": 0
+      },
+      "subagent": {
+        "requests": 7,
+        "request_sizes": [
+          426,
+          704,
+          887,
+          977,
+          1156,
+          1348,
+          1489
+        ],
+        "total_input": 6987,
+        "final_context": 1489,
+        "sub_requests": 3,
+        "sub_input": 1588
+      },
+      "mcp,skill": {
+        "requests": 12,
+        "request_sizes": [
+          593,
+          819,
+          927,
+          1110,
+          1190,
+          1276,
+          1363,
+          1453,
+          1632,
+          1708,
+          2037,
+          2103
+        ],
+        "total_input": 16211,
+        "final_context": 2103,
+        "sub_requests": 0,
+        "sub_input": 0
+      },
+      "mcp,subagent": {
+        "requests": 10,
+        "request_sizes": [
+          571,
+          849,
+          1032,
+          1112,
+          1198,
+          1285,
+          1375,
+          1554,
+          1746,
+          1887
+        ],
+        "total_input": 12609,
+        "final_context": 1887,
+        "sub_requests": 3,
+        "sub_input": 1588
+      },
+      "skill,subagent": {
+        "requests": 8,
+        "request_sizes": [
+          476,
+          702,
+          810,
+          993,
+          1083,
+          1262,
+          1338,
+          1479
+        ],
+        "total_input": 8143,
+        "final_context": 1479,
+        "sub_requests": 3,
+        "sub_input": 1588
+      },
+      "mcp,skill,subagent": {
+        "requests": 11,
+        "request_sizes": [
+          621,
+          847,
+          955,
+          1138,
+          1218,
+          1304,
+          1391,
+          1481,
+          1660,
+          1736,
+          1877
+        ],
+        "total_input": 14228,
+        "final_context": 1877,
+        "sub_requests": 3,
+        "sub_input": 1588
+      }
+    }
+  }
+}

@@ -75,6 +75,8 @@ CONTENT_SCHEMAS = {
     "extensions.json": {**SECTION_KEYS, "mechanisms": list, "attributes": list, "flow": dict, "scenarios": list,
                         "rules_of_thumb": list, "takeaway": str, "source_note": str},
     "quizzes.json": {"review": dict, "questions": list},
+    "inside-extensions.json": {"id": str, "concept": str, "module_link": str, "source_note": str, "task": str,
+                               "lenses": list, "measured": dict, "session": dict, "ledger": dict},
 }
 SITE_SECTION_KEYS = {"id": str, "page": str, "title": str, "summary": str}
 STEP_KEYS = {"text": str, "state": dict}
@@ -182,6 +184,8 @@ def check_content(report: Report) -> None:
             check_anatomy(report, path, data)
         if path.name == "loop.json" and isinstance(data, dict):
             check_loop(report, path, data)
+        if path.name == "inside-extensions.json" and isinstance(data, dict):
+            check_inside_extensions(report, path, data)
         if path.name == "quizzes.json" and isinstance(data, dict):
             check_quizzes(report, path, data)
 
@@ -246,6 +250,89 @@ def check_quizzes(report: Report, path: pathlib.Path, data: dict) -> None:
         missing = [s for s in sections if s != "review" and s not in drawn]
         if missing:
             report.error(path, f"review set has no question from: {', '.join(missing)}")
+
+
+# Section 6.7. The ledger composition is shared with the measurement script,
+# so the checker, the script, and the page agree on every total.
+INSIDE_LENSES = ["mcp", "skill", "subagent", "plugin"]
+INSIDE_MECHANISMS = ["mcp", "skill", "subagent"]
+INSIDE_ROLES = CONTENT_ROLES | {"skill", "subagent"}
+INSIDE_EFFECTS = {"none", "launch", "packet", "drop-in", "refuse", "unfold", "condense",
+                  "split", "sub-grow", "collapse", "unpack", "fly", "hook-fire", "toggle-off"}
+INSIDE_FOCUS = set(INSIDE_LENSES) | {"hook"}
+PLACEHOLDER_RE = re.compile(r"\{([a-z_.]+)\}")
+
+
+def check_inside_extensions(report: Report, path: pathlib.Path, data: dict) -> None:
+    from itertools import combinations
+    sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
+    from measure_inside_extensions import compose
+
+    session, measured = data.get("session", {}), data.get("measured", {})
+    events = session.get("events", [])
+    always = session.get("always", {})
+    ids = [e.get("id") for e in events]
+    for dup in sorted({i for i in ids if ids.count(i) > 1}, key=str):
+        report.error(path, f"session event id '{dup}' is used more than once")
+    whens = {None} | set(INSIDE_MECHANISMS) | {f"!{m}" for m in INSIDE_MECHANISMS}
+    for where, item in [(f"event '{e.get('id')}'", e) for e in events] + \
+                       [(f"always block '{k}'", b) for k, b in always.items()]:
+        if item.get("role") not in INSIDE_ROLES:
+            report.error(path, f"{where} has unknown role '{item.get('role')}'")
+        if item.get("when") not in whens:
+            report.error(path, f"{where} has unknown condition '{item.get('when')}'")
+        if not isinstance(item.get("tokens"), int) or item["tokens"] < 0:
+            report.error(path, f"{where} needs a non-negative integer token count")
+    for e in events:
+        if e.get("ctx") not in ("main", "sub"):
+            report.error(path, f"event '{e.get('id')}' has ctx '{e.get('ctx')}', not main or sub")
+
+    expected = data.get("ledger", {}).get("expected", {})
+    for n in range(len(INSIDE_MECHANISMS) + 1):
+        for combo in combinations(INSIDE_MECHANISMS, n):
+            key = ",".join(combo) or "none"
+            if key not in expected:
+                report.error(path, f"ledger.expected is missing combination '{key}'")
+            elif compose(session, set(combo)) != expected[key]:
+                report.error(path, f"ledger.expected['{key}'] does not match the session's events; "
+                             "re-run tools/measure_inside_extensions.py")
+
+    triage = measured.get("triage", {})
+    for kind in ("full", "condensed"):
+        if len(triage.get(f"{kind}_text", "")) != triage.get(f"{kind}_chars"):
+            report.error(path, f"measured.triage.{kind}_chars does not match its text")
+    plugin_always = sum(always.get(k, {}).get("tokens", 0) for k in ("mcp-tools", "skill-listing", "agent-listing"))
+    if measured.get("plugin", {}).get("always_tokens") != plugin_always:
+        report.error(path, "measured.plugin.always_tokens is not the sum of the plugin's always-on blocks")
+
+    lenses = data.get("lenses", [])
+    if [lens.get("id") for lens in lenses] != INSIDE_LENSES:
+        report.error(path, f"lenses must be, in order: {', '.join(INSIDE_LENSES)}")
+    known_at = {"start"} | set(ids)
+    focus_ok = INSIDE_FOCUS | set(ids) | set(always)
+    wire_len = len(measured.get("wire", []))
+    for lens in lenses:
+        for i, step in enumerate(lens.get("steps", [])):
+            where = f"lens '{lens.get('id')}' step {i + 1}"
+            check_keys(report, path, step, {"text": str, "state": dict}, where)
+            state = step.get("state", {})
+            if state.get("at") not in known_at:
+                report.error(path, f"{where}: state.at '{state.get('at')}' is not an event id")
+            if state.get("focus") not in focus_ok:
+                report.error(path, f"{where}: unknown focus '{state.get('focus')}'")
+            if state.get("effect") not in INSIDE_EFFECTS:
+                report.error(path, f"{where}: unknown effect '{state.get('effect')}'")
+            if not set(state.get("combo", [])) <= set(INSIDE_MECHANISMS):
+                report.error(path, f"{where}: combo names an unknown mechanism")
+            for w in step.get("wire", []):
+                if not isinstance(w, int) or not 0 <= w < wire_len:
+                    report.error(path, f"{where}: wire index {w} is out of range")
+            for ref in PLACEHOLDER_RE.findall(step.get("text", "")):
+                value = data
+                for part in ref.split("."):
+                    value = value.get(part) if isinstance(value, dict) else None
+                if not isinstance(value, (int, float)):
+                    report.error(path, f"{where}: placeholder {{{ref}}} does not resolve to a number")
 
 
 def check_extensions(report: Report, path: pathlib.Path, data: dict) -> None:

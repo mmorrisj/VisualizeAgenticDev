@@ -47,7 +47,7 @@ Each section ends with a short knowledge check adapted from the matching module'
 
 ### Where the numbers come from
 
-Token counts are measured by running the course's `mini-harness` with its mock backend, so they reproduce exactly. The harness estimates tokens as about 4 characters per token, the same convention the course uses. Anything not measured is labelled illustrative on the page.
+Token counts are measured by running the course's `mini-harness` with its mock backend, so they reproduce exactly. The "Inside an extension" data comes from `tools/measure_inside_extensions.py`, which runs the Module 5 examples against a fresh practice-app copy; re-run it after changing those examples, then run `check.py`. The harness estimates tokens as about 4 characters per token, the same convention the course uses. Anything not measured is labelled illustrative on the page.
 
 Two discrepancies in the course material, found while measuring, are worth knowing if a student compares numbers:
 
@@ -108,7 +108,7 @@ assets/js/scrolly.js   links narrative scroll steps to scene states
 assets/js/quiz.js      knowledge checks; finishing one marks the section complete
 assets/js/<section>.js one module per section page
 content/               all editable text and defaults
-tools/                 serve.py, check.py, stamp.py (Python standard library only)
+tools/                 serve.py, check.py, stamp.py, measure_inside_extensions.py (Python standard library only)
 ```
 
 `sections/_style.html` is the reference for how the model, the harness, and each content role are drawn. Review visual changes there first. It is not linked from the student pages.
