@@ -1,0 +1,158 @@
+{
+  "description": "Modules 3 and 7: a broad request that reads many files and repeats work. Run with a small --context-limit to see compaction.",
+  "responses": [
+    [
+      {
+        "type": "text",
+        "text": "I'll review the whole project before making recommendations."
+      },
+      {
+        "type": "tool_use",
+        "id": "call_01",
+        "name": "list_files",
+        "input": {
+          "path": "."
+        }
+      }
+    ],
+    [
+      {
+        "type": "tool_use",
+        "id": "call_02",
+        "name": "read_file",
+        "input": {
+          "path": "src/auth.py"
+        }
+      }
+    ],
+    [
+      {
+        "type": "tool_use",
+        "id": "call_03",
+        "name": "read_file",
+        "input": {
+          "path": "src/users.py"
+        }
+      }
+    ],
+    [
+      {
+        "type": "tool_use",
+        "id": "call_04",
+        "name": "read_file",
+        "input": {
+          "path": "src/audit.py"
+        }
+      }
+    ],
+    [
+      {
+        "type": "tool_use",
+        "id": "call_05",
+        "name": "run_command",
+        "input": {
+          "command": "python3 run_tests.py",
+          "description": "Run the test suite (verbose)"
+        }
+      }
+    ],
+    [
+      {
+        "type": "tool_use",
+        "id": "call_06",
+        "name": "read_file",
+        "input": {
+          "path": "tests/test_login.py"
+        }
+      }
+    ],
+    [
+      {
+        "type": "tool_use",
+        "id": "call_07",
+        "name": "read_file",
+        "input": {
+          "path": "tests/test_users_and_audit.py"
+        }
+      }
+    ],
+    [
+      {
+        "type": "tool_use",
+        "id": "call_08",
+        "name": "read_file",
+        "input": {
+          "path": "vendor/fastlog/__init__.py"
+        }
+      }
+    ],
+    [
+      {
+        "type": "tool_use",
+        "id": "call_09",
+        "name": "run_command",
+        "input": {
+          "command": "python3 run_tests.py",
+          "description": "Run the test suite (verbose)"
+        }
+      }
+    ],
+    [
+      {
+        "type": "tool_use",
+        "id": "call_10",
+        "name": "read_file",
+        "input": {
+          "path": "run_tests.py"
+        }
+      }
+    ],
+    [
+      {
+        "type": "tool_use",
+        "id": "call_11",
+        "name": "read_file",
+        "input": {
+          "path": "src/auth.py"
+        }
+      }
+    ],
+    [
+      {
+        "type": "tool_use",
+        "id": "call_12",
+        "name": "read_file",
+        "input": {
+          "path": "tests/test_login.py"
+        }
+      }
+    ],
+    [
+      {
+        "type": "tool_use",
+        "id": "call_13",
+        "name": "run_command",
+        "input": {
+          "command": "python3 run_tests.py",
+          "description": "Run the test suite (verbose)"
+        }
+      }
+    ],
+    [
+      {
+        "type": "tool_use",
+        "id": "call_14",
+        "name": "read_file",
+        "input": {
+          "path": "run_tests.py"
+        }
+      }
+    ],
+    [
+      {
+        "type": "text",
+        "text": "Summary: the first file I read, src/auth.py, has the empty-hash bug on line 18. (After compaction, the model only has this from its own earlier notes, if at all.)"
+      }
+    ]
+  ]
+}

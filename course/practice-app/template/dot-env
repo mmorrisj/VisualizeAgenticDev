@@ -1,0 +1,3 @@
+# FAKE values for training. Nothing in this file is a real credential.
+DATABASE_URL=postgresql://app:fake-password-0000@db.internal:5432/practice
+API_TOKEN=fake-token-0000-training-only

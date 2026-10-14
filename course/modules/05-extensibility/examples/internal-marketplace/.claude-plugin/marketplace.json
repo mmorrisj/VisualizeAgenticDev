@@ -1,0 +1,12 @@
+{
+  "name": "training-tools",
+  "description": "Internal plugins for the harness training course",
+  "owner": { "name": "Training team" },
+  "plugins": [
+    {
+      "name": "practice-toolkit",
+      "source": "./plugins/practice-toolkit",
+      "description": "Test triage skill, test-review subagent, test-protection hook, and the practice-db MCP server"
+    }
+  ]
+}

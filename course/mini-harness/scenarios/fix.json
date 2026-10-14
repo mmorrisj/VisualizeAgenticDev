@@ -1,0 +1,52 @@
+{
+  "description": "Walkthrough screen 4: apply the one-line fix and verify it.",
+  "responses": [
+    [
+      {
+        "type": "text",
+        "text": "I'll fix the empty-hash branch in src/auth.py."
+      },
+      {
+        "type": "tool_use",
+        "id": "call_01",
+        "name": "read_file",
+        "input": {
+          "path": "src/auth.py"
+        }
+      }
+    ],
+    [
+      {
+        "type": "tool_use",
+        "id": "call_02",
+        "name": "edit_file",
+        "input": {
+          "path": "src/auth.py",
+          "old_text": "    if not stored_hash:\n        return True",
+          "new_text": "    if not stored_hash:\n        return False"
+        }
+      }
+    ],
+    [
+      {
+        "type": "text",
+        "text": "Now I'll run the tests to verify."
+      },
+      {
+        "type": "tool_use",
+        "id": "call_03",
+        "name": "run_command",
+        "input": {
+          "command": "python3 run_tests.py -q",
+          "description": "Run the test suite"
+        }
+      }
+    ],
+    [
+      {
+        "type": "text",
+        "text": "Fixed: verify_password() now rejects users with an empty stored hash. All tests pass."
+      }
+    ]
+  ]
+}

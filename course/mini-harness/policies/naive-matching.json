@@ -1,0 +1,17 @@
+{
+  "_comment": "Module 2 demonstration: same rules as default.json, but run_command rules match the WHOLE command string. Do not use.",
+  "mode": "ask",
+  "split_compound": false,
+  "allow": [
+    "read_file",
+    "list_files",
+    "search",
+    "run_command(python3 run_tests.py*)",
+    "run_command(pytest*)",
+    "run_command(git status*)",
+    "run_command(git diff*)",
+    "run_command(git log*)"
+  ],
+  "ask": [],
+  "deny": []
+}

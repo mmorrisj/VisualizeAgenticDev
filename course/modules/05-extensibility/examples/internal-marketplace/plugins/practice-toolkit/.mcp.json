@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "practice-db": {
+      "command": "python3",
+      "args": ["${CLAUDE_PLUGIN_ROOT}/servers/practice_db_server.py"]
+    }
+  }
+}
