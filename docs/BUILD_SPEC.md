@@ -33,14 +33,15 @@ Development tooling (linters, a test runner) is allowed only if it's optional, a
 
 ## 3. Scope
 
-### In scope: six interactive sections
+### In scope: seven interactive sections
 
 1. Harness anatomy
 2. Agent loop stepper
 3. Context window simulator
 4. Token growth explorer
 5. Extension chooser
-6. Knowledge checks (one per section, plus a final review)
+6. Inside an extension (section 6.7)
+7. Knowledge checks (one per section, plus a final review)
 
 ### Out of scope
 
@@ -62,6 +63,7 @@ harness-site/
 │   ├── context.html
 │   ├── tokens.html
 │   ├── extensions.html
+│   ├── inside-extensions.html
 │   └── review.html
 ├── assets/
 │   ├── css/site.css           # design tokens + layout
@@ -74,6 +76,7 @@ harness-site/
 │       ├── context.js
 │       ├── tokens.js
 │       ├── extensions.js
+│       ├── inside-extensions.js
 │       └── quiz.js            # shared quiz component
 ├── content/
 │   ├── site.json              # landing copy, section order, card summaries
@@ -82,6 +85,7 @@ harness-site/
 │   ├── context.json
 │   ├── tokens.json
 │   ├── extensions.json
+│   ├── inside-extensions.json
 │   └── quizzes.json
 ├── tools/
 │   ├── serve.py               # python3 tools/serve.py -> http://127.0.0.1:8000
@@ -247,11 +251,79 @@ A shared quiz component (`quiz.js`) driven by `quizzes.json`.
 - Correct and incorrect states use text ("Correct" / "Not quite") plus color.
 - Draw questions from the "Check your understanding" sections of the written modules. Keep them conceptual.
 
+
+### 6.7 Inside an extension
+
+Placed after the extension chooser (section 6.5) in page order: section 6 of 7, before the final review. The chooser answers *which mechanism*; this section answers *what happens inside the harness when it runs*. It covers MCP servers, skills, subagents, and plugins. Hooks appear only as a plugin component.
+
+**Concept:** each mechanism changes a different part of the request. An MCP server adds tool definitions and a separate process; a skill adds a short description now and its body later; a subagent runs a second conversation in its own context; a plugin brings all of them at once.
+
+**Signature moment:** one session, opened up four ways. In every lens the main request bar is the same; what changes is which blocks the mechanism adds, when they arrive, and whether they stay on every later request. The student should leave able to point at a request and say which blocks each mechanism put there.
+
+**The session.** One task, used by all four lenses: *"The tests are failing. Find out why, fix it, add a regression test, and check whether any user has an empty password."* In order: the skill triages the failure; the MCP server answers the password question; the model edits the code and adds a test (the hook checks both edits before they happen); the subagent reviews the new test. The harness has the `practice-toolkit` plugin from Module 5 installed: the `practice-test-triage` skill, the `test-reviewer` subagent, the `no_test_weakening` hook, and the `practice-db` MCP server.
+
+**Visual:** a widescreen scene laid out left to right: You, Harness, Model. The main context is drawn as a stacked request bar using the shared token blocks and content roles (section 5.1), with two new roles: `skill` and `subagent`, each with its own color and a non-color marker. Right of the harness, an "outside the model" lane holds the `practice-db` server process, the `skills/` folder, and the subagent's own context window. A meter under the scene shows two numbers for the selected request: **on every request** and **on use**.
+
+**Lenses:** four tabs (ARIA tabs pattern, Left/Right between tabs), each a Play tour with Play/Pause, Back, Next, and a restart. Space plays or pauses; Left and Right step. Each step has short text, a scene state, and an optional wire payload shown in a panel beside the scene. Steps are listed below; wording lives in content.
+
+*MCP lens*
+1. Session start: the harness launches the server as a subprocess. A pipe appears between the harness and the process, labelled stdin and stdout.
+2. `initialize` and its reply travel the pipe as packets; the wire panel shows the real messages. The reply's `instructions` string is shown with a note that some harnesses add it to context.
+3. `tools/list`: three tool definitions return and drop into the request bar as a tools block (measured size). The block stays in every later request; the meter's "on every request" number rises.
+4. The model asks for `run_select`. The harness checks permission for `mcp__practice-db__run_select`, then sends `tools/call` down the pipe.
+5. The result text returns and enters the conversation as a tool result, the same way a file read does.
+6. A `DELETE` is attempted; the server refuses with `isError: true`. The refusal text still enters the model's context. Text explains the two layers: the harness decides whether the call may happen; the server decides what the call can do.
+7. What runs as you: the server is a separate process with its own access, usually outside the command sandbox.
+
+*Skill lens*
+1. Session start: only the skill's name and description enter the request bar, as a thin skill block (measured size). The body stays on disk.
+2. The user's task matches the description; the model picks the skill.
+3. The body unfolds into the request bar (measured size). Text: the description is paid on every request; the body only from now on.
+4. The procedure tells the model to run `failures.py`. The script runs outside the model, through the agent's normal shell tool and permissions.
+5. Side by side: the full test output (measured characters and tokens) and the two lines the script prints. Only the two lines enter the context; the full output is shown shrinking into them.
+6. What runs as you: the script runs with the agent's permissions, inside the sandbox if one is on.
+
+*Subagent lens*
+1. After the regression test is added, the main conversation delegates a review of the test change to `test-reviewer` (its description says to use it after any edit under `tests/`).
+2. A second context window splits off the main one. It starts with its own system prompt (the agent file's body), the delegated task, and only Read, Grep, and Glob; Edit and Bash are drawn locked.
+3. The subagent makes its own requests; its own meter grows while the main meter does not move.
+4. The subagent finishes; its window collapses into one summary block that drops into the main conversation. The meter shows how much the main context grew (the summary) against how much the subagent read.
+5. Text: the subagent never saw the main conversation, which is the point of using one for review; and its read-only tool list is least privilege.
+
+*Plugin lens*
+1. A `practice-toolkit` package (its `plugin.json` shown in the wire panel) opens into four components.
+2. Each component flies to where it lives: the skill description and the subagent description into the request bar; the hook onto the harness's `PreToolUse` event, with no context cost; the MCP server into the outside lane as a running process, whose tool definitions join the request when it starts.
+3. The meter shows the plugin's always-on cost using the site's estimator, next to the figure Claude Code reported for the same plugin in Module 5, labelled as such.
+4. The hook fires before each `Edit` and `Write`, including the regression test; it lets this one through because it adds an assertion rather than removing one. The harness, not the model, runs it, and it adds nothing to context.
+5. An "Enable plugin" toggle removes every block and process the plugin added. Text: an enabled plugin costs its descriptions on every request in every session, used or not.
+6. What runs as you: the hook and the local MCP server run as you, usually outside the sandbox; the plugin can change when it updates.
+
+**Sandbox, the cost ledger:** below the lenses. Toggles for the MCP server, the skill, the subagent, and the plugin (enabling the plugin enables all its parts). A chart shows each request of the session as a stacked bar split into always-on blocks and on-use blocks, with running totals for the session's total input. Selecting a bar shows that request's parts in the panel. With the subagent off, the test review happens in the main conversation and everything it reads lands in the main context; with it on, only its summary does. The ledger shows both.
+
+**Content (`inside-extensions.json`):** `concept`, `module_link` (Module 5), `source_note`, `task`, `lenses` (each with `id`, `label`, `intro`, `steps` of `{text, state, wire?}`), `components` (each with measured `always_tokens`, `on_use_tokens`, and its source file), `wire` (the recorded MCP exchange, verbatim), `triage` (full-output and condensed sizes), `ledger` (the session's requests and the parts each mechanism contributes), and `claude_code_reported` (the Module 5 figures, cited).
+
+**Data:** sizes and payloads come from running the course's own examples: `mcp_probe.py` for the MCP exchange and the tool-definition size, the skill and agent files' own text, `failures.py` against a fresh practice-app copy, and the plugin's manifest files. Token counts use the course harness's estimator (about 4 characters per token, `estimate_tokens` in `mini-harness/backends.py`), the same as every other section. The course harness cannot run MCP servers, skills, or subagents, so the **order** of the session is scripted; the page says so in its source note ("real messages and sizes, scripted sequence"). Claude Code's own figures for the plugin (about 80 and 190 tokens for the skill, 119 always-on) differ from the estimator's; they appear once, labelled as Claude Code's count.
+
+**Motion:** this section uses more motion than the others, because the mechanisms are about movement between places: packets on the pipe, the skill body unfolding, the subagent window splitting and collapsing, the plugin's components flying to their places. Use SVG and the Web Animations API, no libraries. Every effect explains a step and follows the explanatory-motion rules in section 5 (up to about 2s, pausable, driven by step state); with reduced motion, each step jumps to its end state. Wire payloads may type out line by line; with reduced motion they appear at once.
+
+**Knowledge check:** four questions, conceptual, drawn from Module 5's labs: what `tools/list` adds to every request; which part of a skill is always in context; what returns to the main conversation from a subagent; what an enabled but unused plugin costs. One joins the final review's mixed set.
+
+**Out of scope here:** prompt-injection payloads (section 3). The MCP lens notes that tool descriptions are text written by the server's author and go into the model's context, and links to Module 5's security review instead of showing an attack.
+
+**Acceptance:**
+- All four lenses play end to end with the mouse and with the keyboard alone; Back restores a previous step exactly.
+- In every step, the request bar's blocks sum to the meter's numbers; `check.py` validates the sums, that every step's state references known blocks, and that the ledger's totals match its parts.
+- Every wire payload shown is copied from a recorded run of the course examples, not retyped.
+- With reduced motion, no step shows a blank or half-drawn scene.
+- Every scene has an accessible name that describes its current state; lens and step changes are announced in an `aria-live="polite"` region.
+- New roles (`skill`, `subagent`) are distinguishable without color.
+- Locked subagent tools and the plugin toggle state are shown in text as well as visually.
+
 ---
 
 ## 7. Landing page
 
-- Title, a two-sentence description, and the course map: six section cards in recommended order, each with a one-line summary. Landing copy and card text come from `content/site.json`.
+- Title, a two-sentence description, and the course map: seven section cards in recommended order, each with a one-line summary. Landing copy and card text come from `content/site.json`.
 - A small, static rendering of the shared visual world (section 5.1) as the hero image, so the first thing students see is the model they will spend the course exploring.
 - A link to the written course, placed in the footer.
 - Instructor-facing material (instructor notes, the design-language page, build or source notes) is never displayed prominently to students. It stays in the README, the repository, or a quiet footnote. Files named `*INSTRUCTOR*` in the course are not published with the site.
@@ -297,6 +369,8 @@ Stop after each phase and summarize what changed, what's left, and any deviation
 | 4 | Extension chooser | Section 6.5 acceptance criteria met |
 | 5 | Quiz component, all knowledge checks, review page, progress marking | Section 6.6 and 7 met |
 | 6 | Polish: accessibility pass, responsive pass, README for instructors | Full manual checklist passes |
+| 7a | Inside an extension: measured data and content (section 6.7) | Data reproduces from the course examples; `check.py` validates it |
+| 7b | Inside an extension: page, lenses, cost ledger, knowledge check | Section 6.7 acceptance criteria met; full manual checklist passes |
 
 Commit at the end of each phase with a message describing the phase. Keep each commit focused.
 
@@ -343,3 +417,7 @@ Copy the course folder into the repo under `course/`, or give the agent access t
 - `check.py`: allowlisted SVG namespace URIs, banned absolute URLs in JSON too, specified emoji ranges, added JS import checks (section 8).
 - Phases: design-language approval gate, and the agent loop as a vertical slice with user feedback before the other sections (section 9).
 - Desktop only: phone and tablet layouts dropped from scope (sections 5 and 8).
+
+**v2.1**
+- Added "Inside an extension" as section 6 of 7: four lenses (MCP, skill, subagent, plugin) on one session, plus a cost ledger (sections 3, 4, 6.7, 7, 9).
+- Added `skill` and `subagent` content roles for that section (section 6.7).
