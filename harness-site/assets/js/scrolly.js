@@ -48,35 +48,25 @@ export function createScrolly({ steps, onStep, prev, next, status }) {
     targetTimer = window.setTimeout(() => { target = null; }, 1200);
     steps[index].scrollIntoView({
       behavior: prefersReducedMotion() ? "auto" : "smooth",
-      block: narrow.matches ? "end" : "center",
+      block: "center",
     });
     activate(index);
   }
 
-  // A thin band across the viewport decides the active step. On wide
-  // screens it sits mid-screen; on narrow screens the pinned visual covers
-  // the top half, so the band moves below it, where the text is readable.
-  const narrow = window.matchMedia("(max-width: 899px)");
-  let observer = null;
-
-  function observe() {
-    observer?.disconnect();
-    observer = new IntersectionObserver(
-      (entries) => {
-        for (const entry of entries) {
-          if (!entry.isIntersecting) continue;
-          const index = steps.indexOf(entry.target);
-          if (target !== null && index !== target) continue;
-          if (index === target) target = null;
-          activate(index);
-        }
-      },
-      { rootMargin: narrow.matches ? "-70% 0px -20% 0px" : "-45% 0px -45% 0px" }
-    );
-    steps.forEach((step) => observer.observe(step));
-  }
-  observe();
-  narrow.addEventListener("change", observe);
+  // A thin band across the middle of the viewport decides the active step.
+  const observer = new IntersectionObserver(
+    (entries) => {
+      for (const entry of entries) {
+        if (!entry.isIntersecting) continue;
+        const index = steps.indexOf(entry.target);
+        if (target !== null && index !== target) continue;
+        if (index === target) target = null;
+        activate(index);
+      }
+    },
+    { rootMargin: "-45% 0px -45% 0px" }
+  );
+  steps.forEach((step) => observer.observe(step));
 
   prev?.addEventListener("click", () => goTo(active - 1));
   next?.addEventListener("click", () => goTo(active + 1));

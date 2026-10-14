@@ -115,7 +115,7 @@ export function drawModel(parent, { cx, cy, w = 150, h = 96, label = "Model", su
 export function drawComponent(parent, { cx, cy, label, id, w = 116, h = 32 }) {
   const g = el("g", { class: "component", "data-id": id }, parent);
   el("rect", { class: "component-pill", x: cx - w / 2, y: cy - h / 2, width: w, height: h, rx: h / 2 }, g);
-  text(g, cx, cy + 4.5, label, { "text-anchor": "middle", "font-size": 13.5 });
+  text(g, cx, cy + 5, label, { "text-anchor": "middle", "font-size": 15 });
   return g;
 }
 

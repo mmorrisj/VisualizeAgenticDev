@@ -24,7 +24,7 @@ const RING = new Set(ALL_IDS);
  * Make the components and the model keyboard-operable buttons. Called after
  * every redraw, because a redraw replaces the SVG.
  */
-function makeSelectable(handles, onSelect) {
+function makeSelectable(handles, onSelect, tooltip = null) {
   const targets = [
     ...COMPONENTS.map((c) => [c.id, handles.components[c.id], c.label]),
     ["model", handles.model, "The model"],
@@ -35,6 +35,11 @@ function makeSelectable(handles, onSelect) {
     node.setAttribute("role", "button");
     node.setAttribute("aria-label", label);
     node.classList.add("is-selectable");
+    if (!node.querySelector("title")) {
+      const tip = el("title", {});
+      tip.textContent = tooltip ? tooltip(label) : label;
+      node.prepend(tip);
+    }
     node.addEventListener("click", () => onSelect(id));
     node.addEventListener("keydown", (event) => {
       if (event.key === "Enter" || event.key === " ") {
@@ -314,9 +319,31 @@ function createTour(tours, els) {
 
   selectTour(tours[0].id);
 
+  // Desktop shortcuts while the tour is in use: Space plays or pauses,
+  // the arrow keys step. Tabs keep their own arrow keys, and Space on a
+  // focused button keeps its usual meaning (pressing that button).
+  els.panel.closest("section").addEventListener("keydown", (event) => {
+    // A focused diagram part already used this key (Enter or Space selects it).
+    if (event.defaultPrevented || event.altKey || event.ctrlKey || event.metaKey) return;
+    const onTab = event.target.getAttribute?.("role") === "tab";
+    const onButton = event.target.tagName === "BUTTON";
+    if (event.key === " " && !onButton) {
+      event.preventDefault();
+      setPlaying(!playing);
+    } else if (event.key === "ArrowRight" && !onTab && index < steps.length - 1) {
+      event.preventDefault();
+      playing = false;
+      goTo(index + 1, { animated: true });
+    } else if (event.key === "ArrowLeft" && !onTab && index > 0) {
+      event.preventDefault();
+      playing = false;
+      goTo(index - 1);
+    }
+  });
+
   mountWorld(els.scene, (h) => {
     handles = h;
-    makeSelectable(h, jumpTo);
+    makeSelectable(h, jumpTo, (label) => `${label}: jump to this stop`);
     stopMotion();
     drawStatic(index);
     renderCaption();
@@ -415,7 +442,8 @@ function createSandbox(content) {
 
   mountWorld(document.getElementById("sandbox-scene"), (h) => {
     handles = h;
-    makeSelectable(h, (id) => { state.alone = false; state.selected = id; render(); });
+    makeSelectable(h, (id) => { state.alone = false; state.selected = id; render(); },
+      (label) => `${label}: what it does`);
     render();
   });
 
