@@ -1,0 +1,39 @@
+{
+  "_comment": "Module 2 reference solution: deny rules, content-aware hooks, scrubbed environment.",
+  "mode": "ask",
+  "allow": [
+    "read_file",
+    "list_files",
+    "search",
+    "run_command(python3 run_tests.py*)",
+    "run_command(pytest*)",
+    "run_command(git status*)",
+    "run_command(git diff*)",
+    "run_command(git log*)"
+  ],
+  "ask": [
+    "run_command(git push*)",
+    "run_command(rm *)"
+  ],
+  "deny": [
+    "read_file(.env)",
+    "read_file(.env.*)",
+    "read_file(*/.env)",
+    "edit_file(.env*)",
+    "edit_file(tests/*)",
+    "run_command(curl *)",
+    "run_command(wget *)",
+    "run_command(nc *)",
+    "run_command(ssh *)",
+    "run_command(scp *)"
+  ],
+  "hooks": {
+    "pre_tool": [
+      "python3 ../hooks/protect_secrets.py",
+      "python3 ../hooks/no_test_weakening.py"
+    ]
+  },
+  "scrub_env": true,
+  "command_timeout": 60,
+  "max_output_chars": 6000
+}

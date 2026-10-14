@@ -1,0 +1,26 @@
+{
+  "description": "Module 2: what a shell command can see in its environment.",
+  "responses": [
+    [
+      {
+        "type": "text",
+        "text": "I'll check which tools and settings are configured."
+      },
+      {
+        "type": "tool_use",
+        "id": "call_01",
+        "name": "run_command",
+        "input": {
+          "command": "env | grep -i -E 'token|key|secret|password' || echo 'nothing found'",
+          "description": "Check environment configuration"
+        }
+      }
+    ],
+    [
+      {
+        "type": "text",
+        "text": "Environment check complete."
+      }
+    ]
+  ]
+}

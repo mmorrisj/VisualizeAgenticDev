@@ -3,7 +3,11 @@
 
 Browsers refuse to load content/*.json from file:// URLs, so the site must
 be opened through a web server. This is a thin wrapper around the standard
-library's http.server that serves the site root (the parent of tools/).
+library's http.server.
+
+"Go deeper" links point to ../course/ beside the site. When that folder
+exists, the server serves the site's parent directory so those links work,
+and prints the site's address within it.
 
 Usage:
     python3 tools/serve.py              # http://127.0.0.1:8000
@@ -44,9 +48,14 @@ def main() -> None:
     parser.add_argument("--bind", default="127.0.0.1", help="address to listen on (default: localhost only)")
     args = parser.parse_args()
 
-    handler = functools.partial(Handler, directory=str(SITE_ROOT))
+    root, path = SITE_ROOT, ""
+    if (SITE_ROOT.parent / "course").is_dir():
+        root, path = SITE_ROOT.parent, f"{SITE_ROOT.name}/"
+
+    handler = functools.partial(Handler, directory=str(root))
     with http.server.ThreadingHTTPServer((args.bind, args.port), handler) as server:
-        print(f"Serving {SITE_ROOT} at http://{args.bind}:{args.port}/  (Ctrl+C to stop)")
+        print(f"Serving {root}")
+        print(f"Open http://{args.bind}:{args.port}/{path}  (Ctrl+C to stop)")
         try:
             server.serve_forever()
         except KeyboardInterrupt:

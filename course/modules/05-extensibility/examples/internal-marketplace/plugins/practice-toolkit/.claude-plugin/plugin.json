@@ -1,0 +1,6 @@
+{
+  "name": "practice-toolkit",
+  "version": "0.1.0",
+  "description": "Test triage skill, test-review subagent, test-protection hook, and the practice-db MCP server",
+  "author": { "name": "Training team" }
+}

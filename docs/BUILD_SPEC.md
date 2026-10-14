@@ -253,7 +253,8 @@ A shared quiz component (`quiz.js`) driven by `quizzes.json`.
 
 - Title, a two-sentence description, and the course map: six section cards in recommended order, each with a one-line summary. Landing copy and card text come from `content/site.json`.
 - A small, static rendering of the shared visual world (section 5.1) as the hero image, so the first thing students see is the model they will spend the course exploring.
-- A link to the written course for instructors.
+- A link to the written course, placed in the footer.
+- Instructor-facing material (instructor notes, the design-language page, build or source notes) is never displayed prominently to students. It stays in the README, the repository, or a quiet footnote. Files named `*INSTRUCTOR*` in the course are not published with the site.
 - If `localStorage` is available, mark completed sections. "Completed" means the section's knowledge check was finished.
 
 ---
@@ -305,6 +306,7 @@ Commit at the end of each phase with a message describing the phase. Keep each c
 
 - Ask before adding any dependency, file outside the layout in section 4, or feature outside section 3.
 - Keep every file readable by an instructor: short functions, comments that explain *why*, no minified code.
+- Keep instructor-facing notes out of student-facing pages (section 7).
 - Never invent statistics. Use the illustrative numbers given here and label them as illustrative.
 - If anything in this spec conflicts with itself or is unclear, stop and ask rather than guess.
 - When a phase is done, run `python3 tools/check.py` and report its output.

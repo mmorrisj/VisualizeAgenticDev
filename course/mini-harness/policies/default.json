@@ -1,0 +1,17 @@
+{
+  "_comment": "Typical out-of-the-box behavior: reads are free, the test runner and git inspection are pre-approved, everything else asks.",
+  "mode": "ask",
+  "allow": [
+    "read_file",
+    "list_files",
+    "search",
+    "run_command(python3 run_tests.py*)",
+    "run_command(pytest*)",
+    "run_command(git status*)",
+    "run_command(git diff*)",
+    "run_command(git log*)"
+  ],
+  "ask": [],
+  "deny": [],
+  "command_timeout": 60
+}

@@ -8,9 +8,9 @@ name: Site checks and Pages deploy
 on:
   push:
     branches: [main]
-    paths: ["harness-site/**", ".github/workflows/pages.yml"]
+    paths: ["harness-site/**", "course/**", ".github/workflows/pages.yml"]
   pull_request:
-    paths: ["harness-site/**", ".github/workflows/pages.yml"]
+    paths: ["harness-site/**", "course/**", ".github/workflows/pages.yml"]
   workflow_dispatch:
 
 permissions:
@@ -45,9 +45,20 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: actions/configure-pages@v5
-      # Publish the site folder only, not the spec or workflow files.
+      # Site and course side by side, as content links expect (../course/).
+      # The root page forwards to the site.
+      - name: Stage site and course
+        run: |
+          mkdir -p _site
+          cp -r harness-site course _site/
+          rm -rf _site/harness-site/tools
+          # Instructor-only material stays in the repo, not on the student site.
+          find _site/course -iname '*INSTRUCTOR*' -delete
+          printf '%s\n' '<!doctype html><meta charset="utf-8"><title>Inside the Harness</title>' \
+            '<meta http-equiv="refresh" content="0; url=harness-site/index.html">' \
+            '<a href="harness-site/index.html">Inside the Harness</a>' > _site/index.html
       - uses: actions/upload-pages-artifact@v3
         with:
-          path: harness-site
+          path: _site
       - id: deployment
         uses: actions/deploy-pages@v4

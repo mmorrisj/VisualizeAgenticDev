@@ -2,5 +2,185 @@
   "id": "loop",
   "concept": "The model is stateless; the harness re-sends the whole conversation on every request.",
   "module_link": "../course/modules/01-build-a-harness/README.md",
-  "steps": []
+  "source_note": "The Module 1 investigate scenario, replayed by the course's mini-harness. Sizes use the course's estimate of about 4 characters per token.",
+  "tokens_per_block": 10,
+  "fixed": [
+    {
+      "id": "system",
+      "role": "system",
+      "label": "System prompt",
+      "tokens": 16
+    },
+    {
+      "id": "tools",
+      "role": "tools",
+      "label": "Tool definitions: read_file, run_command",
+      "tokens": 93
+    }
+  ],
+  "session": [
+    {
+      "stage": "ask",
+      "item": {
+        "id": "ask",
+        "role": "user",
+        "label": "You: Why is the login test failing?",
+        "tokens": 15
+      },
+      "explain": "You ask a question. The harness builds request 1 from its system prompt, its tool definitions, and your message. The conversation is just a list the harness owns."
+    },
+    {
+      "stage": "decide",
+      "item": {
+        "id": "call-01",
+        "role": "model",
+        "label": "Model: read_file tests/test_login.py",
+        "tokens": 55
+      },
+      "explain": "The harness sends request 1. The model replies with a request for a tool, never a result: it asks to read the failing test. Its reply joins the conversation."
+    },
+    {
+      "stage": "run",
+      "explain": "The harness, not the model, reads the file. Every action happens in harness code, as your user. That is where controls belong."
+    },
+    {
+      "stage": "return",
+      "item": {
+        "id": "result-01",
+        "role": "result",
+        "label": "Result: tests/test_login.py",
+        "tokens": 257
+      },
+      "explain": "The whole test file comes back as a tool result, which is ordinary text in the conversation. It will be re-sent on every request from here on."
+    },
+    {
+      "stage": "decide",
+      "item": {
+        "id": "call-02",
+        "role": "model",
+        "label": "Model: run_command python3 run_tests.py -q",
+        "tokens": 45
+      },
+      "explain": "Request 2 jumps in size, because the test file is now in the history. The model kept nothing from request 1; it reads everything again. Now it asks to run the tests."
+    },
+    {
+      "stage": "run",
+      "explain": "Before running a command, this harness asks you: allow `python3 run_tests.py -q`? A denial would not be an error. The model would receive \"Permission denied by user.\" and reason about it."
+    },
+    {
+      "stage": "return",
+      "item": {
+        "id": "result-02",
+        "role": "result",
+        "label": "Result: test output, exit code 1",
+        "tokens": 212
+      },
+      "explain": "The test output comes back. One test fails."
+    },
+    {
+      "stage": "decide",
+      "item": {
+        "id": "call-03",
+        "role": "model",
+        "label": "Model: search \"def verify_password\"",
+        "tokens": 59
+      },
+      "explain": "Request 3 carries both tool results. The model asks to search for the function under test, but this harness only has read_file and run_command."
+    },
+    {
+      "stage": "run",
+      "explain": "The harness has no search tool. It still has to answer with something."
+    },
+    {
+      "stage": "return",
+      "item": {
+        "id": "result-03",
+        "role": "result",
+        "label": "Result: Unknown tool: search",
+        "tokens": 28
+      },
+      "explain": "The answer is the text \"Unknown tool: search\", and that answer becomes context too. Models can ask for tools that do not exist."
+    },
+    {
+      "stage": "decide",
+      "item": {
+        "id": "call-04",
+        "role": "model",
+        "label": "Model: read_file src/auth.py",
+        "tokens": 32
+      },
+      "explain": "Request 4. The model adapts and asks to read the source file directly."
+    },
+    {
+      "stage": "run",
+      "explain": "The harness reads src/auth.py."
+    },
+    {
+      "stage": "return",
+      "item": {
+        "id": "result-04",
+        "role": "result",
+        "label": "Result: src/auth.py",
+        "tokens": 151
+      },
+      "explain": "The source file is appended. The conversation is now close to eight times the size of request 1."
+    },
+    {
+      "stage": "answer",
+      "item": {
+        "id": "answer",
+        "role": "model",
+        "label": "Model: Found it. auth.py returns True for an empty hash. I haven't changed anything.",
+        "tokens": 84
+      },
+      "explain": "Request 5 is sent. This time the reply has no tool requests, which is the loop's only exit. The model reports the bug and stops."
+    }
+  ],
+  "steps": [
+    {
+      "text": "You ask why the login test is failing. The harness builds request 1: its system prompt, its tool definitions, and your message. That is everything the model will see.",
+      "state": {
+        "session_step": 0
+      }
+    },
+    {
+      "text": "The harness sends request 1. The model cannot open files. It replies with a request: read the failing test.",
+      "state": {
+        "session_step": 1
+      }
+    },
+    {
+      "text": "The harness runs the tool. The whole test file comes back and is appended to the conversation.",
+      "state": {
+        "session_step": 3
+      }
+    },
+    {
+      "text": "Request 2 carries everything again: system prompt, tools, your question, the model's tool call, and the test file. The model kept nothing from request 1.",
+      "state": {
+        "session_step": 4
+      }
+    },
+    {
+      "text": "The model asked for a search tool this harness does not have. The harness answers anyway, and \"Unknown tool: search\" becomes part of the conversation.",
+      "state": {
+        "session_step": 9
+      }
+    },
+    {
+      "text": "By the time the model reports the bug, five requests have been sent. Each one carried everything before it.",
+      "state": {
+        "session_step": 13
+      }
+    }
+  ],
+  "predict": {
+    "question": "Request 1 was {first_request} tokens. This session sends five requests. How big is request 5?",
+    "choices": [
+      "About the same as request 1",
+      "About twice as big",
+      "About eight times as big"
+    ],
+    "reveal": "Request 5 is {last_request} tokens, about {growth} times request 1, because it carries everything from requests 1 to 4. Across all five requests the harness sent {total_input} tokens of input. The token growth section looks at that total."
+  }
 }
