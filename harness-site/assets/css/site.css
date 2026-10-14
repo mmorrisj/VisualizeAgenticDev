@@ -744,6 +744,62 @@ kbd {
 .readout-row { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); gap: 16px; margin-top: 12px; }
 .readout-card h3 { margin-bottom: 0; }
 
+/* Extensions: decision flow. */
+.scene .flow-edge { fill: none; stroke: var(--border); stroke-width: 1.5; }
+.scene .flow-edge.is-taken { stroke: var(--accent-2); stroke-width: 3; }
+.scene .flow-arrow { fill: var(--border); }
+.scene .flow-arrow.is-taken { fill: var(--accent-2); }
+.scene .flow-edge-label { fill: var(--muted); font-size: 12px; }
+.scene .flow-edge-label.is-taken { fill: var(--accent-2); font-weight: 700; }
+.scene .flow-node rect { fill: var(--surface); stroke: var(--border); stroke-width: 1.5; }
+.scene .flow-node.is-question rect { stroke: var(--muted); }
+.scene .flow-node.is-result rect { stroke: var(--accent); }
+.scene .flow-node.is-share rect { stroke-dasharray: 4 3; }
+.scene .flow-node.is-visited rect { stroke: var(--accent-2); stroke-width: 2.5; }
+.scene .flow-node.is-here rect { fill: var(--accent-2); stroke: var(--accent-2); }
+.scene .flow-node.is-here text { fill: var(--bg); font-weight: 600; }
+.flow-question { font-size: 1.2rem; font-weight: 600; }
+.path-heading { font-size: 0.95rem; margin: 18px 0 4px; color: var(--muted); }
+.flow-path { margin: 0 0 8px; padding-left: 1.3em; font-size: 0.92rem; }
+.flow-path li { margin: 2px 0; }
+.tradeoffs dd { font-family: var(--font-text); font-weight: 500; text-align: left; }
+.tradeoffs { grid-template-columns: max-content 1fr; }
+.share-answer { margin-top: 12px; padding-left: 12px; border-left: 4px solid var(--accent-2); }
+.rules { margin: 0 0 8px; padding-left: 1.2em; max-width: 90ch; }
+.rules li { margin: 4px 0; }
+
+/* Extensions: comparison grid. */
+.grid-wrap { padding: 0; overflow: hidden; }
+.grid { width: 100%; border-collapse: collapse; font-size: 0.9rem; table-layout: fixed; }
+.grid th, .grid td { border-bottom: 1px solid var(--border); padding: 10px 12px; text-align: left; vertical-align: top; }
+.grid thead th { background: var(--surface-2); }
+.grid tbody th { width: 12%; background: var(--surface-2); }
+.grid-select {
+  font: inherit; font-weight: 700; background: none; border: none; padding: 2px 4px;
+  color: var(--text); cursor: pointer; text-align: left; border-radius: 4px;
+}
+.grid-select:hover { color: var(--accent-2); }
+.grid-select[aria-pressed="true"] { color: var(--accent-2); text-decoration: underline; text-underline-offset: 3px; }
+.grid .is-col { background: color-mix(in srgb, var(--accent-2) 12%, var(--surface)); }
+.grid thead th.is-col { background: color-mix(in srgb, var(--accent-2) 22%, var(--surface-2)); }
+.grid tr.is-row td, .grid tr.is-row th { background: color-mix(in srgb, var(--accent) 12%, var(--surface)); }
+.grid tr.is-row td.is-col { background: color-mix(in srgb, var(--accent-2) 26%, var(--surface)); }
+.flag { display: inline-block; font-weight: 700; font-size: 0.78rem; padding: 0 7px; border-radius: 999px; border: 1px solid currentColor; }
+.flag-yes { color: var(--success); }
+.flag-no { color: var(--danger); }
+.flag-partly { color: var(--warning); }
+
+/* Extensions: scenarios. */
+.scenarios { list-style: none; padding: 0; margin: 12px 0 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+.scenario-text { font-weight: 600; }
+.scenario .choices { margin: 8px 0; }
+.feedback:empty { display: none; }
+.feedback { padding-left: 12px; border-left: 4px solid var(--border); margin-bottom: 0; }
+.feedback.is-right { border-left-color: var(--success); }
+.feedback.is-wrong { border-left-color: var(--warning); }
+.chapter[aria-pressed="true"] { background: var(--accent-2); border-color: var(--accent-2); color: var(--bg); font-weight: 600; }
+.scenario-score { font-weight: 600; }
+
 /* Agent loop scene. */
 .scene .result-node .component-pill { stroke: var(--role-result); }
 .scene .result-node.is-active .component-pill { fill: var(--role-result); }

@@ -1,6 +1,302 @@
 {
-  "id": "extensions",
-  "concept": "Instructions files, skills, subagents, hooks, MCP servers, and plugins differ in when they load, what they cost, who triggers them, and whether they are guaranteed to run.",
-  "module_link": "../course/modules/05-extensibility/README.md",
-  "steps": []
+ "id": "extensions",
+ "concept": "Instructions files, skills, subagents, hooks, MCP servers, and plugins differ in when they load, what they cost, who triggers them, and whether they are guaranteed to run.",
+ "module_link": "../course/modules/05-extensibility/README.md",
+ "steps": [],
+ "source_note": "Text follows Module 5's comparison table, decision chart, and design exercise. Token costs are from the module's measured install of its example plugin.",
+ "rules_of_thumb": [
+  "If it must happen every time, it's a hook (or a permission rule), not an instruction or a skill. Only the harness can guarantee an action; the model can only be asked.",
+  "If it's needed sometimes, it's a skill, not part of the instructions file: pay for the description always, the body only when it's used."
+ ],
+ "mechanisms": [
+  {
+   "id": "instructions",
+   "label": "Instructions file",
+   "short": "Instructions",
+   "what": "A markdown file (AGENTS.md, CLAUDE.md).",
+   "loads": "Full text, on every request.",
+   "triggered": "Always present.",
+   "deterministic": "No: the model may ignore it.",
+   "deterministic_flag": "no",
+   "runs_code": "No.",
+   "runs_flag": "no"
+  },
+  {
+   "id": "skill",
+   "label": "Skill",
+   "short": "Skill",
+   "what": "A folder with SKILL.md, plus optional scripts and reference files.",
+   "loads": "Short description on every request; full body only when used. Measured: about 80 tokens always, 190 more when it runs.",
+   "triggered": "The model (matching the description) or the user (by name).",
+   "deterministic": "The instructions aren't; its scripts are, once run.",
+   "deterministic_flag": "partly",
+   "runs_code": "Yes, through the agent's normal tools and permissions.",
+   "runs_flag": "yes"
+  },
+  {
+   "id": "subagent",
+   "label": "Subagent",
+   "short": "Subagent",
+   "what": "A separate agent with its own system prompt, tools, and context.",
+   "loads": "Its own requests; only its final summary returns to the main conversation. Measured: about 40 tokens always, 130 when invoked.",
+   "triggered": "The model delegates, or the user asks.",
+   "deterministic": "No.",
+   "deterministic_flag": "no",
+   "runs_code": "Only through the tools it's allowed.",
+   "runs_flag": "partly"
+  },
+  {
+   "id": "hook",
+   "label": "Hook",
+   "short": "Hook",
+   "what": "Your script, run by the harness at a lifecycle event (before a tool call, after an edit, at session start).",
+   "loads": "None, unless its output is injected into context. Measured: no context cost.",
+   "triggered": "The harness, every time the event fires.",
+   "deterministic": "Yes.",
+   "deterministic_flag": "yes",
+   "runs_code": "Yes, as you, outside any sandbox.",
+   "runs_flag": "yes"
+  },
+  {
+   "id": "mcp",
+   "label": "MCP server",
+   "short": "MCP server",
+   "what": "A process or service that offers tools over the Model Context Protocol.",
+   "loads": "Tool names and descriptions on requests (some harnesses defer full definitions); results when called.",
+   "triggered": "The model calls its tools.",
+   "deterministic": "The server's code is; the model's choice to call it isn't.",
+   "deterministic_flag": "partly",
+   "runs_code": "Yes, with the server's own access.",
+   "runs_flag": "yes"
+  },
+  {
+   "id": "cli",
+   "label": "CLI tool",
+   "short": "CLI tool",
+   "what": "An existing command (git, psql, an internal CLI).",
+   "loads": "Nothing until used.",
+   "triggered": "The model, through the shell.",
+   "deterministic": "The tool is.",
+   "deterministic_flag": "partly",
+   "runs_code": "Yes, as you, inside the sandbox if one is on.",
+   "runs_flag": "yes"
+  },
+  {
+   "id": "plugin",
+   "label": "Plugin",
+   "short": "Plugin",
+   "what": "A packaged, versioned set of skills, subagents, hooks, and MCP servers.",
+   "loads": "The sum of its components, in every session where it's enabled.",
+   "triggered": "Installed by a user or an administrator.",
+   "deterministic": "Depends on contents.",
+   "deterministic_flag": "partly",
+   "runs_code": "Depends on contents.",
+   "runs_flag": "partly"
+  }
+ ],
+ "attributes": [
+  {
+   "id": "what",
+   "label": "What it is"
+  },
+  {
+   "id": "loads",
+   "label": "When it loads, and context cost"
+  },
+  {
+   "id": "triggered",
+   "label": "Who triggers it"
+  },
+  {
+   "id": "deterministic",
+   "label": "Deterministic?"
+  },
+  {
+   "id": "runs_code",
+   "label": "Runs code?"
+  }
+ ],
+ "flow": {
+  "start": "q1",
+  "nodes": [
+   {
+    "id": "q1",
+    "type": "question",
+    "label": "Must it happen every time?",
+    "text": "Must it happen every time, regardless of what the model decides?",
+    "yes": "r_hook",
+    "no": "q2",
+    "x": 470,
+    "y": 50
+   },
+   {
+    "id": "q2",
+    "type": "question",
+    "label": "Access to an external system?",
+    "text": "Is it access to an external system or data?",
+    "yes": "q3",
+    "no": "q4",
+    "x": 580,
+    "y": 150
+   },
+   {
+    "id": "q3",
+    "type": "question",
+    "label": "Does a good CLI exist?",
+    "text": "Does a good command-line tool already exist for it?",
+    "yes": "r_cli",
+    "no": "r_mcp",
+    "x": 390,
+    "y": 262
+   },
+   {
+    "id": "q4",
+    "type": "question",
+    "label": "Relevant to nearly every task?",
+    "text": "Is it a fact or constraint relevant to nearly every task?",
+    "yes": "r_instructions",
+    "no": "q5",
+    "x": 740,
+    "y": 262
+   },
+   {
+    "id": "q5",
+    "type": "question",
+    "label": "Lots of output, or unbiased view?",
+    "text": "Does it produce lots of output, or need an unbiased view?",
+    "yes": "r_subagent",
+    "no": "r_skill",
+    "x": 820,
+    "y": 372
+   },
+   {
+    "id": "r_hook",
+    "type": "result",
+    "label": "Hook or permission rule",
+    "mechanism": "hook",
+    "why": "Only the harness can guarantee an action; the model can only be asked.",
+    "x": 160,
+    "y": 150
+   },
+   {
+    "id": "r_cli",
+    "type": "result",
+    "label": "Use the CLI",
+    "mechanism": "cli",
+    "why": "Document the command in the instructions file or a skill. The CLI costs nothing until used and runs under the permission rules and sandbox you already have.",
+    "x": 240,
+    "y": 372
+   },
+   {
+    "id": "r_mcp",
+    "type": "result",
+    "label": "MCP server",
+    "mechanism": "mcp",
+    "why": "An external system with no CLI: the server can hold the credentials and limit what the agent can do.",
+    "x": 420,
+    "y": 372
+   },
+   {
+    "id": "r_instructions",
+    "type": "result",
+    "label": "Instructions file",
+    "mechanism": "instructions",
+    "why": "A short fact relevant to nearly every task belongs where it is always present.",
+    "x": 610,
+    "y": 372
+   },
+   {
+    "id": "r_subagent",
+    "type": "result",
+    "label": "Subagent",
+    "mechanism": "subagent",
+    "why": "Its own context keeps verbose work out of yours, and a fresh context gives an unbiased view.",
+    "x": 700,
+    "y": 482
+   },
+   {
+    "id": "r_skill",
+    "type": "result",
+    "label": "Skill",
+    "mechanism": "skill",
+    "why": "Needed sometimes: pay for the description always, the body only when it is used.",
+    "x": 860,
+    "y": 482
+   }
+  ],
+  "share_question": "Sharing it with a team?",
+  "share_yes": {
+   "label": "Package as a plugin",
+   "mechanism": "plugin",
+   "why": "A versioned bundle everyone installs from an internal marketplace. Disable plugins you are not using: every enabled component costs context in every session."
+  },
+  "share_no": "Keep it in this project.",
+  "share_position": [
+   470,
+   590
+  ],
+  "plugin_position": [
+   780,
+   590
+  ]
+ },
+ "scenarios": [
+  {
+   "id": "s1",
+   "text": "Run the code formatter after every file edit.",
+   "answer": [
+    "hook"
+   ],
+   "explanation": "Hook (after edits): it must happen every time."
+  },
+  {
+   "id": "s2",
+   "text": "Teach the agent your team's six-step release procedure, used about once a month.",
+   "answer": [
+    "skill"
+   ],
+   "explanation": "Skill: needed occasionally; the description costs little until it's used."
+  },
+  {
+   "id": "s3",
+   "text": "Let the agent look up tickets in your internal issue tracker, which has an API but no CLI.",
+   "answer": [
+    "mcp"
+   ],
+   "explanation": "MCP server: an external system with no CLI; the server can hold the credentials and limit what the agent can do."
+  },
+  {
+   "id": "s4",
+   "text": "Never allow a commit directly to main.",
+   "answer": [
+    "hook"
+   ],
+   "explanation": "Hook or permission rule, backed by branch protection on the git server: a harness control stops the agent; server-side protection stops everyone."
+  },
+  {
+   "id": "s5",
+   "text": "Get an independent review of a large diff without the bias of the session that wrote it.",
+   "answer": [
+    "subagent"
+   ],
+   "explanation": "Subagent with read-only tools: a fresh context and least privilege."
+  },
+  {
+   "id": "s6",
+   "text": "Give every developer the same skills, hooks, and servers, and update them centrally.",
+   "answer": [
+    "plugin"
+   ],
+   "explanation": "Plugin from an internal marketplace."
+  },
+  {
+   "id": "s7",
+   "text": "The test command is make test, not pytest.",
+   "answer": [
+    "instructions"
+   ],
+   "explanation": "Instructions file: a short fact relevant to nearly every task."
+  }
+ ],
+ "takeaway": "Put facts in the instructions file, procedures in skills, guarantees in hooks, systems behind MCP, and bundles in plugins. Every one of them except the first runs code as you."
 }
