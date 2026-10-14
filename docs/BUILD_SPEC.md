@@ -97,7 +97,7 @@ Note: browsers block `fetch` of local JSON from `file://` URLs. The README must 
 
 - **Tokens on `:root`:** background, surface, text, muted text, border, accent, accent-2, success, warning. Provide a dark theme under `@media (prefers-color-scheme: dark)` and a manual toggle (`data-theme` on `<html>`).
 - **Fonts:** system font stacks only (`system-ui, …` for text, `ui-monospace, …` for code). No downloaded fonts.
-- **Layout:** each section page is a two-column layout on wide screens (visual left, explanation right) and a single column below 900px. No horizontal scrolling at 360px width.
+- **Layout:** desktop only. Students use the course on desktop browsers, so optimize for 1280px and wider: two-column layouts (visual left, explanation right) that use the available width. Phones and tablets are out of scope; narrower windows need not be optimized.
 - **Visual language:** consistent across sections. The model is always drawn the same way, the harness the same way, and tool results the same color everywhere they appear.
 - **No emoji or decorative icon characters.** Use simple SVG shapes if a symbol is needed, with text labels beside them.
 - **Motion:** two kinds, with different rules.
@@ -275,7 +275,7 @@ SVG drawn at runtime by JavaScript cannot be checked statically; `scene.js` help
 Manual checks before each phase review:
 
 - Run through every section using only the keyboard.
-- Test at 360px, 768px, and 1280px widths.
+- Test at 1280px, 1440px, and 1920px widths.
 - Test light and dark themes and reduced motion.
 - Load the site with networking disabled and confirm nothing is missing.
 - Test in the browsers your network approves.
@@ -342,3 +342,4 @@ Copy the course folder into the repo under `course/`, or give the agent access t
 - Mapped the "use a CLI" result to existing mechanisms; plugin question applies after every result (section 6.5).
 - `check.py`: allowlisted SVG namespace URIs, banned absolute URLs in JSON too, specified emoji ranges, added JS import checks (section 8).
 - Phases: design-language approval gate, and the agent loop as a vertical slice with user feedback before the other sections (section 9).
+- Desktop only: phone and tablet layouts dropped from scope (sections 5 and 8).
