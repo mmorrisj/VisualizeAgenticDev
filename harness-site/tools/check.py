@@ -60,7 +60,8 @@ BANNED_WORD_RE = re.compile(r"beginner", re.IGNORECASE)
 # Required keys per content file. Extend as phases add content.
 SECTION_KEYS = {"id": str, "concept": str, "module_link": str, "steps": list}
 LOOP_KEYS = {**SECTION_KEYS, "tokens_per_block": int, "fixed": list, "session": list, "predict": dict}
-ANATOMY_KEYS = {**SECTION_KEYS, "components": list, "model": dict, "model_only": str, "intro": str, "bubble": dict}
+ANATOMY_KEYS = {**SECTION_KEYS, "components": list, "model": dict, "model_only": str, "intro": str, "bubble": dict,
+                "phases": list, "tour_intro": str}
 # Must match COMPONENTS in assets/js/scene.js, which draws them.
 HARNESS_COMPONENTS = {"instructions", "tools", "context", "permissions", "memory", "interface"}
 COMPONENT_KEYS = {"id": str, "label": str, "example": str, "what": str, "why": str, "module_title": str, "module_link": str}
@@ -202,8 +203,23 @@ def check_anatomy(report: Report, path: pathlib.Path, data: dict) -> None:
     # Tour stops: each names where the line goes, and optionally where it
     # passes on the way.
     places = HARNESS_COMPONENTS | {"you", "model", "world"}
+    phases = {ph.get("id") for ph in data.get("phases", []) if isinstance(ph, dict)}
+    if not phases:
+        report.error(path, "phases must list at least one {id, label}")
+    last_request = 0
     for i, step in enumerate(data.get("steps", [])):
         state = step.get("state", {}) if isinstance(step, dict) else {}
+        if state.get("phase") not in phases:
+            report.error(path, f"steps[{i}].state.phase must be one of {sorted(phases)}")
+        if "wire" in state and not isinstance(state["wire"], str):
+            report.error(path, f"steps[{i}].state.wire must be text")
+        if "request" in state:
+            check_keys(report, path, state["request"], {"number": int, "tokens": int}, f"steps[{i}].state.request")
+            number = state["request"].get("number") if isinstance(state["request"], dict) else None
+            if isinstance(number, int):
+                if number != last_request + 1:
+                    report.error(path, f"steps[{i}].state.request.number should be {last_request + 1}")
+                last_request = number
         if state.get("target") not in places:
             report.error(path, f"steps[{i}].state.target must be one of {sorted(places)}")
         if not isinstance(state.get("title"), str):

@@ -626,7 +626,30 @@ code, .mono { font-family: var(--font-mono); font-size: 0.92em; }
 .scene .world.is-active .world-shape { stroke: var(--accent-2); stroke-width: 2.5; stroke-dasharray: none; }
 
 .tour-caption h3 { font-size: 1.25rem; margin-bottom: 6px; }
-.tour-caption [aria-live] { min-height: 9.5em; }
+.tour-caption [aria-live] { min-height: 16em; }
+
+/* What actually crosses the wire at this stop: tool calls, results, diffs. */
+.wire {
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  line-height: 1.5;
+  margin: 0 0 8px;
+  padding: 10px 12px;
+  background: var(--surface-2);
+  border-left: 3px solid var(--accent-2);
+  border-radius: var(--radius-sm);
+  overflow-x: auto;
+  white-space: pre;
+  max-width: 100%;
+}
+
+.wire-del { color: var(--danger); }
+.wire-add { color: var(--success); }
+
+.meter { margin: 6px 0 10px; font-size: 0.85rem; color: var(--muted); }
+.meter-row { display: flex; justify-content: space-between; gap: 8px; }
+.meter-track { height: 6px; background: var(--surface-2); border-radius: 3px; overflow: hidden; margin-top: 4px; }
+.meter-track > div { height: 100%; background: var(--accent-2); opacity: 0.7; transition: width var(--dur-ui) var(--ease); }
 .tour-progress { height: 3px; background: var(--surface-2); border-radius: 2px; overflow: hidden; margin: 4px 0 2px; }
 .tour-progress > div { height: 100%; width: 0; background: var(--accent-2); }
 

@@ -34,6 +34,7 @@
     <!-- Tour: press Play and a line follows one request through the harness. -->
     <section class="section-block" aria-labelledby="tour-heading">
       <h2 id="tour-heading">Follow a request</h2>
+      <p class="note" id="tour-intro"></p>
       <div class="sandbox tour-player">
         <div class="visual-frame" id="tour-scene"></div>
 
@@ -42,6 +43,11 @@
           <div aria-live="polite">
             <h3 id="tour-title"></h3>
             <p id="tour-text"></p>
+            <pre class="wire" id="tour-wire" hidden></pre>
+          </div>
+          <div class="meter" id="tour-meter" hidden>
+            <div class="meter-row"><span id="tour-meter-label"></span><span class="mono" id="tour-meter-value"></span></div>
+            <div class="meter-track" aria-hidden="true"><div id="tour-meter-bar"></div></div>
           </div>
           <div class="tour-progress" aria-hidden="true"><div id="tour-progress"></div></div>
           <div class="stepper">
@@ -50,7 +56,7 @@
             <button type="button" class="button" id="tour-next">Next</button>
             <button type="button" class="button" id="tour-restart">Restart</button>
           </div>
-          <nav aria-label="Stops on the tour">
+          <nav aria-label="Phases of the request">
             <ol class="chapters" id="tour-chapters"></ol>
           </nav>
         </div>
