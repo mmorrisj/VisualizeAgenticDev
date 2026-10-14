@@ -4,83 +4,284 @@
   "module_link": "../course/README.md",
   "steps": [
     {
-      "text": "You type \"Why is the login test failing?\" The harness starts a conversation: a list of messages it owns, beginning with yours.",
+      "text": "You open a session in the practice app and describe the bug, without saying which file it is in.",
       "state": {
+        "phase": "start",
         "target": "you",
-        "title": "Your message"
+        "title": "You ask",
+        "wire": "> Accounts with an empty password hash accept any password. Fix it."
       }
     },
     {
-      "text": "The interface (terminal, editor, web page, or SDK) collects your message and will show you every tool call, permission prompt, and result as the loop runs.",
+      "text": "The interface takes your message. For the rest of the session it is where every tool call, permission prompt, and result appears.",
       "state": {
+        "phase": "start",
         "target": "interface",
-        "title": "Interface"
+        "title": "Interface",
+        "wire": "mini-harness  session c7e5d25e\n  loaded:  AGENTS.md (17 lines)\n  policy:  policies/default.json  · default mode: ask"
       }
     },
     {
-      "text": "The harness builds the system prompt: its instructions for behaving and using tools, plus environment details. It is sent at the top of every request, and you usually never see it.",
+      "text": "At session start the harness looks for AGENTS.md and CLAUDE.md in the working directory. This repository has an AGENTS.md: commands, layout, and rules such as \"a task is done only when python3 run_tests.py -q passes\".",
       "state": {
+        "phase": "start",
+        "target": "memory",
+        "title": "Memory",
+        "wire": "## Layout\n- `src/auth.py`: password hashing and verification\n- `src/users.py`: user records\n...\n## Rules\n- A task is done only when `python3 run_tests.py -q` passes"
+      }
+    },
+    {
+      "text": "The harness builds the system prompt: its own instructions, environment details, and the full text of AGENTS.md. This exact text is re-sent at the top of every request in the session.",
+      "state": {
+        "phase": "start",
         "target": "instructions",
-        "title": "Instructions"
+        "title": "Instructions",
+        "wire": "You are a coding agent working in a local repository.\nUse the tools to inspect files and run commands. Prefer small, verifiable changes.\n...\nEnvironment: working directory ~/practice-app; platform linux\n\nProject instructions from AGENTS.md:\n# practice-app: agent instructions ..."
       }
     },
     {
-      "text": "The harness assembles the request: system prompt, the definition of every tool, and the full conversation so far. When that nears the context limit, it drops or summarizes older tool output to fit.",
+      "text": "The harness assembles request 1: the system prompt, the definitions of all five tools (read_file, list_files, search, run_command, edit_file), and your one message.",
       "state": {
+        "phase": "start",
         "target": "context",
-        "title": "Context"
+        "title": "Context",
+        "wire": "system:   instructions + environment + AGENTS.md\ntools:    read_file, list_files, search, run_command, edit_file\nmessages: [ user: \"Accounts with an empty password hash ...\" ]",
+        "request": {
+          "number": 1,
+          "tokens": 638
+        }
       }
     },
     {
-      "text": "The model reads the whole request and returns text. Here that text contains a tool_use block: call read_file with path tests/test_login.py. It is a request, not an action.",
+      "text": "The model reads all 638 tokens. It does not know which file holds the bug, so it asks for a search. It replies with text plus a tool_use block; nothing has run yet.",
       "state": {
+        "phase": "find",
         "target": "model",
-        "title": "The model"
+        "title": "The model decides",
+        "wire": "{\"type\": \"tool_use\", \"id\": \"call_01\", \"name\": \"search\",\n \"input\": {\"pattern\": \"stored_hash\", \"path\": \"src\"}}"
       }
     },
     {
-      "text": "The harness matches the tool name to code it has. If the name is unknown, it does not fail: it answers \"Unknown tool\", and that answer goes back to the model like any result.",
+      "text": "The harness matches the name to its search tool: a regular expression run over every file under src/, skipping .git and any file the read rules deny, so search cannot leak a file you blocked.",
       "state": {
+        "phase": "find",
         "target": "tools",
-        "title": "Tools"
+        "title": "Tools: search"
       }
     },
     {
-      "text": "Before running anything, the harness checks its rules. A matching deny always wins, a matching ask beats an allow, and anything unmatched prompts you. A denial goes back to the model as text: \"Permission denied by user.\"",
+      "text": "The default policy allows read-only tools without asking. search matches the allow rule, so it runs with no prompt.",
       "state": {
+        "phase": "find",
         "target": "permissions",
-        "title": "Permissions"
+        "title": "Permissions: allowed by rule",
+        "wire": "allow: read_file, list_files, search,\n       run_command(python3 run_tests.py*), git status/diff/log\ndecision: allow  (rule: search)"
       }
     },
     {
-      "text": "Only now does anything touch your system. The harness runs the tool as your operating-system user, with path checks that keep file tools inside the working directory.",
+      "text": "The search walks every file under src/ and returns each matching line as path:line: text. Seven lines in two files match.",
       "state": {
+        "phase": "find",
         "target": "world",
-        "title": "Your files"
+        "title": "Your files: grep",
+        "wire": "src/auth.py:12: def check_hash(password: str, stored_hash: str) -> bool:\nsrc/auth.py:13: return hmac.compare_digest(hash_password(password), stored_hash)\nsrc/auth.py:16: def verify_password(password: str, stored_hash: str) -> bool:\nsrc/auth.py:17: if not stored_hash:\nsrc/auth.py:19: return check_hash(password, stored_hash)\nsrc/users.py:13: def make_user(name: str = \"test-user\", stored_hash: str = \"\") -> User:\nsrc/users.py:15: return User(name=name, hash=stored_hash)"
       }
     },
     {
-      "text": "The output becomes a tool_result block, paired to the request by its tool_use_id, and is appended to the conversation. The harness sends everything again, and the model decides its next step.",
+      "text": "The matches go back as a tool_result, paired to call_01, and the harness sends request 2 with everything so far. The model sees two candidate files and decides to read users.py first.",
       "state": {
+        "phase": "find",
         "target": "model",
         "title": "Result returns",
         "via": [
           "tools"
-        ]
+        ],
+        "wire": "{\"type\": \"tool_use\", \"id\": \"call_02\", \"name\": \"read_file\",\n \"input\": {\"path\": \"src/users.py\"}}",
+        "request": {
+          "number": 2,
+          "tokens": 839
+        }
       }
     },
     {
-      "text": "None of this conversation survives the session. The only thing carried forward is memory files such as AGENTS.md or CLAUDE.md, which the harness reads at startup and places in the system prompt.",
+      "text": "read_file is allowed by rule. When it runs, the tool resolves the path and refuses anything outside the working directory. That scope check covers file tools only, not run_command.",
       "state": {
-        "target": "memory",
-        "title": "Memory"
+        "phase": "read",
+        "target": "permissions",
+        "title": "Permissions: allowed by rule",
+        "via": [
+          "tools"
+        ],
+        "wire": "decision: allow  (rule: read_file)"
       }
     },
     {
-      "text": "When the model replies with no tool_use blocks, the loop ends: that is its only exit. The interface shows the final text, after however many request, tool, and result cycles it took.",
+      "text": "The file comes back whole. The model learns that make_user stores an empty hash by default, so the empty case is real and must be handled where the hash is checked.",
       "state": {
+        "phase": "read",
+        "target": "world",
+        "title": "Read src/users.py",
+        "wire": "def make_user(name: str = \"test-user\", stored_hash: str = \"\") -> User:\n    \"\"\"Build a User directly from a stored hash ...\"\"\"\n    return User(name=name, hash=stored_hash)"
+      }
+    },
+    {
+      "text": "Request 3 carries both results so far. The model asks for the other file the search found.",
+      "state": {
+        "phase": "read",
+        "target": "model",
+        "title": "Loop again: next file",
+        "via": [
+          "tools"
+        ],
+        "wire": "{\"type\": \"tool_use\", \"id\": \"call_03\", \"name\": \"read_file\",\n \"input\": {\"path\": \"src/auth.py\"}}",
+        "request": {
+          "number": 3,
+          "tokens": 1064
+        }
+      }
+    },
+    {
+      "text": "Allowed by the same rule. The whole file is appended to the conversation, and will stay there, in this version, for the rest of the session.",
+      "state": {
+        "phase": "read",
+        "target": "world",
+        "title": "Read src/auth.py",
+        "via": [
+          "tools",
+          "permissions"
+        ],
+        "wire": "16  def verify_password(password: str, stored_hash: str) -> bool:\n17      if not stored_hash:\n18          return True\n19      return check_hash(password, stored_hash)"
+      }
+    },
+    {
+      "text": "Request 4. The model pinpoints lines 17 and 18: an empty stored hash returns True, so any password passes. It asks for an edit that replaces exactly that text.",
+      "state": {
+        "phase": "read",
+        "target": "model",
+        "title": "Identify the section",
+        "via": [
+          "tools"
+        ],
+        "wire": "{\"type\": \"tool_use\", \"id\": \"call_04\", \"name\": \"edit_file\",\n \"input\": {\"path\": \"src/auth.py\",\n   \"old_text\": \"    if not stored_hash:\\n        return True\",\n   \"new_text\": \"    if not stored_hash:\\n        return False\"}}",
+        "request": {
+          "number": 4,
+          "tokens": 1278
+        }
+      }
+    },
+    {
+      "text": "edit_file replaces one exact occurrence of old_text. If that text appears zero times or more than once, the harness refuses and sends the error back to the model instead of guessing.",
+      "state": {
+        "phase": "edit",
+        "target": "tools",
+        "title": "Tools: edit_file"
+      }
+    },
+    {
+      "text": "No allow rule matches edit_file, and the policy's default mode is ask. The harness pauses the loop and asks you.",
+      "state": {
+        "phase": "edit",
+        "target": "permissions",
+        "title": "Permissions: ask",
+        "wire": "[permission needed] edit_file  (default mode)"
+      }
+    },
+    {
+      "text": "The interface shows the change as a diff before anything is written. You can allow it once, allow it for the rest of the session, or deny it with a reason the model will read.",
+      "state": {
+        "phase": "edit",
+        "target": "you",
+        "title": "You review the diff",
+        "via": [
+          "interface"
+        ],
+        "wire": "--- src/auth.py\n+++ src/auth.py\n@@ -16,4 +16,4 @@\n def verify_password(password: str, stored_hash: str) -> bool:\n     if not stored_hash:\n-        return True\n+        return False\n     return check_hash(password, stored_hash)\nAllow? [y] once  [a] always this session  [n] deny"
+      }
+    },
+    {
+      "text": "You allow it once. Only now does the harness write to disk. The copy of auth.py read earlier is still in the conversation, now out of date.",
+      "state": {
+        "phase": "edit",
+        "target": "world",
+        "title": "The file is written",
+        "via": [
+          "interface",
+          "permissions"
+        ],
+        "wire": "Edited src/auth.py"
+      }
+    },
+    {
+      "text": "Request 5. The model has the edit's result, and AGENTS.md says a task is done only when the tests pass, so it asks to run them.",
+      "state": {
+        "phase": "edit",
+        "target": "model",
+        "title": "Result returns",
+        "via": [
+          "tools"
+        ],
+        "wire": "{\"type\": \"tool_use\", \"id\": \"call_05\", \"name\": \"run_command\",\n \"input\": {\"command\": \"python3 run_tests.py -q\",\n           \"description\": \"Run the test suite\"}}",
+        "request": {
+          "number": 5,
+          "tokens": 1397
+        }
+      }
+    },
+    {
+      "text": "The harness splits the command at &&, ;, | and similar before matching, so nothing can be chained on. python3 run_tests.py -q matches an allow rule and runs without a prompt.",
+      "state": {
+        "phase": "verify",
+        "target": "permissions",
+        "title": "Permissions: command rule",
+        "via": [
+          "tools"
+        ],
+        "wire": "decision: allow  (rule: run_command(python3 run_tests.py*))"
+      }
+    },
+    {
+      "text": "The command runs as your user, with a 60-second timeout. Long output would be cut in the middle; this output is short.",
+      "state": {
+        "phase": "verify",
+        "target": "world",
+        "title": "Tests run",
+        "wire": "exit code 0\n6 passed"
+      }
+    },
+    {
+      "text": "Request 6. This time the reply has no tool_use blocks, which is the loop's only exit. Six requests, each carrying everything before it, sent 6,730 tokens of input in total.",
+      "state": {
+        "phase": "verify",
+        "target": "model",
+        "title": "The loop ends",
+        "via": [
+          "tools"
+        ],
+        "wire": "Fixed: verify_password() in src/auth.py now returns False when the\nstored hash is empty, so accounts with no password reject every login.\nAll tests pass.",
+        "request": {
+          "number": 6,
+          "tokens": 1514
+        }
+      }
+    },
+    {
+      "text": "The summary appears in the interface. It is the model's claim; the test output and the diff are the evidence. Read the diff before you commit.",
+      "state": {
+        "phase": "finish",
         "target": "you",
         "title": "The answer",
+        "via": [
+          "interface"
+        ],
+        "wire": "$ git diff src/auth.py\n-        return True\n+        return False"
+      }
+    },
+    {
+      "text": "When the session ends, none of these six requests carry over. The next session starts from AGENTS.md alone. If something here is worth knowing next time, it belongs in that file.",
+      "state": {
+        "phase": "finish",
+        "target": "memory",
+        "title": "After the session",
         "via": [
           "interface"
         ]
@@ -152,6 +353,33 @@
       "why": "It affects your workflow more than what the tool can do.",
       "module_title": "Screen walkthrough",
       "module_link": "../course/ui-walkthrough/README.md"
+    }
+  ],
+  "tour_intro": "One request, start to finish: you ask the agent to fix a bug without saying which file it is in. Recorded by running the course's mini-harness on the practice app with a scripted model, the default permission policy, and the Module 3 AGENTS.md.",
+  "phases": [
+    {
+      "id": "start",
+      "label": "Session start"
+    },
+    {
+      "id": "find",
+      "label": "Find the code"
+    },
+    {
+      "id": "read",
+      "label": "Read before writing"
+    },
+    {
+      "id": "edit",
+      "label": "Make the edit"
+    },
+    {
+      "id": "verify",
+      "label": "Verify"
+    },
+    {
+      "id": "finish",
+      "label": "Finish"
     }
   ]
 }

@@ -86,6 +86,23 @@ function legFor(steps, index, handles) {
   return parts.join(" ");
 }
 
+/**
+ * Show a stop's payload. Diff lines are tinted like a terminal; the leading
+ * - and + stay visible, so color is never the only cue.
+ */
+function renderWire(pre, wire) {
+  pre.hidden = !wire;
+  pre.replaceChildren();
+  if (!wire) return;
+  for (const line of wire.split("\n")) {
+    const span = document.createElement("span");
+    if (line.startsWith("-") && !line.startsWith("---")) span.className = "wire-del";
+    if (line.startsWith("+") && !line.startsWith("+++")) span.className = "wire-add";
+    span.textContent = `${line}\n`;
+    pre.append(span);
+  }
+}
+
 /* Tour: player ------------------------------------------------------------------------ */
 
 function createTour(content, els) {
@@ -96,8 +113,12 @@ function createTour(content, els) {
   let timer = 0;
   let frame = 0;
 
-  // Reading time for a caption: about 4 words a second, plus a pause.
-  const dwell = (step) => 1500 + step.text.split(/\s+/).length * 240;
+  // Reading time for a stop: about 4 words a second for the caption, plus
+  // time to glance at each line of the payload, plus a pause.
+  const dwell = (step) => 1500 + step.text.split(/\s+/).length * 240
+    + (step.state.wire ? step.state.wire.split("\n").length * 700 : 0);
+  const maxTokens = Math.max(...steps.map((s) => s.state.request?.tokens || 0));
+  const fmt = (n) => n.toLocaleString("en-US");
 
   function stopMotion() {
     window.clearTimeout(timer);
@@ -149,16 +170,33 @@ function createTour(content, els) {
     frame = window.requestAnimationFrame(tick);
   }
 
+  // The request shown is the latest one sent at or before this stop.
+  function requestAt(i) {
+    for (let k = i; k >= 0; k -= 1) if (steps[k].state.request) return steps[k].state.request;
+    return null;
+  }
+
   function renderCaption() {
     const step = steps[index];
+    const phase = content.phases.find((ph) => ph.id === step.state.phase);
     els.title.textContent = step.state.title;
     els.text.textContent = step.text;
-    els.status.textContent = `Stop ${index + 1} of ${steps.length}`;
+    els.status.textContent = `${phase ? phase.label : ""} · stop ${index + 1} of ${steps.length}`;
+
+    renderWire(els.wire, step.state.wire);
+
+    const req = requestAt(index);
+    els.meter.hidden = !req;
+    if (req) {
+      els.meterLabel.textContent = `Request ${req.number}`;
+      els.meterValue.textContent = `${fmt(req.tokens)} tokens`;
+      els.meterBar.style.width = `${(req.tokens / maxTokens) * 100}%`;
+    }
     els.back.disabled = index === 0;
     els.next.disabled = index === steps.length - 1;
     els.play.textContent = playing ? "Pause" : index === steps.length - 1 ? "Play again" : "Play";
-    els.chapters.querySelectorAll("button").forEach((b, i) => {
-      if (i === index) b.setAttribute("aria-current", "step");
+    els.chapters.querySelectorAll("button").forEach((b) => {
+      if (b.dataset.phase === step.state.phase) b.setAttribute("aria-current", "step");
       else b.removeAttribute("aria-current");
     });
     highlight(handles, step.state.target);
@@ -201,17 +239,21 @@ function createTour(content, els) {
   els.next.addEventListener("click", () => { playing = false; goTo(index + 1, { animated: true }); });
   els.restart.addEventListener("click", () => { playing = false; goTo(0); });
 
+  // One button per phase; each jumps to the phase's first stop.
   els.chapters.replaceChildren();
-  steps.forEach((step, i) => {
+  for (const phase of content.phases) {
+    const first = steps.findIndex((s) => s.state.phase === phase.id);
+    if (first < 0) continue;
     const li = document.createElement("li");
     const b = document.createElement("button");
     b.type = "button";
     b.className = "chapter";
-    b.textContent = step.state.title;
-    b.addEventListener("click", () => { playing = false; goTo(i); });
+    b.dataset.phase = phase.id;
+    b.textContent = phase.label;
+    b.addEventListener("click", () => { playing = false; goTo(first); });
     li.append(b);
     els.chapters.append(li);
-  });
+  }
 
   // Clicking a part of the diagram jumps to its first stop.
   const jumpTo = (id) => {
@@ -349,7 +391,13 @@ async function main() {
     next: document.getElementById("tour-next"),
     restart: document.getElementById("tour-restart"),
     chapters: document.getElementById("tour-chapters"),
+    wire: document.getElementById("tour-wire"),
+    meter: document.getElementById("tour-meter"),
+    meterLabel: document.getElementById("tour-meter-label"),
+    meterValue: document.getElementById("tour-meter-value"),
+    meterBar: document.getElementById("tour-meter-bar"),
   });
+  document.getElementById("tour-intro").textContent = content.tour_intro;
   createSandbox(content);
 }
 
