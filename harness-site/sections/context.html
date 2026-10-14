@@ -31,25 +31,113 @@
     <h1>The context window</h1>
     <p class="concept" data-content="concept"></p>
 
-    <section class="panel" aria-labelledby="status-heading">
-      <h2 id="status-heading">Being built</h2>
-      <p>The guided narrative and sandbox for this section arrive in Phase 3.</p>
+    <p class="note"><span class="badge">Measured</span> The replay and Lab A come from running the course's harness. <span class="badge">Illustrative</span> The simulator is a simplified model.</p>
+
+    <!-- 1. Replay of Module 3 Lab B. -->
+    <section class="section-block" aria-labelledby="replay-title">
+      <h2 id="replay-title"></h2>
+      <p class="note" id="replay-intro"></p>
+      <div class="sandbox">
+        <div>
+          <div class="visual-frame" id="replay-scene"></div>
+          <ul class="legend context-legend"></ul>
+        </div>
+        <aside class="panel">
+          <p class="stage-label" id="replay-status"></p>
+          <div aria-live="polite">
+            <p id="replay-caption"></p>
+            <p class="note" id="replay-call"></p>
+          </div>
+          <dl class="readouts">
+            <dt>Request size</dt><dd id="replay-size"></dd>
+            <dt>Share of the window</dt><dd id="replay-share"></dd>
+            <dt>Compactions so far</dt><dd id="replay-compactions"></dd>
+            <dt>Total input sent</dt><dd id="replay-total"></dd>
+          </dl>
+          <div class="stepper">
+            <button type="button" class="button" id="replay-prev">Back</button>
+            <button type="button" class="button button-primary" id="replay-next">Next</button>
+            <button type="button" class="button" id="replay-restart">Start over</button>
+          </div>
+          <p class="note keys">Keys: <kbd>Left</kbd> <kbd>Right</kbd> step</p>
+        </aside>
+      </div>
     </section>
 
-    <p class="section-block"><a href="../index.html" data-content="module-link">Go deeper in the written module</a></p>
+    <!-- 2. Module 3 Lab A: what an instructions file costs. -->
+    <section class="section-block" aria-labelledby="laba-title">
+      <h2 id="laba-title"></h2>
+      <p class="note" id="laba-intro"></p>
+      <div class="visual-frame" id="laba-scene"></div>
+      <ul class="legend" id="laba-legend"></ul>
+    </section>
+
+    <!-- 3. Simulator. -->
+    <section class="section-block" aria-labelledby="sim-title">
+      <h2 id="sim-title"></h2>
+      <p class="note" id="sim-intro"></p>
+      <div class="sim-controls panel">
+        <div class="sim-field">
+          <label for="sim-instructions">Instructions file</label>
+          <input type="range" id="sim-instructions">
+          <output for="sim-instructions" id="sim-instructions-out"></output>
+        </div>
+        <div class="sim-field">
+          <label for="sim-tools">Tool definitions (each MCP server adds more)</label>
+          <input type="range" id="sim-tools">
+          <output for="sim-tools" id="sim-tools-out"></output>
+        </div>
+        <div class="sim-field">
+          <label for="sim-result">Average tool result</label>
+          <input type="range" id="sim-result">
+          <output for="sim-result" id="sim-result-out"></output>
+        </div>
+        <div class="sim-field">
+          <label for="sim-steps">Requests in the session</label>
+          <input type="range" id="sim-steps">
+          <output for="sim-steps" id="sim-steps-out"></output>
+        </div>
+        <div class="sim-field">
+          <span class="sim-label" id="sim-limit-label">Context limit (tokens)</span>
+          <div class="choices" id="sim-limit" role="group" aria-labelledby="sim-limit-label"></div>
+        </div>
+        <div class="sim-field">
+          <span class="sim-label" id="sim-presets-label">Presets</span>
+          <div class="choices" id="sim-presets" role="group" aria-labelledby="sim-presets-label"></div>
+        </div>
+      </div>
+      <div class="sandbox section-block">
+        <div>
+          <div class="visual-frame" id="sim-scene"></div>
+          <ul class="legend context-legend"></ul>
+          <p class="note">Select a bar in the chart (or use <kbd>Left</kbd> <kbd>Right</kbd>) to see that request in the window. <span class="badge">Illustrative numbers</span></p>
+        </div>
+        <aside class="panel">
+          <div aria-live="polite">
+            <p id="sim-summary"></p>
+            <p id="sim-overhead"></p>
+          </div>
+          <dl class="readouts">
+            <dt>Requests sent</dt><dd id="sim-requests"></dd>
+            <dt>Compactions</dt><dd id="sim-compactions"></dd>
+            <dt>Largest request</dt><dd id="sim-peak"></dd>
+            <dt>Total input</dt><dd id="sim-total"></dd>
+          </dl>
+        </aside>
+      </div>
+    </section>
+
+    <p class="section-block"><a href="../index.html" data-content="module-link">Go deeper: Module 3, Context engineering</a></p>
+    <p class="note" id="source-note"></p>
   </main>
 
   <footer class="site-footer">
     <div class="site-footer-inner">
-      <span>All numbers on this site are illustrative.</span>
+      <span>Numbers come from running the course harness unless marked illustrative.</span>
       <span><a href="../index.html">Course map</a></span>
     </div>
   </footer>
 
-  <script type="module">
-    import { initPage, initSection } from "../assets/js/common.js";
-    initPage();
-    initSection("context");
-  </script>
+  <script type="module" src="../assets/js/context.js"></script>
 </body>
 </html>

@@ -70,7 +70,7 @@ CONTENT_SCHEMAS = {
     "site.json": {"title": str, "description": str, "written_course_link": str, "sections": list},
     "anatomy.json": ANATOMY_KEYS,
     "loop.json": LOOP_KEYS,
-    "context.json": SECTION_KEYS,
+    "context.json": {**SECTION_KEYS, "source_note": str, "replay": dict, "lab_a": dict, "simulator": dict},
     "tokens.json": SECTION_KEYS,
     "extensions.json": SECTION_KEYS,
     "quizzes.json": {"review": dict, "questions": list},
@@ -171,6 +171,8 @@ def check_content(report: Report) -> None:
                     report.error(path, f"sections[{i}].page '{page}' does not exist")
         for i, step in enumerate(data.get("steps", []) if isinstance(data, dict) else []):
             check_keys(report, path, step, STEP_KEYS, f"steps[{i}]")
+        if path.name == "context.json" and isinstance(data, dict):
+            check_context(report, path, data)
         if path.name == "anatomy.json" and isinstance(data, dict):
             check_anatomy(report, path, data)
         if path.name == "loop.json" and isinstance(data, dict):
@@ -188,6 +190,38 @@ def check_content(report: Report) -> None:
         for link in find_links(data):
             if is_relative_reference(link) and not (SITE_ROOT / urlsplit(link).path).resolve().exists():
                 report.warn(path, f"link target not found (is course/ copied in?): {link}")
+
+
+def check_context(report: Report, path: pathlib.Path, data: dict) -> None:
+    """Replay parts must add up to each request's measured size; simulator
+    defaults and presets must sit inside their slider ranges."""
+    replay = data.get("replay", {})
+    check_keys(report, path, replay, {"title": str, "intro": str, "limit": int, "threshold": float, "requests": list}, "replay")
+    for i, req in enumerate(replay.get("requests", [])):
+        check_keys(report, path, req, {"n": int, "reported": int, "parts": dict, "results": list, "caption": str}, f"replay.requests[{i}]")
+        if not isinstance(req, dict) or not isinstance(req.get("parts"), dict):
+            continue
+        parts = sum(v for v in req["parts"].values() if isinstance(v, int))
+        results = sum(r.get("tokens", 0) for r in req.get("results", []) if isinstance(r, dict))
+        if parts + results != req.get("reported"):
+            report.error(path, f"replay.requests[{i}]: parts and results sum to {parts + results}, not {req.get('reported')}")
+    sim = data.get("simulator", {})
+    check_keys(report, path, sim, {"title": str, "intro": str, "ranges": dict, "defaults": dict, "presets": list, "limits": list,
+                                   "system_tokens": int, "tokens_per_tool": int, "user_message_tokens": int,
+                                   "model_message_tokens": int, "stub_tokens": int, "keep_recent_results": int,
+                                   "result_pattern": list}, "simulator")
+    ranges = sim.get("ranges", {}) if isinstance(sim.get("ranges"), dict) else {}
+    named = [("defaults", sim.get("defaults", {}))] + [(f"presets[{i}]", p.get("values", {})) for i, p in enumerate(sim.get("presets", [])) if isinstance(p, dict)]
+    for where, values in named:
+        for key, value in values.items():
+            lo_hi = ranges.get(key)
+            if lo_hi and not lo_hi[0] <= value <= lo_hi[1]:
+                report.error(path, f"simulator.{where}.{key} = {value} is outside its range {lo_hi[:2]}")
+    if sim.get("defaults", {}).get("limit") not in sim.get("limits", []):
+        report.error(path, "simulator.defaults.limit must be one of simulator.limits")
+    pattern = sim.get("result_pattern", [])
+    if pattern and abs(sum(pattern) / len(pattern) - 1) > 0.01:
+        report.error(path, "simulator.result_pattern must average 1.0, so the average-result control is accurate")
 
 
 def check_anatomy(report: Report, path: pathlib.Path, data: dict) -> None:

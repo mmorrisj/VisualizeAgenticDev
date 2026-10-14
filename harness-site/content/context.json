@@ -1,6 +1,889 @@
 {
-  "id": "context",
-  "concept": "Fixed overhead is paid on every request, tool results accumulate, and compaction loses detail.",
-  "module_link": "../course/modules/03-context-engineering/README.md",
-  "steps": []
+ "id": "context",
+ "concept": "Fixed overhead is paid on every request, tool results accumulate, and compaction loses detail.",
+ "module_link": "../course/modules/03-context-engineering/README.md",
+ "steps": [],
+ "source_note": "Replay and Lab A numbers were measured by running the course's mini-harness with its mock model; sizes use its estimate of about 4 characters per token. The simulator below is a simplified model of the same harness; its numbers are illustrative.",
+ "replay": {
+  "title": "Replay: Module 3, Lab B",
+  "intro": "The course's long-session scenario, run with a deliberately small 2,500-token window so compaction happens. Step through the 15 requests.",
+  "limit": 2500,
+  "threshold": 0.8,
+  "requests": [
+   {
+    "n": 1,
+    "reported": 423,
+    "parts": {
+     "system": 100,
+     "tools": 297,
+     "instructions": 0,
+     "conversation": 26
+    },
+    "results": [],
+    "compacted": null,
+    "call": "list_files .",
+    "caption": "You ask for a review of the whole project: a broad request. Request 1 is mostly fixed overhead: the system prompt and the definitions of five tools."
+   },
+   {
+    "n": 2,
+    "reported": 559,
+    "parts": {
+     "system": 100,
+     "tools": 297,
+     "instructions": 0,
+     "conversation": 87
+    },
+    "results": [
+     {
+      "label": "list_files .",
+      "tokens": 75,
+      "removed": false
+     }
+    ],
+    "compacted": null,
+    "call": "read_file src/auth.py",
+    "caption": "The model lists the files. The listing comes back as the first tool result, and joins every request from now on."
+   },
+   {
+    "n": 3,
+    "reported": 743,
+    "parts": {
+     "system": 100,
+     "tools": 297,
+     "instructions": 0,
+     "conversation": 128
+    },
+    "results": [
+     {
+      "label": "list_files .",
+      "tokens": 75,
+      "removed": false
+     },
+     {
+      "label": "read_file src/auth.py",
+      "tokens": 143,
+      "removed": false
+     }
+    ],
+    "compacted": null,
+    "call": "read_file src/users.py",
+    "caption": "It reads src/auth.py. File contents are the largest thing a session accumulates."
+   },
+   {
+    "n": 4,
+    "reported": 942,
+    "parts": {
+     "system": 100,
+     "tools": 297,
+     "instructions": 0,
+     "conversation": 170
+    },
+    "results": [
+     {
+      "label": "list_files .",
+      "tokens": 75,
+      "removed": false
+     },
+     {
+      "label": "read_file src/auth.py",
+      "tokens": 143,
+      "removed": false
+     },
+     {
+      "label": "read_file src/users.py",
+      "tokens": 157,
+      "removed": false
+     }
+    ],
+    "compacted": null,
+    "call": "read_file src/audit.py",
+    "caption": "src/users.py. Each request carries everything before it."
+   },
+   {
+    "n": 5,
+    "reported": 1069,
+    "parts": {
+     "system": 100,
+     "tools": 297,
+     "instructions": 0,
+     "conversation": 211
+    },
+    "results": [
+     {
+      "label": "list_files .",
+      "tokens": 75,
+      "removed": false
+     },
+     {
+      "label": "read_file src/auth.py",
+      "tokens": 143,
+      "removed": false
+     },
+     {
+      "label": "read_file src/users.py",
+      "tokens": 157,
+      "removed": false
+     },
+     {
+      "label": "read_file src/audit.py",
+      "tokens": 86,
+      "removed": false
+     }
+    ],
+    "compacted": null,
+    "call": "run_command python3 run_tests.py",
+    "caption": "src/audit.py."
+   },
+   {
+    "n": 6,
+    "reported": 1387,
+    "parts": {
+     "system": 100,
+     "tools": 297,
+     "instructions": 0,
+     "conversation": 267
+    },
+    "results": [
+     {
+      "label": "list_files .",
+      "tokens": 75,
+      "removed": false
+     },
+     {
+      "label": "read_file src/auth.py",
+      "tokens": 143,
+      "removed": false
+     },
+     {
+      "label": "read_file src/users.py",
+      "tokens": 157,
+      "removed": false
+     },
+     {
+      "label": "read_file src/audit.py",
+      "tokens": 86,
+      "removed": false
+     },
+     {
+      "label": "run_command python3 run_tests.py",
+      "tokens": 262,
+      "removed": false
+     }
+    ],
+    "compacted": null,
+    "call": "read_file tests/test_login.py",
+    "caption": "It runs the tests. Command output is another large result."
+   },
+   {
+    "n": 7,
+    "reported": 1679,
+    "parts": {
+     "system": 100,
+     "tools": 297,
+     "instructions": 0,
+     "conversation": 310
+    },
+    "results": [
+     {
+      "label": "list_files .",
+      "tokens": 75,
+      "removed": false
+     },
+     {
+      "label": "read_file src/auth.py",
+      "tokens": 143,
+      "removed": false
+     },
+     {
+      "label": "read_file src/users.py",
+      "tokens": 157,
+      "removed": false
+     },
+     {
+      "label": "read_file src/audit.py",
+      "tokens": 86,
+      "removed": false
+     },
+     {
+      "label": "run_command python3 run_tests.py",
+      "tokens": 262,
+      "removed": false
+     },
+     {
+      "label": "read_file tests/test_login.py",
+      "tokens": 249,
+      "removed": false
+     }
+    ],
+    "compacted": null,
+    "call": "read_file tests/test_users_and_audit.py",
+    "caption": "tests/test_login.py. The window is now two-thirds full."
+   },
+   {
+    "n": 8,
+    "reported": 1880,
+    "parts": {
+     "system": 100,
+     "tools": 297,
+     "instructions": 0,
+     "conversation": 356
+    },
+    "results": [
+     {
+      "label": "list_files .",
+      "tokens": 75,
+      "removed": false
+     },
+     {
+      "label": "read_file src/auth.py",
+      "tokens": 143,
+      "removed": false
+     },
+     {
+      "label": "read_file src/users.py",
+      "tokens": 157,
+      "removed": false
+     },
+     {
+      "label": "read_file src/audit.py",
+      "tokens": 86,
+      "removed": false
+     },
+     {
+      "label": "run_command python3 run_tests.py",
+      "tokens": 262,
+      "removed": false
+     },
+     {
+      "label": "read_file tests/test_login.py",
+      "tokens": 249,
+      "removed": false
+     },
+     {
+      "label": "read_file tests/test_users_and_audit.py",
+      "tokens": 155,
+      "removed": false
+     }
+    ],
+    "compacted": null,
+    "call": "read_file vendor/fastlog/__init__.py",
+    "caption": "tests/test_users_and_audit.py. The request is past 1,800 tokens, closing on the 80% line."
+   },
+   {
+    "n": 9,
+    "reported": 1213,
+    "parts": {
+     "system": 100,
+     "tools": 297,
+     "instructions": 0,
+     "conversation": 403
+    },
+    "results": [
+     {
+      "label": "list_files .",
+      "tokens": 26,
+      "removed": true
+     },
+     {
+      "label": "read_file src/auth.py",
+      "tokens": 26,
+      "removed": true
+     },
+     {
+      "label": "read_file src/users.py",
+      "tokens": 26,
+      "removed": true
+     },
+     {
+      "label": "read_file src/audit.py",
+      "tokens": 26,
+      "removed": true
+     },
+     {
+      "label": "run_command python3 run_tests.py",
+      "tokens": 26,
+      "removed": true
+     },
+     {
+      "label": "read_file tests/test_login.py",
+      "tokens": 26,
+      "removed": true
+     },
+     {
+      "label": "read_file tests/test_users_and_audit.py",
+      "tokens": 155,
+      "removed": false
+     },
+     {
+      "label": "read_file vendor/fastlog/__init__.py",
+      "tokens": 102,
+      "removed": false
+     }
+    ],
+    "compacted": {
+     "before": 2026,
+     "after": 1213
+    },
+    "call": "run_command python3 run_tests.py",
+    "caption": "Before sending request 9 the harness compacts: the bodies of every tool result except the latest ones are replaced with \"[removed during compaction]\". The file contents the model read first are gone. Only its own short comments about them remain."
+   },
+   {
+    "n": 10,
+    "reported": 1531,
+    "parts": {
+     "system": 100,
+     "tools": 297,
+     "instructions": 0,
+     "conversation": 459
+    },
+    "results": [
+     {
+      "label": "list_files .",
+      "tokens": 26,
+      "removed": true
+     },
+     {
+      "label": "read_file src/auth.py",
+      "tokens": 26,
+      "removed": true
+     },
+     {
+      "label": "read_file src/users.py",
+      "tokens": 26,
+      "removed": true
+     },
+     {
+      "label": "read_file src/audit.py",
+      "tokens": 26,
+      "removed": true
+     },
+     {
+      "label": "run_command python3 run_tests.py",
+      "tokens": 26,
+      "removed": true
+     },
+     {
+      "label": "read_file tests/test_login.py",
+      "tokens": 26,
+      "removed": true
+     },
+     {
+      "label": "read_file tests/test_users_and_audit.py",
+      "tokens": 155,
+      "removed": false
+     },
+     {
+      "label": "read_file vendor/fastlog/__init__.py",
+      "tokens": 102,
+      "removed": false
+     },
+     {
+      "label": "run_command python3 run_tests.py",
+      "tokens": 262,
+      "removed": false
+     }
+    ],
+    "compacted": null,
+    "call": "read_file run_tests.py",
+    "caption": "The session carries on, and results start piling up again."
+   },
+   {
+    "n": 11,
+    "reported": 1798,
+    "parts": {
+     "system": 100,
+     "tools": 297,
+     "instructions": 0,
+     "conversation": 502
+    },
+    "results": [
+     {
+      "label": "list_files .",
+      "tokens": 26,
+      "removed": true
+     },
+     {
+      "label": "read_file src/auth.py",
+      "tokens": 26,
+      "removed": true
+     },
+     {
+      "label": "read_file src/users.py",
+      "tokens": 26,
+      "removed": true
+     },
+     {
+      "label": "read_file src/audit.py",
+      "tokens": 26,
+      "removed": true
+     },
+     {
+      "label": "run_command python3 run_tests.py",
+      "tokens": 26,
+      "removed": true
+     },
+     {
+      "label": "read_file tests/test_login.py",
+      "tokens": 26,
+      "removed": true
+     },
+     {
+      "label": "read_file tests/test_users_and_audit.py",
+      "tokens": 26,
+      "removed": true
+     },
+     {
+      "label": "read_file vendor/fastlog/__init__.py",
+      "tokens": 26,
+      "removed": true
+     },
+     {
+      "label": "run_command python3 run_tests.py",
+      "tokens": 262,
+      "removed": false
+     },
+     {
+      "label": "read_file run_tests.py",
+      "tokens": 429,
+      "removed": false
+     }
+    ],
+    "compacted": {
+     "before": 2002,
+     "after": 1798
+    },
+    "call": "read_file src/auth.py",
+    "caption": "Compaction again, with little to remove this time. The model asks to read src/auth.py a second time: the copy it read at request 3 no longer exists in the conversation."
+   },
+   {
+    "n": 12,
+    "reported": 1982,
+    "parts": {
+     "system": 100,
+     "tools": 297,
+     "instructions": 0,
+     "conversation": 543
+    },
+    "results": [
+     {
+      "label": "list_files .",
+      "tokens": 26,
+      "removed": true
+     },
+     {
+      "label": "read_file src/auth.py",
+      "tokens": 26,
+      "removed": true
+     },
+     {
+      "label": "read_file src/users.py",
+      "tokens": 26,
+      "removed": true
+     },
+     {
+      "label": "read_file src/audit.py",
+      "tokens": 26,
+      "removed": true
+     },
+     {
+      "label": "run_command python3 run_tests.py",
+      "tokens": 26,
+      "removed": true
+     },
+     {
+      "label": "read_file tests/test_login.py",
+      "tokens": 26,
+      "removed": true
+     },
+     {
+      "label": "read_file tests/test_users_and_audit.py",
+      "tokens": 26,
+      "removed": true
+     },
+     {
+      "label": "read_file vendor/fastlog/__init__.py",
+      "tokens": 26,
+      "removed": true
+     },
+     {
+      "label": "run_command python3 run_tests.py",
+      "tokens": 262,
+      "removed": false
+     },
+     {
+      "label": "read_file run_tests.py",
+      "tokens": 429,
+      "removed": false
+     },
+     {
+      "label": "read_file src/auth.py",
+      "tokens": 143,
+      "removed": false
+     }
+    ],
+    "compacted": null,
+    "call": "read_file tests/test_login.py",
+    "caption": "Repeated work costs tokens a second time."
+   },
+   {
+    "n": 13,
+    "reported": 1636,
+    "parts": {
+     "system": 100,
+     "tools": 297,
+     "instructions": 0,
+     "conversation": 586
+    },
+    "results": [
+     {
+      "label": "list_files .",
+      "tokens": 26,
+      "removed": true
+     },
+     {
+      "label": "read_file src/auth.py",
+      "tokens": 26,
+      "removed": true
+     },
+     {
+      "label": "read_file src/users.py",
+      "tokens": 26,
+      "removed": true
+     },
+     {
+      "label": "read_file src/audit.py",
+      "tokens": 26,
+      "removed": true
+     },
+     {
+      "label": "run_command python3 run_tests.py",
+      "tokens": 26,
+      "removed": true
+     },
+     {
+      "label": "read_file tests/test_login.py",
+      "tokens": 26,
+      "removed": true
+     },
+     {
+      "label": "read_file tests/test_users_and_audit.py",
+      "tokens": 26,
+      "removed": true
+     },
+     {
+      "label": "read_file vendor/fastlog/__init__.py",
+      "tokens": 26,
+      "removed": true
+     },
+     {
+      "label": "run_command python3 run_tests.py",
+      "tokens": 26,
+      "removed": true
+     },
+     {
+      "label": "read_file run_tests.py",
+      "tokens": 27,
+      "removed": true
+     },
+     {
+      "label": "read_file src/auth.py",
+      "tokens": 143,
+      "removed": false
+     },
+     {
+      "label": "read_file tests/test_login.py",
+      "tokens": 249,
+      "removed": false
+     }
+    ],
+    "compacted": {
+     "before": 2274,
+     "after": 1636
+    },
+    "call": "run_command python3 run_tests.py",
+    "caption": "Third compaction."
+   },
+   {
+    "n": 14,
+    "reported": 1954,
+    "parts": {
+     "system": 100,
+     "tools": 297,
+     "instructions": 0,
+     "conversation": 642
+    },
+    "results": [
+     {
+      "label": "list_files .",
+      "tokens": 26,
+      "removed": true
+     },
+     {
+      "label": "read_file src/auth.py",
+      "tokens": 26,
+      "removed": true
+     },
+     {
+      "label": "read_file src/users.py",
+      "tokens": 26,
+      "removed": true
+     },
+     {
+      "label": "read_file src/audit.py",
+      "tokens": 26,
+      "removed": true
+     },
+     {
+      "label": "run_command python3 run_tests.py",
+      "tokens": 26,
+      "removed": true
+     },
+     {
+      "label": "read_file tests/test_login.py",
+      "tokens": 26,
+      "removed": true
+     },
+     {
+      "label": "read_file tests/test_users_and_audit.py",
+      "tokens": 26,
+      "removed": true
+     },
+     {
+      "label": "read_file vendor/fastlog/__init__.py",
+      "tokens": 26,
+      "removed": true
+     },
+     {
+      "label": "run_command python3 run_tests.py",
+      "tokens": 26,
+      "removed": true
+     },
+     {
+      "label": "read_file run_tests.py",
+      "tokens": 27,
+      "removed": true
+     },
+     {
+      "label": "read_file src/auth.py",
+      "tokens": 143,
+      "removed": false
+     },
+     {
+      "label": "read_file tests/test_login.py",
+      "tokens": 249,
+      "removed": false
+     },
+     {
+      "label": "run_command python3 run_tests.py",
+      "tokens": 262,
+      "removed": false
+     }
+    ],
+    "compacted": null,
+    "call": "read_file run_tests.py",
+    "caption": "The window refills."
+   },
+   {
+    "n": 15,
+    "reported": 2086,
+    "parts": {
+     "system": 100,
+     "tools": 297,
+     "instructions": 0,
+     "conversation": 685
+    },
+    "results": [
+     {
+      "label": "list_files .",
+      "tokens": 26,
+      "removed": true
+     },
+     {
+      "label": "read_file src/auth.py",
+      "tokens": 26,
+      "removed": true
+     },
+     {
+      "label": "read_file src/users.py",
+      "tokens": 26,
+      "removed": true
+     },
+     {
+      "label": "read_file src/audit.py",
+      "tokens": 26,
+      "removed": true
+     },
+     {
+      "label": "run_command python3 run_tests.py",
+      "tokens": 26,
+      "removed": true
+     },
+     {
+      "label": "read_file tests/test_login.py",
+      "tokens": 26,
+      "removed": true
+     },
+     {
+      "label": "read_file tests/test_users_and_audit.py",
+      "tokens": 26,
+      "removed": true
+     },
+     {
+      "label": "read_file vendor/fastlog/__init__.py",
+      "tokens": 26,
+      "removed": true
+     },
+     {
+      "label": "run_command python3 run_tests.py",
+      "tokens": 26,
+      "removed": true
+     },
+     {
+      "label": "read_file run_tests.py",
+      "tokens": 27,
+      "removed": true
+     },
+     {
+      "label": "read_file src/auth.py",
+      "tokens": 26,
+      "removed": true
+     },
+     {
+      "label": "read_file tests/test_login.py",
+      "tokens": 26,
+      "removed": true
+     },
+     {
+      "label": "run_command python3 run_tests.py",
+      "tokens": 262,
+      "removed": false
+     },
+     {
+      "label": "read_file run_tests.py",
+      "tokens": 429,
+      "removed": false
+     }
+    ],
+    "compacted": {
+     "before": 2425,
+     "after": 2086
+    },
+    "call": null,
+    "caption": "Fourth compaction, then the model's summary: \"the first file I read, src/auth.py, has the empty-hash bug on line 18.\" It has no copy of that file's first read; the claim comes from its own earlier notes. Have it re-read the file, or start a fresh session with a handoff note."
+   }
+  ]
+ },
+ "lab_a": {
+  "title": "What an instructions file costs",
+  "intro": "Module 3, Lab A: the same five-request scenario with no instructions file, the short AGENTS.md, and the bloated one.",
+  "runs": [
+   {
+    "label": "No instructions file",
+    "lines": 0,
+    "instructions_tokens": 0,
+    "first_request": 425,
+    "session_total": 4512,
+    "requests": 5
+   },
+   {
+    "label": "Short AGENTS.md",
+    "lines": 17,
+    "instructions_tokens": 193,
+    "first_request": 625,
+    "session_total": 5511,
+    "requests": 5
+   },
+   {
+    "label": "Bloated AGENTS.md",
+    "lines": 134,
+    "instructions_tokens": 2618,
+    "first_request": 3080,
+    "session_total": 17786,
+    "requests": 5
+   }
+  ]
+ },
+ "simulator": {
+  "title": "Try it",
+  "intro": "A simplified model of the same harness. Change what fills the window and watch when compaction starts.",
+  "system_tokens": 102,
+  "tokens_per_tool": 59,
+  "user_message_tokens": 26,
+  "model_message_tokens": 47,
+  "stub_tokens": 27,
+  "keep_recent_results": 2,
+  "result_pattern": [
+   0.5,
+   1.2,
+   1.0,
+   0.7,
+   1.6
+  ],
+  "limits": [
+   2500,
+   8000,
+   32000
+  ],
+  "defaults": {
+   "limit": 8000,
+   "instructions": 193,
+   "tools": 5,
+   "result": 210,
+   "steps": 15
+  },
+  "ranges": {
+   "instructions": [
+    0,
+    3000,
+    25
+   ],
+   "tools": [
+    1,
+    40,
+    1
+   ],
+   "result": [
+    20,
+    800,
+    10
+   ],
+   "steps": [
+    1,
+    40,
+    1
+   ]
+  },
+  "presets": [
+   {
+    "id": "short",
+    "label": "Short instructions file",
+    "values": {
+     "instructions": 193,
+     "tools": 5,
+     "result": 210,
+     "steps": 15
+    }
+   },
+   {
+    "id": "bloated",
+    "label": "Bloated instructions file",
+    "values": {
+     "instructions": 2618,
+     "tools": 5,
+     "result": 210,
+     "steps": 15
+    }
+   },
+   {
+    "id": "broad",
+    "label": "Broad request",
+    "values": {
+     "instructions": 193,
+     "tools": 5,
+     "result": 420,
+     "steps": 30
+    }
+   }
+  ]
+ }
 }

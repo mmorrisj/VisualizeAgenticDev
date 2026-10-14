@@ -704,6 +704,28 @@ kbd {
   font-weight: 600;
 }
 
+/* Context window: request chart and simulator controls. */
+.scene .axis { stroke: var(--muted); stroke-width: 1; }
+.scene .gridline { stroke: var(--border); stroke-width: 1; }
+.scene .chart-bar .hit { fill: transparent; }
+.scene .chart-bar[role="button"] { cursor: pointer; }
+.scene .chart-bar[role="button"]:hover .block { opacity: 0.85; }
+.scene .chart-bar.is-selected .hit { fill: var(--accent-2); opacity: 0.08; }
+.scene .compaction-mark { fill: var(--warning); }
+.scene .overhead-warning { font-size: 20px; }
+
+.sim-controls {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 18px 32px;
+  margin-top: 12px;
+}
+.sim-field { display: flex; flex-direction: column; gap: 4px; }
+.sim-field label, .sim-label { font-weight: 600; font-size: 0.95rem; }
+.sim-field input[type="range"] { width: 100%; accent-color: var(--accent); }
+.sim-field output { font-family: var(--font-mono); font-size: 0.88rem; color: var(--muted); }
+.sim-field .choices { margin: 2px 0 0; }
+
 /* Agent loop scene. */
 .scene .result-node .component-pill { stroke: var(--role-result); }
 .scene .result-node.is-active .component-pill { fill: var(--role-result); }
