@@ -71,7 +71,7 @@ CONTENT_SCHEMAS = {
     "anatomy.json": ANATOMY_KEYS,
     "loop.json": LOOP_KEYS,
     "context.json": {**SECTION_KEYS, "source_note": str, "replay": dict, "lab_a": dict, "simulator": dict},
-    "tokens.json": SECTION_KEYS,
+    "tokens.json": {**SECTION_KEYS, "source_note": str, "compare": dict, "caching": dict},
     "extensions.json": SECTION_KEYS,
     "quizzes.json": {"review": dict, "questions": list},
 }
@@ -171,6 +171,8 @@ def check_content(report: Report) -> None:
                     report.error(path, f"sections[{i}].page '{page}' does not exist")
         for i, step in enumerate(data.get("steps", []) if isinstance(data, dict) else []):
             check_keys(report, path, step, STEP_KEYS, f"steps[{i}]")
+        if path.name == "tokens.json" and isinstance(data, dict):
+            check_tokens(report, path, data)
         if path.name == "context.json" and isinstance(data, dict):
             check_context(report, path, data)
         if path.name == "anatomy.json" and isinstance(data, dict):
@@ -190,6 +192,26 @@ def check_content(report: Report) -> None:
         for link in find_links(data):
             if is_relative_reference(link) and not (SITE_ROOT / urlsplit(link).path).resolve().exists():
                 report.warn(path, f"link target not found (is course/ copied in?): {link}")
+
+
+def check_tokens(report: Report, path: pathlib.Path, data: dict) -> None:
+    """Sessions need numbered requests with positive sizes; cached tokens can
+    never exceed a request's size."""
+    sessions = data.get("compare", {}).get("sessions", [])
+    if len(sessions) != 2:
+        report.error(path, "compare.sessions must hold exactly two sessions (focused and broad)")
+    for s, session in enumerate(sessions):
+        check_keys(report, path, session, {"id": str, "label": str, "prompt": str, "requests": list}, f"compare.sessions[{s}]")
+        for i, req in enumerate(session.get("requests", []) if isinstance(session, dict) else []):
+            check_keys(report, path, req, {"n": int, "tokens": int, "call": str}, f"compare.sessions[{s}].requests[{i}]")
+            if isinstance(req, dict) and (req.get("n") != i + 1 or not req.get("tokens", 0) > 0):
+                report.error(path, f"compare.sessions[{s}].requests[{i}] must be numbered {i + 1} with a positive size")
+    caching = data.get("caching", {})
+    check_keys(report, path, caching, {"title": str, "intro": str, "requests": list, "miss_note": str}, "caching")
+    for i, req in enumerate(caching.get("requests", [])):
+        check_keys(report, path, req, {"n": int, "tokens": int, "cached": int}, f"caching.requests[{i}]")
+        if isinstance(req, dict) and not 0 <= req.get("cached", 0) <= req.get("tokens", 0):
+            report.error(path, f"caching.requests[{i}].cached must be between 0 and the request's size")
 
 
 def check_context(report: Report, path: pathlib.Path, data: dict) -> None:

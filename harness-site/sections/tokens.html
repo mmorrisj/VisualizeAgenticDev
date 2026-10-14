@@ -31,12 +31,48 @@
     <h1>Token growth</h1>
     <p class="concept" data-content="concept"></p>
 
-    <section class="panel" aria-labelledby="status-heading">
-      <h2 id="status-heading">Being built</h2>
-      <p>The guided narrative and sandbox for this section arrive in Phase 3.</p>
+    <p class="note"><span class="badge">Measured</span> The two sessions come from running the course's harness. <span class="badge">Illustrative</span> The cached session is the course's teaching log.</p>
+
+    <!-- 1. Two sessions, side by side. -->
+    <section class="section-block" aria-labelledby="compare-title">
+      <h2 id="compare-title"></h2>
+      <p class="note" id="compare-intro"></p>
+      <div class="stepper">
+        <div class="choices" id="compare-mode" role="group" aria-label="Session"></div>
+        <button type="button" class="button button-primary" id="compare-play">Play</button>
+      </div>
+      <div class="visual-frame section-gap" id="compare-scene"></div>
+      <ul class="legend">
+        <li><svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true" focusable="false"><rect x="1" y="1" width="10" height="10" rx="2" class="token-bar"/></svg>Input tokens in one request</li>
+        <li id="legend-pile"><svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true" focusable="false"><rect x="1" y="1" width="10" height="10" class="pile-block"/></svg>Total input: every request added up</li>
+        <li id="legend-line" hidden><svg width="16" height="12" viewBox="0 0 16 12" aria-hidden="true" focusable="false"><path d="M1 10 L15 2" class="running-line"/></svg>Running total of input</li>
+        <li><svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true" focusable="false"><path d="M1 3 L11 3 L6 10 Z" class="compaction-mark"/></svg>Compacted before this request</li>
+      </ul>
+      <div class="readout-row" id="compare-readouts" aria-live="polite"></div>
     </section>
 
-    <p class="section-block"><a href="../index.html" data-content="module-link">Go deeper in the written module</a></p>
+    <!-- 2. Caching. -->
+    <section class="section-block" aria-labelledby="cache-title">
+      <h2 id="cache-title"></h2>
+      <p class="note" id="cache-intro"></p>
+      <div class="stepper">
+        <button type="button" class="button" id="cache-toggle" aria-pressed="true">Hide caching</button>
+        <span class="badge">Illustrative numbers</span>
+      </div>
+      <div class="visual-frame section-gap" id="cache-scene"></div>
+      <ul class="legend">
+        <li><svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true" focusable="false"><rect x="1" y="1" width="10" height="10" rx="2" class="token-bar"/></svg>Processed fresh</li>
+        <li><svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true" focusable="false"><rect x="1" y="1" width="10" height="10" class="token-bar is-cached"/></svg>Read from cache</li>
+        <li><svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true" focusable="false"><rect x="1" y="1" width="10" height="10" rx="2" class="token-bar is-miss"/></svg>Cache miss: everything processed fresh</li>
+      </ul>
+      <div class="panel" aria-live="polite">
+        <p id="cache-share"></p>
+        <p id="cache-note"></p>
+      </div>
+    </section>
+
+    <p class="section-block"><a href="../index.html" data-content="module-link">Go deeper: Module 7, Token observability</a></p>
+    <p class="note" id="source-note"></p>
   </main>
 
   <footer class="site-footer">
@@ -46,10 +82,6 @@
     </div>
   </footer>
 
-  <script type="module">
-    import { initPage, initSection } from "../assets/js/common.js";
-    initPage();
-    initSection("tokens");
-  </script>
+  <script type="module" src="../assets/js/tokens.js"></script>
 </body>
 </html>
