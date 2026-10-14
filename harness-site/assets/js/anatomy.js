@@ -105,8 +105,13 @@ function renderWire(pre, wire) {
 
 /* Tour: player ------------------------------------------------------------------------ */
 
-function createTour(content, els) {
-  const steps = content.steps;
+/**
+ * The player holds several tours (the general path, and a recorded example)
+ * on one diagram. Switching tours starts the new one from its first stop.
+ */
+function createTour(tours, els) {
+  let tour = tours[0];
+  let steps = tour.steps;
   let handles = null;
   let index = 0;
   let playing = false;
@@ -117,7 +122,7 @@ function createTour(content, els) {
   // time to glance at each line of the payload, plus a pause.
   const dwell = (step) => 1500 + step.text.split(/\s+/).length * 240
     + (step.state.wire ? step.state.wire.split("\n").length * 700 : 0);
-  const maxTokens = Math.max(...steps.map((s) => s.state.request?.tokens || 0));
+  let maxTokens = 0;
   const fmt = (n) => n.toLocaleString("en-US");
 
   function stopMotion() {
@@ -178,7 +183,7 @@ function createTour(content, els) {
 
   function renderCaption() {
     const step = steps[index];
-    const phase = content.phases.find((ph) => ph.id === step.state.phase);
+    const phase = tour.phases.find((ph) => ph.id === step.state.phase);
     els.title.textContent = step.state.title;
     els.text.textContent = step.text;
     els.status.textContent = `${phase ? phase.label : ""} · stop ${index + 1} of ${steps.length}`;
@@ -240,19 +245,65 @@ function createTour(content, els) {
   els.restart.addEventListener("click", () => { playing = false; goTo(0); });
 
   // One button per phase; each jumps to the phase's first stop.
-  els.chapters.replaceChildren();
-  for (const phase of content.phases) {
-    const first = steps.findIndex((s) => s.state.phase === phase.id);
-    if (first < 0) continue;
-    const li = document.createElement("li");
+  function renderPhases() {
+    els.chapters.replaceChildren();
+    for (const phase of tour.phases) {
+      const first = steps.findIndex((s) => s.state.phase === phase.id);
+      if (first < 0) continue;
+      const li = document.createElement("li");
+      const b = document.createElement("button");
+      b.type = "button";
+      b.className = "chapter";
+      b.dataset.phase = phase.id;
+      b.textContent = phase.label;
+      b.addEventListener("click", () => { playing = false; goTo(first); });
+      li.append(b);
+      els.chapters.append(li);
+    }
+  }
+
+  // Tabs: one per tour, following the ARIA tabs pattern (arrow keys move
+  // between tabs; only the selected tab is in the tab order).
+  const tabs = tours.map((t) => {
     const b = document.createElement("button");
     b.type = "button";
-    b.className = "chapter";
-    b.dataset.phase = phase.id;
-    b.textContent = phase.label;
-    b.addEventListener("click", () => { playing = false; goTo(first); });
-    li.append(b);
-    els.chapters.append(li);
+    b.className = "tab";
+    b.id = `tour-tab-${t.id}`;
+    b.setAttribute("role", "tab");
+    b.setAttribute("aria-controls", els.panel.id);
+    b.textContent = t.label;
+    b.addEventListener("click", () => selectTour(t.id));
+    b.addEventListener("keydown", (event) => {
+      const step = { ArrowRight: 1, ArrowLeft: -1 }[event.key];
+      if (!step) return;
+      event.preventDefault();
+      const next = tours[(tours.indexOf(t) + step + tours.length) % tours.length];
+      selectTour(next.id);
+      document.getElementById(`tour-tab-${next.id}`).focus();
+    });
+    return b;
+  });
+  els.tabs.replaceChildren(...tabs);
+
+  function selectTour(id) {
+    tour = tours.find((t) => t.id === id) || tours[0];
+    steps = tour.steps;
+    maxTokens = Math.max(0, ...steps.map((s) => s.state.request?.tokens || 0));
+    playing = false;
+    stopMotion();
+    index = 0;
+    for (const b of tabs) {
+      const selected = b.id === `tour-tab-${tour.id}`;
+      b.setAttribute("aria-selected", String(selected));
+      b.tabIndex = selected ? 0 : -1;
+    }
+    els.panel.setAttribute("aria-labelledby", `tour-tab-${tour.id}`);
+    els.intro.textContent = tour.intro;
+    // Reserve room for payloads only in tours that show them, so the caption
+    // does not jump between stops but has no empty gap either.
+    els.panel.dataset.wire = String(steps.some((s) => s.state.wire));
+    renderPhases();
+    if (handles) { drawStatic(0); renderCaption(); }
   }
 
   // Clicking a part of the diagram jumps to its first stop.
@@ -260,6 +311,8 @@ function createTour(content, els) {
     const i = steps.findIndex((s) => s.state.target === id);
     if (i >= 0) { playing = false; goTo(i); }
   };
+
+  selectTour(tours[0].id);
 
   mountWorld(els.scene, (h) => {
     handles = h;
@@ -380,7 +433,10 @@ async function main() {
   const content = await initSection("anatomy");
   if (!content) return;
 
-  createTour(content, {
+  createTour(content.tours, {
+    tabs: document.getElementById("tour-tabs"),
+    panel: document.getElementById("tour-panel"),
+    intro: document.getElementById("tour-intro"),
     scene: document.getElementById("tour-scene"),
     title: document.getElementById("tour-title"),
     text: document.getElementById("tour-text"),
@@ -397,7 +453,6 @@ async function main() {
     meterValue: document.getElementById("tour-meter-value"),
     meterBar: document.getElementById("tour-meter-bar"),
   });
-  document.getElementById("tour-intro").textContent = content.tour_intro;
   createSandbox(content);
 }
 

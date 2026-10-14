@@ -60,8 +60,9 @@ BANNED_WORD_RE = re.compile(r"beginner", re.IGNORECASE)
 # Required keys per content file. Extend as phases add content.
 SECTION_KEYS = {"id": str, "concept": str, "module_link": str, "steps": list}
 LOOP_KEYS = {**SECTION_KEYS, "tokens_per_block": int, "fixed": list, "session": list, "predict": dict}
-ANATOMY_KEYS = {**SECTION_KEYS, "components": list, "model": dict, "model_only": str, "intro": str, "bubble": dict,
-                "phases": list, "tour_intro": str}
+ANATOMY_KEYS = {"id": str, "concept": str, "module_link": str, "tours": list,
+                "components": list, "model": dict, "model_only": str, "intro": str, "bubble": dict}
+TOUR_KEYS = {"id": str, "label": str, "intro": str, "phases": list, "steps": list}
 # Must match COMPONENTS in assets/js/scene.js, which draws them.
 HARNESS_COMPONENTS = {"instructions", "tools", "context", "permissions", "memory", "interface"}
 COMPONENT_KEYS = {"id": str, "label": str, "example": str, "what": str, "why": str, "module_title": str, "module_link": str}
@@ -200,33 +201,48 @@ def check_anatomy(report: Report, path: pathlib.Path, data: dict) -> None:
         report.error(path, f"components must be exactly {sorted(HARNESS_COMPONENTS)}, found {ids}")
     check_keys(report, path, data.get("model"), {"label": str, "what": str, "why": str}, "model")
     check_keys(report, path, data.get("bubble"), {"text": str, "caption": str}, "bubble")
-    # Tour stops: each names where the line goes, and optionally where it
-    # passes on the way.
+    tour_ids = set()
+    for t, tour in enumerate(data.get("tours", [])):
+        check_keys(report, path, tour, TOUR_KEYS, f"tours[{t}]")
+        if not isinstance(tour, dict):
+            continue
+        if tour.get("id") in tour_ids:
+            report.error(path, f"tours[{t}].id '{tour.get('id')}' is used twice")
+        tour_ids.add(tour.get("id"))
+        check_tour(report, path, tour, f"tours[{t}]")
+    if not tour_ids:
+        report.error(path, "tours must list at least one tour")
+
+
+def check_tour(report: Report, path: pathlib.Path, tour: dict, where: str) -> None:
+    """Tour stops: each names where the line goes, and optionally where it
+    passes on the way, which phase it belongs to, and any request it sends."""
     places = HARNESS_COMPONENTS | {"you", "model", "world"}
-    phases = {ph.get("id") for ph in data.get("phases", []) if isinstance(ph, dict)}
+    phases = {ph.get("id") for ph in tour.get("phases", []) if isinstance(ph, dict)}
     if not phases:
-        report.error(path, "phases must list at least one {id, label}")
+        report.error(path, f"{where}.phases must list at least one {{id, label}}")
     last_request = 0
-    for i, step in enumerate(data.get("steps", [])):
+    for i, step in enumerate(tour.get("steps", [])):
+        check_keys(report, path, step, STEP_KEYS, f"{where}.steps[{i}]")
         state = step.get("state", {}) if isinstance(step, dict) else {}
         if state.get("phase") not in phases:
-            report.error(path, f"steps[{i}].state.phase must be one of {sorted(phases)}")
+            report.error(path, f"{where}.steps[{i}].state.phase must be one of {sorted(phases)}")
         if "wire" in state and not isinstance(state["wire"], str):
-            report.error(path, f"steps[{i}].state.wire must be text")
+            report.error(path, f"{where}.steps[{i}].state.wire must be text")
         if "request" in state:
-            check_keys(report, path, state["request"], {"number": int, "tokens": int}, f"steps[{i}].state.request")
+            check_keys(report, path, state["request"], {"number": int, "tokens": int}, f"{where}.steps[{i}].state.request")
             number = state["request"].get("number") if isinstance(state["request"], dict) else None
             if isinstance(number, int):
                 if number != last_request + 1:
-                    report.error(path, f"steps[{i}].state.request.number should be {last_request + 1}")
+                    report.error(path, f"{where}.steps[{i}].state.request.number should be {last_request + 1}")
                 last_request = number
         if state.get("target") not in places:
-            report.error(path, f"steps[{i}].state.target must be one of {sorted(places)}")
+            report.error(path, f"{where}.steps[{i}].state.target must be one of {sorted(places)}")
         if not isinstance(state.get("title"), str):
-            report.error(path, f"steps[{i}].state.title is required")
+            report.error(path, f"{where}.steps[{i}].state.title is required")
         unknown = set(state.get("via", [])) - places
         if unknown:
-            report.error(path, f"steps[{i}].state.via names unknown places {sorted(unknown)}")
+            report.error(path, f"{where}.steps[{i}].state.via names unknown places {sorted(unknown)}")
 
 
 def check_loop(report: Report, path: pathlib.Path, data: dict) -> None:
