@@ -9,6 +9,7 @@
       "context-fixed-cost",
       "tokens-total-vs-final",
       "ext-formatter",
+      "inside-subagent-return",
       "review-rm-build"
     ]
   },
@@ -298,6 +299,58 @@
       ],
       "answer": 3,
       "explanation": "Check that you understand the command, that build/ is a generated folder you can recreate, that your work is committed, and that your request actually needed it. If any answer is no, deny it and ask the agent to explain."
+    },
+    {
+      "id": "inside-mcp-defs",
+      "section": "inside-extensions",
+      "prompt": "An MCP server offers three tools. When do their definitions take up context?",
+      "choices": [
+        "Only on the requests where the model calls one of them",
+        "On every request once the server is connected, called or not",
+        "Once, while the server starts up, and never again after that",
+        "Never: tool definitions stay on the server's side of the pipe"
+      ],
+      "answer": 1,
+      "explanation": "The harness adds the server's tool definitions to the request so the model can choose them. They are paid on every request from then on; in this session, 145 tokens each time."
+    },
+    {
+      "id": "inside-skill-always",
+      "section": "inside-extensions",
+      "prompt": "Which part of a skill is in the model's context on every request?",
+      "choices": [
+        "Its full procedure, so it is ready the moment it is needed",
+        "Its scripts, so they can run without the model calling a tool",
+        "Its name and description",
+        "Nothing at all, until a user types the skill's name"
+      ],
+      "answer": 2,
+      "explanation": "The description is how the model decides the skill is relevant, so it is always present. The body loads only when the skill is used, and its scripts run outside the context."
+    },
+    {
+      "id": "inside-subagent-return",
+      "section": "inside-extensions",
+      "prompt": "A subagent reads a file and searches a folder before answering. What reaches the main conversation?",
+      "choices": [
+        "Only the subagent's final summary",
+        "Every file and search result the subagent read along the way",
+        "The subagent's system prompt and its list of allowed tools",
+        "Nothing; the subagent writes its findings to disk instead"
+      ],
+      "answer": 0,
+      "explanation": "The subagent works in its own context window. When it finishes, that window is discarded and only its answer returns, so the main context grows by the summary alone."
+    },
+    {
+      "id": "inside-hook-cost",
+      "section": "inside-extensions",
+      "prompt": "The plugin's hook runs before every edit. How much does it add to the model's context?",
+      "choices": [
+        "Its full source code, sent along with every request",
+        "Its description, which is always present like a skill's",
+        "The output of every run, even when the edit is allowed",
+        "Nothing; the harness runs it, and only a block reaches the model"
+      ],
+      "answer": 3,
+      "explanation": "Hooks are run by the harness at a lifecycle event, not chosen by the model. An allowed edit adds nothing; a blocked one sends the hook's message back to the model as the reason."
     }
   ]
 }

@@ -26,7 +26,8 @@ Any internal static web server works too. The site has no build step, no depende
 | 3. The context window | Lab B replayed with compactions, Lab A's three runs compared, and a simulator for window size, overhead, and tool-result size. | Module 3, Context engineering |
 | 4. Token growth | Focused and broad sessions side by side: final context versus total input paid, plus prompt caching. | Module 7, Token observability |
 | 5. Choosing an extension | A decision flow, a comparison grid of seven mechanisms, and practice scenarios. | Module 5, Extensibility |
-| 6. Final review | A mixed knowledge check across all sections. | Course README, section 12 |
+| 6. Inside an extension | One session (triage, fix, regression test, password check) through four lenses: MCP server, skill, subagent, plugin. Each shows what the mechanism adds to the request and when, with the recorded MCP wire messages. A cost ledger toggles each one, with an illustrative test-suite-size control that shows where the skill starts saving tokens. | Module 5, Extensibility (Labs A to D) |
+| 7. Final review | A mixed knowledge check across all sections. | Course README, section 12 |
 
 Each section ends with a short knowledge check adapted from the matching module's "Check your understanding". Use the site after students read a module, or project it while you teach the module and let students explore afterwards.
 
@@ -42,7 +43,8 @@ Each section ends with a short knowledge check adapted from the matching module'
 | Where | Keys |
 |---|---|
 | Harness anatomy walkthrough | <kbd>Space</kbd> play or pause, <kbd>Left</kbd> <kbd>Right</kbd> step |
-| Agent loop, context replay, simulator | <kbd>Left</kbd> <kbd>Right</kbd> step |
+| Agent loop, context replay, simulator, cost ledger | <kbd>Left</kbd> <kbd>Right</kbd> step |
+| Inside an extension lenses | <kbd>Space</kbd> play or pause, <kbd>Left</kbd> <kbd>Right</kbd> step |
 | Diagram parts and tabs | <kbd>Tab</kbd> to reach, <kbd>Enter</kbd> or <kbd>Space</kbd> to select, <kbd>Left</kbd> <kbd>Right</kbd> between tabs |
 
 ### Where the numbers come from
@@ -61,7 +63,7 @@ All explanatory text lives in `content/`:
 | File | Holds |
 |---|---|
 | `site.json` | Landing page title, description, section order, and card summaries |
-| `anatomy.json`, `loop.json`, `context.json`, `tokens.json`, `extensions.json` | Each section's concept statement, "Go deeper" link, narrative steps, and simulation defaults |
+| `anatomy.json`, `loop.json`, `context.json`, `tokens.json`, `extensions.json`, `inside-extensions.json` | Each section's concept statement, "Go deeper" link, narrative steps, and simulation defaults |
 | `quizzes.json` | Knowledge-check questions (3 to 4 per section, tagged by `section`), plus the review page's concept, link, and `question_ids` for its mixed set |
 
 To change a question, edit its `prompt`, `choices`, `answer` (zero-based index of the correct choice), and `explanation`. Keep wrong choices about as long and specific as the right one, so the answer cannot be guessed from its length. After any edit, run the checks.
