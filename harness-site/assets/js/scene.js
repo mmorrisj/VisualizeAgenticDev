@@ -170,7 +170,7 @@ export function drawWorld(container, { layout = "wide", label } = {}) {
   // Spokes: the model reaches the world only through components.
   for (const comp of COMPONENTS) {
     const p = point(L.angles[comp.id], L.r - 18);
-    el("line", { class: "spoke", x1: L.cx, y1: L.cy, x2: p.x, y2: p.y }, links);
+    el("line", { class: "spoke", "data-for": comp.id, x1: L.cx, y1: L.cy, x2: p.x, y2: p.y }, links);
   }
 
   const model = drawModel(svg, { cx: L.cx, cy: L.cy });
@@ -201,14 +201,22 @@ export function drawWorld(container, { layout = "wide", label } = {}) {
   const iface = point(L.angles.interface);
   const tools = point(L.angles.tools);
   if (layout === "wide") {
-    el("line", { class: "link", x1: L.you.x + 26, y1: L.you.y, x2: iface.x - L.pill / 2, y2: iface.y }, links);
-    el("line", { class: "link", x1: tools.x + L.pill / 2, y1: tools.y, x2: W.x - W.w / 2, y2: W.y }, links);
+    el("line", { class: "link", "data-for": "interface", x1: L.you.x + 26, y1: L.you.y, x2: iface.x - L.pill / 2, y2: iface.y }, links);
+    el("line", { class: "link", "data-for": "tools", x1: tools.x + L.pill / 2, y1: tools.y, x2: W.x - W.w / 2, y2: W.y }, links);
   } else {
-    el("line", { class: "link", x1: L.you.x, y1: L.you.y + 26, x2: iface.x, y2: iface.y - 16 }, links);
-    el("line", { class: "link", x1: tools.x, y1: tools.y + 16, x2: W.x, y2: W.y - W.h / 2 }, links);
+    el("line", { class: "link", "data-for": "interface", x1: L.you.x, y1: L.you.y + 26, x2: iface.x, y2: iface.y - 16 }, links);
+    el("line", { class: "link", "data-for": "tools", x1: tools.x, y1: tools.y + 16, x2: W.x, y2: W.y - W.h / 2 }, links);
   }
 
-  return { svg, model, components, you, world, layout };
+  // Key points, so sections can trace the path a request takes.
+  const points = {
+    you: { x: L.you.x, y: L.you.y },
+    interface: iface,
+    model: { x: L.cx, y: L.cy },
+    tools,
+    world: { x: W.x, y: W.y },
+  };
+  return { svg, model, components, you, world, layout, points };
 }
 
 /**

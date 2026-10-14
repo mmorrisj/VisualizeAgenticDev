@@ -2,5 +2,140 @@
   "id": "anatomy",
   "concept": "The model predicts text; the harness turns text into work.",
   "module_link": "../course/README.md",
-  "steps": []
+  "steps": [
+    {
+      "text": "This is a harness at work. You ask through the interface; the model decides what to do; the tools act on your files. The model is the engine. The harness is the car.",
+      "state": {
+        "hidden": [],
+        "pulse": true
+      }
+    },
+    {
+      "text": "Take away the interface. You have no way to ask, and nothing to show you what happened.",
+      "state": {
+        "hidden": [
+          "interface"
+        ]
+      }
+    },
+    {
+      "text": "Take away permissions. Nothing decides whether a command should run: not you, not a rule, nobody.",
+      "state": {
+        "hidden": [
+          "interface",
+          "permissions"
+        ]
+      }
+    },
+    {
+      "text": "Take away the tools. The model can still ask to read a file, but nothing can carry the request out.",
+      "state": {
+        "hidden": [
+          "interface",
+          "permissions",
+          "tools"
+        ]
+      }
+    },
+    {
+      "text": "Take away context and memory. The model sees nothing of your project, and remembers nothing from yesterday.",
+      "state": {
+        "hidden": [
+          "interface",
+          "permissions",
+          "tools",
+          "context",
+          "memory"
+        ]
+      }
+    },
+    {
+      "text": "Take away the instructions. What is left is the model alone. It takes text in and writes text out. It cannot open a file.",
+      "state": {
+        "hidden": [
+          "interface",
+          "permissions",
+          "tools",
+          "context",
+          "memory",
+          "instructions"
+        ],
+        "bubble": true
+      }
+    },
+    {
+      "text": "Put the harness back. The model is what thinks. The harness is what acts.",
+      "state": {
+        "hidden": [],
+        "pulse": true
+      }
+    }
+  ],
+  "bubble": {
+    "text": "read_file(\"tests/test_login.py\")",
+    "caption": "A request nobody carries out"
+  },
+  "intro": "Select any part of the harness, or the model in the middle, to see what it does.",
+  "model": {
+    "label": "The model",
+    "what": "Takes text in and writes text out. When it wants something done, it writes a request, such as \"call read_file with path=test_login.py\".",
+    "why": "It cannot open a file, run a command, or remember yesterday. Everything else in this picture is the harness."
+  },
+  "model_only": "With every component gone, the model has no path to you, your files, or your tools. It can only predict text, and nothing acts on it.",
+  "components": [
+    {
+      "id": "instructions",
+      "label": "Instructions",
+      "example": "The hidden system prompt",
+      "what": "A system prompt telling the model how to behave and how to use its tools.",
+      "why": "You usually cannot see it, but it heavily shapes behavior.",
+      "module_title": "Module 1: Build a harness",
+      "module_link": "../course/modules/01-build-a-harness/README.md"
+    },
+    {
+      "id": "tools",
+      "label": "Tools",
+      "example": "Files, shell, search, APIs, MCP servers",
+      "what": "Read and edit files, run shell commands, search, and call APIs or MCP servers, when the model asks.",
+      "why": "More tools means more capability, and more risk.",
+      "module_title": "Module 5: Extending a harness",
+      "module_link": "../course/modules/05-extensibility/README.md"
+    },
+    {
+      "id": "context",
+      "label": "Context",
+      "example": "What fits in the window",
+      "what": "Picks which files and history fit in the model's limited context window.",
+      "why": "A major source of quality differences between tools.",
+      "module_title": "Module 3: Context engineering",
+      "module_link": "../course/modules/03-context-engineering/README.md"
+    },
+    {
+      "id": "permissions",
+      "label": "Permissions",
+      "example": "Approvals, allow-lists, sandboxes",
+      "what": "Approval prompts, allow-lists, and sandboxes that sit between a request and the action.",
+      "why": "Decides who approves a shell command: you, a rule, or nobody.",
+      "module_title": "Module 2: Hard controls",
+      "module_link": "../course/modules/02-hard-controls/README.md"
+    },
+    {
+      "id": "memory",
+      "label": "Memory",
+      "example": "CLAUDE.md, AGENTS.md",
+      "what": "Project files such as CLAUDE.md or AGENTS.md, loaded at the start of each session.",
+      "why": "Models forget everything between sessions without it.",
+      "module_title": "Module 3: Context engineering",
+      "module_link": "../course/modules/03-context-engineering/README.md"
+    },
+    {
+      "id": "interface",
+      "label": "Interface",
+      "example": "Terminal, editor, web, SDK",
+      "what": "Where you work with it: a terminal, an editor, a web page, or an SDK.",
+      "why": "It affects your workflow more than what the tool can do.",
+      "module_title": "Screen walkthrough",
+      "module_link": "../course/ui-walkthrough/README.md"
+    }
+  ]
 }

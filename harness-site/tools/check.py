@@ -60,9 +60,13 @@ BANNED_WORD_RE = re.compile(r"beginner", re.IGNORECASE)
 # Required keys per content file. Extend as phases add content.
 SECTION_KEYS = {"id": str, "concept": str, "module_link": str, "steps": list}
 LOOP_KEYS = {**SECTION_KEYS, "tokens_per_block": int, "fixed": list, "session": list, "predict": dict}
+ANATOMY_KEYS = {**SECTION_KEYS, "components": list, "model": dict, "model_only": str, "intro": str, "bubble": dict}
+# Must match COMPONENTS in assets/js/scene.js, which draws them.
+HARNESS_COMPONENTS = {"instructions", "tools", "context", "permissions", "memory", "interface"}
+COMPONENT_KEYS = {"id": str, "label": str, "example": str, "what": str, "why": str, "module_title": str, "module_link": str}
 CONTENT_SCHEMAS = {
     "site.json": {"title": str, "description": str, "written_course_link": str, "sections": list},
-    "anatomy.json": SECTION_KEYS,
+    "anatomy.json": ANATOMY_KEYS,
     "loop.json": LOOP_KEYS,
     "context.json": SECTION_KEYS,
     "tokens.json": SECTION_KEYS,
@@ -165,6 +169,8 @@ def check_content(report: Report) -> None:
                     report.error(path, f"sections[{i}].page '{page}' does not exist")
         for i, step in enumerate(data.get("steps", []) if isinstance(data, dict) else []):
             check_keys(report, path, step, STEP_KEYS, f"steps[{i}]")
+        if path.name == "anatomy.json" and isinstance(data, dict):
+            check_anatomy(report, path, data)
         if path.name == "loop.json" and isinstance(data, dict):
             check_loop(report, path, data)
         if path.name == "quizzes.json":
@@ -180,6 +186,24 @@ def check_content(report: Report) -> None:
         for link in find_links(data):
             if is_relative_reference(link) and not (SITE_ROOT / urlsplit(link).path).resolve().exists():
                 report.warn(path, f"link target not found (is course/ copied in?): {link}")
+
+
+def check_anatomy(report: Report, path: pathlib.Path, data: dict) -> None:
+    """Exactly the six components the scene draws, and steps that name them."""
+    ids = []
+    for i, comp in enumerate(data.get("components", [])):
+        check_keys(report, path, comp, COMPONENT_KEYS, f"components[{i}]")
+        if isinstance(comp, dict):
+            ids.append(comp.get("id"))
+    if sorted(ids) != sorted(HARNESS_COMPONENTS):
+        report.error(path, f"components must be exactly {sorted(HARNESS_COMPONENTS)}, found {ids}")
+    check_keys(report, path, data.get("model"), {"label": str, "what": str, "why": str}, "model")
+    check_keys(report, path, data.get("bubble"), {"text": str, "caption": str}, "bubble")
+    for i, step in enumerate(data.get("steps", [])):
+        hidden = step.get("state", {}).get("hidden", []) if isinstance(step, dict) else []
+        unknown = set(hidden) - HARNESS_COMPONENTS
+        if unknown:
+            report.error(path, f"steps[{i}].state.hidden names unknown components {sorted(unknown)}")
 
 
 def check_loop(report: Report, path: pathlib.Path, data: dict) -> None:
