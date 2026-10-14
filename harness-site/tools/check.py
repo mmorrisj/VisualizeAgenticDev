@@ -72,7 +72,8 @@ CONTENT_SCHEMAS = {
     "loop.json": LOOP_KEYS,
     "context.json": {**SECTION_KEYS, "source_note": str, "replay": dict, "lab_a": dict, "simulator": dict},
     "tokens.json": {**SECTION_KEYS, "source_note": str, "compare": dict, "caching": dict},
-    "extensions.json": SECTION_KEYS,
+    "extensions.json": {**SECTION_KEYS, "mechanisms": list, "attributes": list, "flow": dict, "scenarios": list,
+                        "rules_of_thumb": list, "takeaway": str, "source_note": str},
     "quizzes.json": {"review": dict, "questions": list},
 }
 SITE_SECTION_KEYS = {"id": str, "page": str, "title": str, "summary": str}
@@ -171,6 +172,8 @@ def check_content(report: Report) -> None:
                     report.error(path, f"sections[{i}].page '{page}' does not exist")
         for i, step in enumerate(data.get("steps", []) if isinstance(data, dict) else []):
             check_keys(report, path, step, STEP_KEYS, f"steps[{i}]")
+        if path.name == "extensions.json" and isinstance(data, dict):
+            check_extensions(report, path, data)
         if path.name == "tokens.json" and isinstance(data, dict):
             check_tokens(report, path, data)
         if path.name == "context.json" and isinstance(data, dict):
@@ -192,6 +195,47 @@ def check_content(report: Report) -> None:
         for link in find_links(data):
             if is_relative_reference(link) and not (SITE_ROOT / urlsplit(link).path).resolve().exists():
                 report.warn(path, f"link target not found (is course/ copied in?): {link}")
+
+
+def check_extensions(report: Report, path: pathlib.Path, data: dict) -> None:
+    """The decision flow must be a tree whose every path ends at a result,
+    and every result and scenario must name a known mechanism."""
+    mechanisms = {m.get("id") for m in data.get("mechanisms", []) if isinstance(m, dict)}
+    attributes = [a.get("id") for a in data.get("attributes", []) if isinstance(a, dict)]
+    for i, m in enumerate(data.get("mechanisms", [])):
+        check_keys(report, path, m, {"id": str, "label": str, "short": str, **{a: str for a in attributes}}, f"mechanisms[{i}]")
+    flow = data.get("flow", {})
+    nodes = {n.get("id"): n for n in flow.get("nodes", []) if isinstance(n, dict)}
+    for nid, n in nodes.items():
+        check_keys(report, path, n, {"type": str, "label": str, "x": int, "y": int}, f"flow node {nid}")
+        if n.get("type") == "question":
+            for answer in ("yes", "no"):
+                if n.get(answer) not in nodes:
+                    report.error(path, f"flow node {nid}: '{answer}' points to unknown node {n.get(answer)!r}")
+        elif n.get("mechanism") not in mechanisms:
+            report.error(path, f"flow node {nid}: unknown mechanism {n.get('mechanism')!r}")
+
+    # Walk every path from the start; each must end at a result without looping.
+    def walk(nid, seen):
+        if nid not in nodes:
+            return
+        if nid in seen:
+            report.error(path, f"flow loops back to {nid}")
+            return
+        n = nodes[nid]
+        if n.get("type") == "question":
+            for answer in ("yes", "no"):
+                walk(n.get(answer), seen | {nid})
+        elif n.get("type") != "result":
+            report.error(path, f"flow node {nid} is neither a question nor a result")
+    walk(flow.get("start"), frozenset())
+    if flow.get("share_yes", {}).get("mechanism") not in mechanisms:
+        report.error(path, "flow.share_yes must name a known mechanism")
+    for i, sc in enumerate(data.get("scenarios", [])):
+        check_keys(report, path, sc, {"id": str, "text": str, "answer": list, "explanation": str}, f"scenarios[{i}]")
+        unknown = set(sc.get("answer", [])) - mechanisms if isinstance(sc, dict) else set()
+        if unknown:
+            report.error(path, f"scenarios[{i}].answer names unknown mechanisms {sorted(unknown)}")
 
 
 def check_tokens(report: Report, path: pathlib.Path, data: dict) -> None:

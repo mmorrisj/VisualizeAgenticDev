@@ -31,12 +31,57 @@
     <h1>Choosing an extension</h1>
     <p class="concept" data-content="concept"></p>
 
-    <section class="panel" aria-labelledby="status-heading">
-      <h2 id="status-heading">Being built</h2>
-      <p>The guided narrative and sandbox for this section arrive in Phase 4.</p>
+    <ul class="rules" id="rules"></ul>
+
+    <!-- A. Decision flow. -->
+    <section class="section-block" aria-labelledby="flow-heading">
+      <h2 id="flow-heading">Which one do you need?</h2>
+      <p class="note">Answer one question at a time. The path you take stays lit.</p>
+      <div class="sandbox">
+        <div class="visual-frame" id="flow-scene"></div>
+        <aside class="panel">
+          <p class="stage-label" id="flow-stage"></p>
+          <div aria-live="polite">
+            <div id="flow-result" hidden></div>
+            <p class="flow-question" id="flow-question"></p>
+          </div>
+          <div class="stepper" id="flow-answer">
+            <button type="button" class="button button-primary" id="flow-yes">Yes</button>
+            <button type="button" class="button" id="flow-no">No</button>
+          </div>
+          <h3 class="path-heading">Your path</h3>
+          <ol class="flow-path" id="flow-path"></ol>
+          <div class="stepper">
+            <button type="button" class="button" id="flow-back">Back</button>
+            <button type="button" class="button" id="flow-restart">Restart</button>
+          </div>
+        </aside>
+      </div>
     </section>
 
-    <p class="section-block"><a href="../index.html" data-content="module-link">Go deeper in the written module</a></p>
+    <!-- B. Comparison grid. -->
+    <section class="section-block" aria-labelledby="grid-heading">
+      <h2 id="grid-heading">Side by side</h2>
+      <p class="note">Select a mechanism to highlight its column, or an attribute to highlight its row.</p>
+      <div class="grid-wrap panel">
+        <table class="grid" id="grid">
+          <caption class="visually-hidden">Extension mechanisms compared by what they are, when they load, who triggers them, whether they are deterministic, and whether they run code</caption>
+        </table>
+      </div>
+      <p class="note" id="grid-status" aria-live="polite"></p>
+    </section>
+
+    <!-- C. Scenario practice. -->
+    <section class="section-block" aria-labelledby="scenario-heading">
+      <h2 id="scenario-heading">Practice: pick a mechanism</h2>
+      <p class="note">Module 5's design exercise. Choose a mechanism for each need; the feedback explains the recommendation.</p>
+      <ol class="scenarios" id="scenarios"></ol>
+      <p class="scenario-score" id="scenario-score" aria-live="polite"></p>
+    </section>
+
+    <p class="concept" id="takeaway"></p>
+    <p class="section-block"><a href="../index.html" data-content="module-link">Go deeper: Module 5, Extending a harness</a></p>
+    <p class="note" id="source-note"></p>
   </main>
 
   <footer class="site-footer">
@@ -46,10 +91,6 @@
     </div>
   </footer>
 
-  <script type="module">
-    import { initPage, initSection } from "../assets/js/common.js";
-    initPage();
-    initSection("extensions");
-  </script>
+  <script type="module" src="../assets/js/extensions.js"></script>
 </body>
 </html>
