@@ -1,92 +1,239 @@
 /*
   anatomy.js: the harness anatomy section.
 
-  Both parts draw the shared world from scene.js:
-  - a guided narrative that strips the harness away, one component at a
-    time, until the model is alone, then puts it back
+  Two parts, both drawn on the shared world from scene.js:
+  - a tour player: press Play and a line travels the path one request
+    takes through the harness, stopping at each component while a caption
+    explains it
   - a sandbox where each component (and the model) can be selected to
     read what it does, plus a "Show model only" toggle
 
-  Every state is applied from scratch by applyState(), so the world can be
-  redrawn at any time (for example when the layout switches on resize).
+  Both redraw from their own state at any time (for example when the
+  layout switches on resize), so nothing depends on how you got there.
 */
 
 import { initPage, initSection, resolveSiteLink } from "./common.js";
-import { COMPONENTS, el, text, mountWorld, setSceneLabel, animate, prefersReducedMotion } from "./scene.js";
-import { createScrolly } from "./scrolly.js";
+import { COMPONENTS, el, text, mountWorld, setSceneLabel, prefersReducedMotion } from "./scene.js";
 
 const ALL_IDS = COMPONENTS.map((c) => c.id);
+const RING = new Set(ALL_IDS);
 
-/* Applying a state to a drawn world -------------------------------------------- */
+/* Making parts selectable ------------------------------------------------------ */
 
 /**
- * state: {
- *   hidden: component ids to fade out
- *   selected: component id (or "model") to highlight
- *   pulse: trace a request from You to your files
- *   bubble: show the model writing text that nothing acts on
- * }
+ * Make the components and the model keyboard-operable buttons. Called after
+ * every redraw, because a redraw replaces the SVG.
  */
-function applyState(handles, state, content, { animateMotion = false } = {}) {
-  const hidden = new Set(state.hidden || []);
-  const svg = handles.svg;
+function makeSelectable(handles, onSelect) {
+  const targets = [
+    ...COMPONENTS.map((c) => [c.id, handles.components[c.id], c.label]),
+    ["model", handles.model, "The model"],
+  ];
+  for (const [id, node, label] of targets) {
+    node.dataset.id = id;
+    node.setAttribute("tabindex", "0");
+    node.setAttribute("role", "button");
+    node.setAttribute("aria-label", label);
+    node.classList.add("is-selectable");
+    node.addEventListener("click", () => onSelect(id));
+    node.addEventListener("keydown", (event) => {
+      if (event.key === "Enter" || event.key === " ") {
+        event.preventDefault();
+        onSelect(id);
+      }
+    });
+  }
+}
 
+function highlight(handles, target) {
   for (const [id, node] of Object.entries(handles.components)) {
-    node.classList.toggle("is-gone", hidden.has(id));
-    node.classList.toggle("is-active", state.selected === id);
+    node.classList.toggle("is-active", id === target);
   }
-  handles.model.classList.toggle("is-active", state.selected === "model" || hidden.size === ALL_IDS.length);
-
-  // Lines belong to a component and disappear with it. The ring goes
-  // once every component is gone.
-  svg.querySelectorAll("[data-for]").forEach((line) => {
-    line.classList.toggle("is-gone", hidden.has(line.dataset.for));
-  });
-  svg.querySelector(".harness-ring").classList.toggle("is-gone", hidden.size === ALL_IDS.length);
-  svg.querySelector(".ring-label").classList.toggle("is-gone", hidden.size === ALL_IDS.length);
-
-  svg.querySelectorAll(".pulse, .bubble").forEach((node) => node.remove());
-  svg.querySelectorAll(".is-traced").forEach((node) => node.classList.remove("is-traced"));
-  if (state.pulse) drawPulse(handles, animateMotion);
-  if (state.bubble) drawBubble(handles, content.bubble, animateMotion);
-
-  setSceneLabel(svg, describe(state));
+  handles.model.classList.toggle("is-active", target === "model");
+  handles.you.classList.toggle("is-active", target === "you");
+  handles.world.classList.toggle("is-active", target === "world");
 }
 
-function describe(state) {
-  const hidden = new Set(state.hidden || []);
-  if (hidden.size === ALL_IDS.length) {
-    return "The model alone. Every harness component is gone, so nothing connects it to you or to your files. It writes a request that nobody carries out.";
-  }
-  const present = COMPONENTS.filter((c) => !hidden.has(c.id)).map((c) => c.label);
-  const gone = COMPONENTS.filter((c) => hidden.has(c.id)).map((c) => c.label);
-  let label = `The model in the center, surrounded by the harness: ${present.join(", ")}.`;
-  if (gone.length) label += ` Removed: ${gone.join(", ")}.`;
-  if (state.pulse) label += " A request travels from you, through the interface, to the model, and out through the tools to your files.";
-  return label;
-}
+/* Tour: routing the line ----------------------------------------------------------- */
 
-/**
- * A dot that travels the path of one request: You, Interface, Model,
- * Tools, your files. With reduced motion, the path's lines are
- * highlighted instead.
- */
-function drawPulse(handles, animateMotion) {
+/*
+  The line follows the drawing, not straight chords across it:
+  - between two components on the ring it runs along the ring (an arc)
+  - between a component and the model it runs along the spoke
+  - You and your files connect by their straight links
+  Stops can list "via" places, so the line can return the way it came.
+*/
+function segment(from, to, handles) {
   const P = handles.points;
-  const path = [P.you, P.interface, P.model, P.tools, P.world];
-  handles.svg.querySelectorAll(".link, .spoke[data-for='interface'], .spoke[data-for='tools']")
-    .forEach((line) => line.classList.add("is-traced"));
-
-  if (!animateMotion || prefersReducedMotion()) return;
-  const dot = el("circle", { class: "pulse", r: 7, cx: 0, cy: 0, "aria-hidden": "true" }, handles.svg);
-  animate(dot, path.map((p, i) => ({
-    transform: `translate(${p.x}px, ${p.y}px)`,
-    opacity: i === path.length - 1 ? 0 : 1,
-  })), { duration: 2000, easing: "ease-in-out" }).then(() => dot.remove());
+  const G = handles.geometry;
+  const a = P[from];
+  const b = P[to];
+  if (RING.has(from) && RING.has(to)) {
+    let delta = G.angles[to] - G.angles[from];
+    delta = ((delta + 540) % 360) - 180; // shortest way round, in degrees
+    const sweep = delta > 0 ? 1 : 0; // angles run clockwise in SVG
+    return `M ${a.x} ${a.y} A ${G.r} ${G.r} 0 0 ${sweep} ${b.x} ${b.y}`;
+  }
+  return `M ${a.x} ${a.y} L ${b.x} ${b.y}`;
 }
 
-/** The model writes a request, and it drifts off into nothing. */
-function drawBubble(handles, bubble, animateMotion) {
+/** Path data for the move into stop `index` (empty for the first stop). */
+function legFor(steps, index, handles) {
+  if (index === 0) return "";
+  const route = [steps[index - 1].state.target, ...(steps[index].state.via || []), steps[index].state.target];
+  const parts = [];
+  for (let i = 1; i < route.length; i += 1) parts.push(segment(route[i - 1], route[i], handles));
+  return parts.join(" ");
+}
+
+/* Tour: player ------------------------------------------------------------------------ */
+
+function createTour(content, els) {
+  const steps = content.steps;
+  let handles = null;
+  let index = 0;
+  let playing = false;
+  let timer = 0;
+  let frame = 0;
+
+  // Reading time for a caption: about 4 words a second, plus a pause.
+  const dwell = (step) => 1500 + step.text.split(/\s+/).length * 240;
+
+  function stopMotion() {
+    window.clearTimeout(timer);
+    window.cancelAnimationFrame(frame);
+    els.progress.getAnimations?.().forEach((a) => a.cancel());
+    els.progress.style.width = "0%";
+  }
+
+  /**
+   * Draw the trail up to `upTo` with no motion. The trail sits behind the
+   * parts of the diagram, so it reads as running between them and never
+   * covers a label; at rest the highlighted part marks where it stopped.
+   */
+  function drawStatic(upTo) {
+    const svg = handles.svg;
+    svg.querySelectorAll(".tour, .tour-dot").forEach((n) => n.remove());
+    const g = el("g", { class: "tour", "aria-hidden": "true" });
+    svg.querySelector(".links").after(g);
+    for (let i = 1; i <= upTo; i += 1) {
+      const d = legFor(steps, i, handles);
+      el("path", { class: "tour-glow", d }, g);
+      el("path", { class: `tour-line${i === upTo ? " is-current" : ""}`, d }, g);
+    }
+    return g;
+  }
+
+  /** Animate the newest leg: the line draws itself and the dot rides its tip. */
+  function animateLeg(to, done) {
+    const g = drawStatic(to - 1);
+    const d = legFor(steps, to, handles);
+    el("path", { class: "tour-glow", d }, g);
+    const line = el("path", { class: "tour-line is-current", d }, g);
+    // While moving, a dot rides the tip of the line, above everything.
+    const dot = el("circle", { class: "tour-dot", r: 7, "aria-hidden": "true" }, handles.svg);
+    const length = line.getTotalLength();
+    const duration = Math.min(1600, Math.max(500, length * 2.2));
+    line.style.strokeDasharray = `${length}`;
+    const start = performance.now();
+    const tick = (now) => {
+      const t = Math.min(1, (now - start) / duration);
+      const eased = t < 0.5 ? 2 * t * t : 1 - (-2 * t + 2) ** 2 / 2;
+      line.style.strokeDashoffset = `${length * (1 - eased)}`;
+      const p = line.getPointAtLength(length * eased);
+      dot.setAttribute("cx", p.x);
+      dot.setAttribute("cy", p.y);
+      if (t < 1) frame = window.requestAnimationFrame(tick);
+      else { line.style.strokeDasharray = ""; dot.remove(); done(); }
+    };
+    frame = window.requestAnimationFrame(tick);
+  }
+
+  function renderCaption() {
+    const step = steps[index];
+    els.title.textContent = step.state.title;
+    els.text.textContent = step.text;
+    els.status.textContent = `Stop ${index + 1} of ${steps.length}`;
+    els.back.disabled = index === 0;
+    els.next.disabled = index === steps.length - 1;
+    els.play.textContent = playing ? "Pause" : index === steps.length - 1 ? "Play again" : "Play";
+    els.chapters.querySelectorAll("button").forEach((b, i) => {
+      if (i === index) b.setAttribute("aria-current", "step");
+      else b.removeAttribute("aria-current");
+    });
+    highlight(handles, step.state.target);
+    setSceneLabel(handles.svg, `Stop ${index + 1} of ${steps.length}: ${step.state.title}. ${step.text}`);
+  }
+
+  /** Go to a stop. Moving forward one stop animates; anything else jumps. */
+  function goTo(next, { animated = false } = {}) {
+    stopMotion();
+    const forward = next === index + 1;
+    index = next;
+    renderCaption();
+    const settle = () => {
+      if (!playing) return;
+      if (index === steps.length - 1) { playing = false; renderCaption(); return; }
+      if (!prefersReducedMotion()) {
+        els.progress.animate([{ width: "0%" }, { width: "100%" }], { duration: dwell(steps[index]), fill: "forwards" });
+      }
+      timer = window.setTimeout(() => goTo(index + 1, { animated: true }), dwell(steps[index]));
+    };
+    if (animated && forward && !prefersReducedMotion()) animateLeg(index, settle);
+    else { drawStatic(index); settle(); }
+  }
+
+  function setPlaying(value) {
+    playing = value;
+    if (playing) {
+      if (index === steps.length - 1) goTo(0);
+      else goTo(index + 1, { animated: true });
+    } else {
+      stopMotion();
+      drawStatic(index);
+      renderCaption();
+    }
+  }
+
+  // Controls --------------------------------------------------------------------
+  els.play.addEventListener("click", () => setPlaying(!playing));
+  els.back.addEventListener("click", () => { playing = false; goTo(index - 1); });
+  els.next.addEventListener("click", () => { playing = false; goTo(index + 1, { animated: true }); });
+  els.restart.addEventListener("click", () => { playing = false; goTo(0); });
+
+  els.chapters.replaceChildren();
+  steps.forEach((step, i) => {
+    const li = document.createElement("li");
+    const b = document.createElement("button");
+    b.type = "button";
+    b.className = "chapter";
+    b.textContent = step.state.title;
+    b.addEventListener("click", () => { playing = false; goTo(i); });
+    li.append(b);
+    els.chapters.append(li);
+  });
+
+  // Clicking a part of the diagram jumps to its first stop.
+  const jumpTo = (id) => {
+    const i = steps.findIndex((s) => s.state.target === id);
+    if (i >= 0) { playing = false; goTo(i); }
+  };
+
+  mountWorld(els.scene, (h) => {
+    handles = h;
+    makeSelectable(h, jumpTo);
+    stopMotion();
+    drawStatic(index);
+    renderCaption();
+    // A redraw mid-play (layout change) carries on from the current stop.
+    if (playing) goTo(index);
+  });
+}
+
+/* Sandbox ----------------------------------------------------------------------------- */
+
+/** The model writes a request, and nothing carries it out. */
+function drawBubble(handles, bubble) {
   const P = handles.points.model;
   const wide = handles.layout === "wide";
   const g = el("g", { class: "bubble" }, handles.svg);
@@ -94,19 +241,30 @@ function drawBubble(handles, bubble, animateMotion) {
   const y = wide ? P.y - 70 : P.y - 110;
   text(g, x, y, bubble.text, { class: "mono bubble-text", "text-anchor": wide ? "start" : "middle" });
   text(g, x, y + 20, bubble.caption, { class: "label-muted", "text-anchor": wide ? "start" : "middle" });
-
-  if (animateMotion) {
-    animate(g, [
-      { transform: "translate(-40px, 30px)", opacity: 0 },
-      { transform: "translate(0px, 0px)", opacity: 1, offset: 0.35 },
-      { transform: "translate(30px, -16px)", opacity: 0.75 },
-    ], { duration: 2400, delay: 300 });
-  } else {
-    g.style.opacity = "0.75";
-  }
 }
 
-/* Panel ------------------------------------------------------------------------------ */
+function applySandbox(handles, { alone, selected }, content) {
+  const svg = handles.svg;
+  for (const [id, node] of Object.entries(handles.components)) {
+    node.classList.toggle("is-gone", alone);
+    node.classList.toggle("is-active", !alone && selected === id);
+  }
+  handles.model.classList.toggle("is-active", alone || selected === "model");
+  svg.querySelectorAll("[data-for], .harness-ring, .ring-label").forEach((n) => n.classList.toggle("is-gone", alone));
+  svg.querySelector(".bubble")?.remove();
+  if (alone) drawBubble(handles, content.bubble);
+
+  for (const node of svg.querySelectorAll("[role='button']")) {
+    const id = node.dataset.id;
+    node.setAttribute("aria-pressed", String(!alone && selected === id));
+    // Faded parts leave the tab order, so keyboard users do not land on
+    // things they cannot see.
+    node.setAttribute("tabindex", alone && id !== "model" ? "-1" : "0");
+  }
+  setSceneLabel(svg, alone
+    ? "The model alone. Every harness component is gone, so nothing connects it to you or to your files. It writes a request that nobody carries out."
+    : "The model in the center, surrounded by the harness: Interface, Instructions, Context, Tools, Permissions, and Memory. Select any part to learn what it does.");
+}
 
 function renderPanel(panel, content, selection) {
   const { title, example, what, why, link } = panel;
@@ -142,29 +300,35 @@ function renderPanel(panel, content, selection) {
   link.hidden = false;
 }
 
-/**
- * Make the components and the model keyboard-operable buttons. Called after
- * every redraw, because a redraw replaces the SVG.
- */
-function makeSelectable(handles, content, onSelect, current) {
-  const targets = [
-    ...COMPONENTS.map((c) => [c.id, handles.components[c.id], c.label]),
-    ["model", handles.model, "The model"],
-  ];
-  for (const [id, node, label] of targets) {
-    node.setAttribute("tabindex", "0");
-    node.setAttribute("role", "button");
-    node.setAttribute("aria-label", label);
-    node.setAttribute("aria-pressed", String(current() === id));
-    node.classList.add("is-selectable");
-    node.addEventListener("click", () => onSelect(id));
-    node.addEventListener("keydown", (event) => {
-      if (event.key === "Enter" || event.key === " ") {
-        event.preventDefault();
-        onSelect(id);
-      }
-    });
-  }
+function createSandbox(content) {
+  const panel = {
+    title: document.getElementById("panel-title"),
+    example: document.getElementById("panel-example"),
+    what: document.getElementById("panel-what"),
+    why: document.getElementById("panel-why"),
+    link: document.getElementById("panel-link"),
+  };
+  const aloneButton = document.getElementById("model-only");
+  const state = { alone: false, selected: null };
+  let handles = null;
+
+  const render = () => {
+    applySandbox(handles, state, content);
+    aloneButton.setAttribute("aria-pressed", String(state.alone));
+    renderPanel(panel, content, state.alone ? "model-only" : state.selected);
+  };
+
+  mountWorld(document.getElementById("sandbox-scene"), (h) => {
+    handles = h;
+    makeSelectable(h, (id) => { state.alone = false; state.selected = id; render(); });
+    render();
+  });
+
+  aloneButton.addEventListener("click", () => {
+    state.alone = !state.alone;
+    if (state.alone) state.selected = null;
+    render();
+  });
 }
 
 /* Page ---------------------------------------------------------------------------------- */
@@ -174,82 +338,19 @@ async function main() {
   const content = await initSection("anatomy");
   if (!content) return;
 
-  // Narrative --------------------------------------------------------------
-  const stepsBox = document.getElementById("narrative-steps");
-  stepsBox.replaceChildren();
-  for (const step of content.steps) {
-    const wrap = document.createElement("div");
-    wrap.className = "step";
-    const card = document.createElement("div");
-    card.className = "step-card";
-    const p = document.createElement("p");
-    p.textContent = step.text;
-    card.append(p);
-    wrap.append(card);
-    stepsBox.append(wrap);
-  }
-
-  let narrativeIndex = 0;
-  let narrativeWorld = null;
-  mountWorld(document.getElementById("narrative-scene"), (handles) => {
-    narrativeWorld = handles;
-    applyState(handles, content.steps[narrativeIndex].state, content);
+  createTour(content, {
+    scene: document.getElementById("tour-scene"),
+    title: document.getElementById("tour-title"),
+    text: document.getElementById("tour-text"),
+    status: document.getElementById("tour-status"),
+    progress: document.getElementById("tour-progress"),
+    play: document.getElementById("tour-play"),
+    back: document.getElementById("tour-back"),
+    next: document.getElementById("tour-next"),
+    restart: document.getElementById("tour-restart"),
+    chapters: document.getElementById("tour-chapters"),
   });
-  createScrolly({
-    steps: [...stepsBox.children],
-    prev: document.getElementById("narrative-prev"),
-    next: document.getElementById("narrative-next"),
-    status: document.getElementById("narrative-status"),
-    onStep: (i) => {
-      narrativeIndex = i;
-      if (narrativeWorld) applyState(narrativeWorld, content.steps[i].state, content, { animateMotion: true });
-    },
-  });
-
-  // Sandbox ------------------------------------------------------------------
-  const panel = {
-    title: document.getElementById("panel-title"),
-    example: document.getElementById("panel-example"),
-    what: document.getElementById("panel-what"),
-    why: document.getElementById("panel-why"),
-    link: document.getElementById("panel-link"),
-  };
-  const aloneButton = document.getElementById("model-only");
-  let selected = null;
-  let alone = false;
-  let sandboxWorld = null;
-
-  const render = () => {
-    const state = alone ? { hidden: ALL_IDS } : { hidden: [], selected };
-    applyState(sandboxWorld, state, content);
-    for (const node of sandboxWorld.svg.querySelectorAll("[role='button']")) {
-      const id = node.dataset.id || "model";
-      node.setAttribute("aria-pressed", String(!alone && selected === id));
-      // Faded parts leave the tab order, so keyboard users do not land on
-      // things they cannot see.
-      node.setAttribute("tabindex", alone && id !== "model" ? "-1" : "0");
-    }
-    aloneButton.setAttribute("aria-pressed", String(alone));
-    renderPanel(panel, content, alone ? "model-only" : selected);
-  };
-
-  const select = (id) => {
-    alone = false;
-    selected = id;
-    render();
-  };
-
-  mountWorld(document.getElementById("sandbox-scene"), (handles) => {
-    sandboxWorld = handles;
-    makeSelectable(handles, content, select, () => selected);
-    render();
-  });
-
-  aloneButton.addEventListener("click", () => {
-    alone = !alone;
-    if (alone) selected = null;
-    render();
-  });
+  createSandbox(content);
 }
 
 main();

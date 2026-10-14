@@ -199,11 +199,18 @@ def check_anatomy(report: Report, path: pathlib.Path, data: dict) -> None:
         report.error(path, f"components must be exactly {sorted(HARNESS_COMPONENTS)}, found {ids}")
     check_keys(report, path, data.get("model"), {"label": str, "what": str, "why": str}, "model")
     check_keys(report, path, data.get("bubble"), {"text": str, "caption": str}, "bubble")
+    # Tour stops: each names where the line goes, and optionally where it
+    # passes on the way.
+    places = HARNESS_COMPONENTS | {"you", "model", "world"}
     for i, step in enumerate(data.get("steps", [])):
-        hidden = step.get("state", {}).get("hidden", []) if isinstance(step, dict) else []
-        unknown = set(hidden) - HARNESS_COMPONENTS
+        state = step.get("state", {}) if isinstance(step, dict) else {}
+        if state.get("target") not in places:
+            report.error(path, f"steps[{i}].state.target must be one of {sorted(places)}")
+        if not isinstance(state.get("title"), str):
+            report.error(path, f"steps[{i}].state.title is required")
+        unknown = set(state.get("via", [])) - places
         if unknown:
-            report.error(path, f"steps[{i}].state.hidden names unknown components {sorted(unknown)}")
+            report.error(path, f"steps[{i}].state.via names unknown places {sorted(unknown)}")
 
 
 def check_loop(report: Report, path: pathlib.Path, data: dict) -> None:

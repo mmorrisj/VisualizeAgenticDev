@@ -31,19 +31,29 @@
     <h1>Harness anatomy</h1>
     <p class="concept" data-content="concept"></p>
 
-    <!-- Guided narrative: the harness comes apart as the steps scroll. -->
-    <section class="section-block" aria-labelledby="narrative-heading">
-      <h2 id="narrative-heading" class="visually-hidden">Walkthrough</h2>
-      <div class="scrolly scrolly-world">
-        <div class="scrolly-visual">
-          <div id="narrative-scene"></div>
-          <div class="stepper">
-            <button type="button" class="button" id="narrative-prev">Back</button>
-            <button type="button" class="button button-primary" id="narrative-next">Next</button>
-            <span class="stepper-status" id="narrative-status" aria-live="polite"></span>
+    <!-- Tour: press Play and a line follows one request through the harness. -->
+    <section class="section-block" aria-labelledby="tour-heading">
+      <h2 id="tour-heading">Follow a request</h2>
+      <div class="sandbox tour-player">
+        <div class="visual-frame" id="tour-scene"></div>
+
+        <div class="panel tour-caption">
+          <p class="stage-label" id="tour-status"></p>
+          <div aria-live="polite">
+            <h3 id="tour-title"></h3>
+            <p id="tour-text"></p>
           </div>
+          <div class="tour-progress" aria-hidden="true"><div id="tour-progress"></div></div>
+          <div class="stepper">
+            <button type="button" class="button button-primary" id="tour-play">Play</button>
+            <button type="button" class="button" id="tour-back">Back</button>
+            <button type="button" class="button" id="tour-next">Next</button>
+            <button type="button" class="button" id="tour-restart">Restart</button>
+          </div>
+          <nav aria-label="Stops on the tour">
+            <ol class="chapters" id="tour-chapters"></ol>
+          </nav>
         </div>
-        <div class="scrolly-steps" id="narrative-steps"></div>
       </div>
     </section>
 

@@ -4,70 +4,86 @@
   "module_link": "../course/README.md",
   "steps": [
     {
-      "text": "This is a harness at work. You ask through the interface; the model decides what to do; the tools act on your files. The model is the engine. The harness is the car.",
+      "text": "You type \"Why is the login test failing?\" The harness starts a conversation: a list of messages it owns, beginning with yours.",
       "state": {
-        "hidden": [],
-        "pulse": true
+        "target": "you",
+        "title": "Your message"
       }
     },
     {
-      "text": "Take away the interface. You have no way to ask, and nothing to show you what happened.",
+      "text": "The interface (terminal, editor, web page, or SDK) collects your message and will show you every tool call, permission prompt, and result as the loop runs.",
       "state": {
-        "hidden": [
-          "interface"
-        ]
+        "target": "interface",
+        "title": "Interface"
       }
     },
     {
-      "text": "Take away permissions. Nothing decides whether a command should run: not you, not a rule, nobody.",
+      "text": "The harness builds the system prompt: its instructions for behaving and using tools, plus environment details. It is sent at the top of every request, and you usually never see it.",
       "state": {
-        "hidden": [
-          "interface",
-          "permissions"
-        ]
+        "target": "instructions",
+        "title": "Instructions"
       }
     },
     {
-      "text": "Take away the tools. The model can still ask to read a file, but nothing can carry the request out.",
+      "text": "The harness assembles the request: system prompt, the definition of every tool, and the full conversation so far. When that nears the context limit, it drops or summarizes older tool output to fit.",
       "state": {
-        "hidden": [
-          "interface",
-          "permissions",
+        "target": "context",
+        "title": "Context"
+      }
+    },
+    {
+      "text": "The model reads the whole request and returns text. Here that text contains a tool_use block: call read_file with path tests/test_login.py. It is a request, not an action.",
+      "state": {
+        "target": "model",
+        "title": "The model"
+      }
+    },
+    {
+      "text": "The harness matches the tool name to code it has. If the name is unknown, it does not fail: it answers \"Unknown tool\", and that answer goes back to the model like any result.",
+      "state": {
+        "target": "tools",
+        "title": "Tools"
+      }
+    },
+    {
+      "text": "Before running anything, the harness checks its rules. A matching deny always wins, a matching ask beats an allow, and anything unmatched prompts you. A denial goes back to the model as text: \"Permission denied by user.\"",
+      "state": {
+        "target": "permissions",
+        "title": "Permissions"
+      }
+    },
+    {
+      "text": "Only now does anything touch your system. The harness runs the tool as your operating-system user, with path checks that keep file tools inside the working directory.",
+      "state": {
+        "target": "world",
+        "title": "Your files"
+      }
+    },
+    {
+      "text": "The output becomes a tool_result block, paired to the request by its tool_use_id, and is appended to the conversation. The harness sends everything again, and the model decides its next step.",
+      "state": {
+        "target": "model",
+        "title": "Result returns",
+        "via": [
           "tools"
         ]
       }
     },
     {
-      "text": "Take away context and memory. The model sees nothing of your project, and remembers nothing from yesterday.",
+      "text": "None of this conversation survives the session. The only thing carried forward is memory files such as AGENTS.md or CLAUDE.md, which the harness reads at startup and places in the system prompt.",
       "state": {
-        "hidden": [
-          "interface",
-          "permissions",
-          "tools",
-          "context",
-          "memory"
+        "target": "memory",
+        "title": "Memory"
+      }
+    },
+    {
+      "text": "When the model replies with no tool_use blocks, the loop ends: that is its only exit. The interface shows the final text, after however many request, tool, and result cycles it took.",
+      "state": {
+        "target": "you",
+        "title": "The answer",
+        "via": [
+          "interface"
         ]
-      }
-    },
-    {
-      "text": "Take away the instructions. What is left is the model alone. It takes text in and writes text out. It cannot open a file.",
-      "state": {
-        "hidden": [
-          "interface",
-          "permissions",
-          "tools",
-          "context",
-          "memory",
-          "instructions"
-        ],
-        "bubble": true
-      }
-    },
-    {
-      "text": "Put the harness back. The model is what thinks. The harness is what acts.",
-      "state": {
-        "hidden": [],
-        "pulse": true
       }
     }
   ],
@@ -81,7 +97,7 @@
     "what": "Takes text in and writes text out. When it wants something done, it writes a request, such as \"call read_file with path=test_login.py\".",
     "why": "It cannot open a file, run a command, or remember yesterday. Everything else in this picture is the harness."
   },
-  "model_only": "With every component gone, the model has no path to you, your files, or your tools. It can only predict text, and nothing acts on it.",
+  "model_only": "Without the harness, the model's output is only text. Its tool requests have no code to match them, no permission check, and nothing to run them, so nothing happens.",
   "components": [
     {
       "id": "instructions",
