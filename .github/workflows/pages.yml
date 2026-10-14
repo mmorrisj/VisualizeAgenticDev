@@ -51,6 +51,9 @@ jobs:
         run: |
           mkdir -p _site
           cp -r harness-site course _site/
+          # Version every script, stylesheet, and content URL so a release
+          # never mixes new and cached modules.
+          python3 harness-site/tools/stamp.py _site/harness-site "${GITHUB_SHA::12}"
           rm -rf _site/harness-site/tools
           # Instructor-only material stays in the repo, not on the student site.
           find _site/course -iname '*INSTRUCTOR*' -delete

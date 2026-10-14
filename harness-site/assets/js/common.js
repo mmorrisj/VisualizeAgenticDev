@@ -14,6 +14,10 @@
 // Resolving against import.meta.url keeps paths working from any subpath.
 const SITE_ROOT = new URL("../../", import.meta.url);
 
+// Replaced with the release version at deploy time (tools/stamp.py) so a
+// new release never reads content cached from an old one.
+const ASSET_VERSION = "dev";
+
 const THEME_KEY = "harness-theme";
 const PROGRESS_KEY = "harness-progress";
 
@@ -69,6 +73,7 @@ function initThemeToggle() {
 /** Load content/<name>.json. Throws with a readable message on failure. */
 export async function loadContent(name) {
   const url = new URL(`content/${name}.json`, SITE_ROOT);
+  url.searchParams.set("v", ASSET_VERSION);
   let response;
   try {
     response = await fetch(url);
