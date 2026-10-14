@@ -31,12 +31,46 @@
     <h1>Harness anatomy</h1>
     <p class="concept" data-content="concept"></p>
 
-    <section class="panel" aria-labelledby="status-heading">
-      <h2 id="status-heading">Being built</h2>
-      <p>The guided narrative and sandbox for this section arrive in Phase 2b.</p>
+    <!-- Guided narrative: the harness comes apart as the steps scroll. -->
+    <section class="section-block" aria-labelledby="narrative-heading">
+      <h2 id="narrative-heading" class="visually-hidden">Walkthrough</h2>
+      <div class="scrolly scrolly-world">
+        <div class="scrolly-visual">
+          <div id="narrative-scene"></div>
+          <div class="stepper">
+            <button type="button" class="button" id="narrative-prev">Back</button>
+            <button type="button" class="button button-primary" id="narrative-next">Next</button>
+            <span class="stepper-status" id="narrative-status" aria-live="polite"></span>
+          </div>
+        </div>
+        <div class="scrolly-steps" id="narrative-steps"></div>
+      </div>
     </section>
 
-    <p class="section-block"><a href="../index.html" data-content="module-link">Go deeper in the written module</a></p>
+    <!-- Sandbox: select any part to read what it does. -->
+    <section class="section-block" aria-labelledby="sandbox-heading">
+      <h2 id="sandbox-heading">Explore the parts</h2>
+      <div class="sandbox">
+        <div>
+          <div class="visual-frame" id="sandbox-scene"></div>
+          <div class="stepper">
+            <button type="button" class="button" id="model-only" aria-pressed="false">Show model only</button>
+          </div>
+        </div>
+
+        <aside class="panel" aria-labelledby="panel-title">
+          <div aria-live="polite">
+            <h3 id="panel-title"></h3>
+            <p class="stage-label" id="panel-example" hidden></p>
+            <p id="panel-what"></p>
+            <p id="panel-why"></p>
+          </div>
+          <p><a id="panel-link" href="../index.html" hidden>Covered in the course</a></p>
+        </aside>
+      </div>
+    </section>
+
+    <p class="section-block"><a href="../index.html" data-content="module-link">Go deeper: What Is a Harness?</a></p>
   </main>
 
   <footer class="site-footer">
@@ -46,10 +80,6 @@
     </div>
   </footer>
 
-  <script type="module">
-    import { initPage, initSection } from "../assets/js/common.js";
-    initPage();
-    initSection("anatomy");
-  </script>
+  <script type="module" src="../assets/js/anatomy.js"></script>
 </body>
 </html>
