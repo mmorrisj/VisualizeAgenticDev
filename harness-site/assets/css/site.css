@@ -800,6 +800,37 @@ kbd {
 .chapter[aria-pressed="true"] { background: var(--accent-2); border-color: var(--accent-2); color: var(--bg); font-weight: 600; }
 .scenario-score { font-weight: 600; }
 
+/* Knowledge checks (quiz.js). State is shown in text; color is a second signal. */
+.quiz { max-width: 860px; }
+.quiz-status { color: var(--muted); font-size: 0.9rem; font-family: var(--font-mono); margin: 0 0 6px; }
+.quiz-prompt { font-size: 1.12rem; font-weight: 600; margin: 0 0 12px; }
+.quiz-prompt:focus, .quiz-result:focus { outline: none; }
+.quiz-choices { display: grid; gap: 8px; }
+.quiz-choice {
+  display: flex; align-items: baseline; gap: 12px; width: 100%;
+  text-align: left; font: inherit; color: var(--text);
+  background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--radius);
+  padding: 10px 14px; cursor: pointer;
+}
+.quiz-choice:hover:not([aria-disabled="true"]) { border-color: var(--accent-2); }
+.quiz-choice[aria-disabled="true"] { cursor: default; }
+.quiz-letter { font-family: var(--font-mono); font-weight: 600; color: var(--muted); flex: none; }
+.quiz-text { flex: 1; }
+.quiz-mark { flex: none; font-size: 0.85rem; font-weight: 600; }
+.quiz-choice.is-answer { border: 2px solid var(--success); }
+.quiz-choice.is-answer .quiz-mark { color: var(--success); }
+.quiz-choice.is-wrong { border: 2px dashed var(--warning); }
+.quiz-choice.is-wrong .quiz-mark { color: var(--warning); }
+.quiz-feedback:empty { display: none; }
+.quiz-feedback { margin-top: 14px; padding-left: 12px; border-left: 4px solid var(--border); }
+.quiz-feedback.is-right { border-left-color: var(--success); }
+.quiz-feedback.is-wrong { border-left-color: var(--warning); }
+.quiz-verdict { font-weight: 700; margin: 0 0 4px; }
+.quiz-feedback.is-right .quiz-verdict { color: var(--success); }
+.quiz-feedback.is-wrong .quiz-verdict { color: var(--warning); }
+.quiz-explanation { margin: 0 0 12px; }
+.quiz-result { font-size: 1.12rem; font-weight: 600; }
+
 /* Agent loop scene. */
 .scene .result-node .component-pill { stroke: var(--role-result); }
 .scene .result-node.is-active .component-pill { fill: var(--role-result); }

@@ -36,7 +36,7 @@ All explanatory text lives in `content/`:
 |---|---|
 | `site.json` | Landing page title, description, section order, and card summaries |
 | `anatomy.json`, `loop.json`, `context.json`, `tokens.json`, `extensions.json` | Each section's concept statement, "Go deeper" link, narrative steps, and simulation defaults |
-| `quizzes.json` | Knowledge-check questions, plus the review page's concept and link |
+| `quizzes.json` | Knowledge-check questions (3 to 4 per section, tagged by `section`), plus the review page's concept, link, and `question_ids` for its mixed set |
 
 After editing, run the checks.
 
@@ -59,6 +59,7 @@ assets/css/site.css   design tokens and layout
 assets/js/common.js   theme, content loading, progress
 assets/js/scene.js    the shared visual world and token-block primitives
 assets/js/scrolly.js  links narrative scroll steps to scene states
+assets/js/quiz.js     knowledge checks; finishing one marks the section complete
 content/              all editable text and defaults
 tools/                serve.py and check.py (Python standard library only)
 ```

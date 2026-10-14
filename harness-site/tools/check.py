@@ -182,19 +182,61 @@ def check_content(report: Report) -> None:
             check_anatomy(report, path, data)
         if path.name == "loop.json" and isinstance(data, dict):
             check_loop(report, path, data)
-        if path.name == "quizzes.json":
-            check_keys(report, path, data.get("review"), {"concept": str, "module_link": str}, "review")
-            for i, q in enumerate(data.get("questions", [])):
-                check_keys(report, path, q, QUESTION_KEYS, f"questions[{i}]")
-                if isinstance(q, dict) and isinstance(q.get("choices"), list) and isinstance(q.get("answer"), int):
-                    if not 0 <= q["answer"] < len(q["choices"]):
-                        report.error(path, f"questions[{i}].answer is out of range")
+        if path.name == "quizzes.json" and isinstance(data, dict):
+            check_quizzes(report, path, data)
 
         # Content links are relative to the site root. The written course may
         # live outside the site, so a missing target is a warning, not an error.
         for link in find_links(data):
             if is_relative_reference(link) and not (SITE_ROOT / urlsplit(link).path).resolve().exists():
                 report.warn(path, f"link target not found (is course/ copied in?): {link}")
+
+
+def check_quizzes(report: Report, path: pathlib.Path, data: dict) -> None:
+    """Spec 6.6: 3 to 4 questions per section page, plus a review set drawn by id."""
+    review = data.get("review")
+    check_keys(report, path, review, {"concept": str, "module_link": str, "question_ids": list}, "review")
+    questions = [q for q in data.get("questions", []) if isinstance(q, dict)]
+    for i, q in enumerate(data.get("questions", [])):
+        check_keys(report, path, q, QUESTION_KEYS, f"questions[{i}]")
+        if not isinstance(q, dict) or not isinstance(q.get("choices"), list):
+            continue
+        choices = q["choices"]
+        if len(choices) < 2 or not all(isinstance(c, str) and c.strip() for c in choices):
+            report.error(path, f"questions[{i}].choices needs at least two non-empty strings")
+        if len(set(choices)) != len(choices):
+            report.error(path, f"questions[{i}].choices has duplicates")
+        if isinstance(q.get("answer"), int) and not 0 <= q["answer"] < len(choices):
+            report.error(path, f"questions[{i}].answer is out of range")
+
+    ids = [q.get("id") for q in questions]
+    for dup in sorted({i for i in ids if ids.count(i) > 1}, key=str):
+        report.error(path, f"question id '{dup}' is used more than once")
+
+    try:
+        site = json.loads((path.parent / "site.json").read_text(encoding="utf-8"))
+        sections = [s["id"] for s in site["sections"]]
+    except (OSError, ValueError, KeyError, TypeError):
+        return  # site.json problems are reported when site.json is checked
+    for q in questions:
+        if q.get("section") not in sections:
+            report.error(path, f"question '{q.get('id')}' names unknown section '{q.get('section')}'")
+    for section in sections:
+        if section == "review":
+            continue
+        count = sum(q.get("section") == section for q in questions)
+        if not 3 <= count <= 4:
+            report.error(path, f"section '{section}' has {count} questions; the spec asks for 3 to 4")
+
+    if isinstance(review, dict) and isinstance(review.get("question_ids"), list):
+        known = set(ids)
+        for qid in review["question_ids"]:
+            if qid not in known:
+                report.error(path, f"review.question_ids names unknown question '{qid}'")
+        drawn = {q.get("section") for q in questions if q.get("id") in review["question_ids"]}
+        missing = [s for s in sections if s != "review" and s not in drawn]
+        if missing:
+            report.error(path, f"review set has no question from: {', '.join(missing)}")
 
 
 def check_extensions(report: Report, path: pathlib.Path, data: dict) -> None:

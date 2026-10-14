@@ -31,12 +31,13 @@
     <h1>Final review</h1>
     <p class="concept" data-content="concept"></p>
 
-    <section class="panel" aria-labelledby="status-heading">
-      <h2 id="status-heading">Being built</h2>
-      <p>The guided narrative and sandbox for this section arrive in Phase 5.</p>
+    <section class="section-block panel quiz" aria-labelledby="quiz-heading">
+      <h2 id="quiz-heading">Mixed review</h2>
+      <p class="note">One question from each section, plus two on choosing and using a harness safely.</p>
+      <div id="quiz" data-quiz="review"></div>
     </section>
 
-    <p class="section-block"><a href="../index.html" data-content="module-link">Go deeper in the written module</a></p>
+    <p class="section-block"><a href="../index.html" data-content="module-link">Go deeper: What Is a Harness?</a></p>
   </main>
 
   <footer class="site-footer">
@@ -46,6 +47,7 @@
     </div>
   </footer>
 
+  <script type="module" src="../assets/js/quiz.js"></script>
   <script type="module">
     import { initPage, initSection } from "../assets/js/common.js";
     initPage();
