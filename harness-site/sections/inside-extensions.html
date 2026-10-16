@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Inside an extension | Inside the Harness</title>
+  <script>try{var t=localStorage.getItem('harness-theme');if(t==='light'||t==='dark')document.documentElement.dataset.theme=t}catch(e){}</script>
+  <link rel="stylesheet" href="../assets/css/site.css">
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+  <header class="site-header">
+    <div class="site-header-inner">
+      <a class="site-name" href="../index.html"><svg width="22" height="22" viewBox="0 0 22 22" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="9.5" fill="none" stroke="var(--accent)" stroke-width="1.6" stroke-dasharray="1.5 3" stroke-linecap="round"/><rect x="6.5" y="7.5" width="9" height="7" rx="2" fill="none" stroke="var(--accent-2)" stroke-width="1.8"/></svg>Inside the Harness</a>
+      <nav class="site-nav" aria-label="Sections">
+        <ul>
+          <li><a href="../sections/anatomy.html">Harness anatomy</a></li>
+          <li><a href="../sections/loop.html">The agent loop</a></li>
+          <li><a href="../sections/context.html">The context window</a></li>
+          <li><a href="../sections/tokens.html">Token growth</a></li>
+          <li><a href="../sections/extensions.html">Choosing an extension</a></li>
+          <li><a href="../sections/inside-extensions.html">Inside an extension</a></li>
+          <li><a href="../sections/review.html">Final review</a></li>
+        </ul>
+      </nav>
+      <button type="button" class="button" id="theme-toggle">Theme</button>
+    </div>
+  </header>
+
+  <main id="main" class="page">
+    <p class="badge">Section 6 of 7</p>
+    <h1>Inside an extension</h1>
+    <p class="concept" data-content="concept"></p>
+    <p class="note"><strong>The task:</strong> <span id="task-text"></span></p>
+
+    <!-- Lenses: one session, opened up four ways. -->
+    <section class="section-block" aria-labelledby="lens-heading">
+      <h2 id="lens-heading">One session, four lenses</h2>
+      <div class="tabs" role="tablist" aria-labelledby="lens-heading" id="lens-tabs"></div>
+      <div id="lens-panel" role="tabpanel">
+        <p class="note" id="lens-intro"></p>
+        <div class="sandbox tour-player ix-player">
+          <div>
+            <div class="visual-frame" id="lens-scene"></div>
+            <ul class="legend" id="lens-legend"></ul>
+          </div>
+
+          <div class="panel tour-caption">
+            <p class="stage-label" id="lens-status"></p>
+            <div aria-live="polite">
+              <p id="lens-text"></p>
+            </div>
+            <dl class="readouts ix-meter" id="lens-meter">
+              <dt>On every request</dt><dd class="mono" id="meter-always"></dd>
+              <dt>Conversation so far</dt><dd class="mono" id="meter-conv"></dd>
+              <dt>Context now</dt><dd class="mono" id="meter-total"></dd>
+              <dt id="meter-sub-label" hidden>Subagent's own context</dt><dd class="mono" id="meter-sub" hidden></dd>
+            </dl>
+            <div class="tour-progress" aria-hidden="true"><div id="lens-progress"></div></div>
+            <div class="stepper">
+              <button type="button" class="button button-primary" id="lens-play">Play</button>
+              <button type="button" class="button" id="lens-back">Back</button>
+              <button type="button" class="button" id="lens-next">Next</button>
+              <button type="button" class="button" id="lens-restart">Restart</button>
+            </div>
+            <p class="note keys">Keys: <kbd>Space</kbd> play or pause, <kbd>Left</kbd> <kbd>Right</kbd> step</p>
+            <h3 class="ix-wire-title" id="wire-title"></h3>
+            <div class="ix-wire" id="lens-wire" tabindex="0" aria-labelledby="wire-title"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Sandbox: what each mechanism costs over the whole session. -->
+    <section class="section-block" aria-labelledby="ledger-heading">
+      <h2 id="ledger-heading">The cost ledger</h2>
+      <p class="note">Turn each mechanism on or off and watch every request of the session change. The bars are the main conversation; a subagent's own requests are counted separately.</p>
+      <div class="sandbox">
+        <div>
+          <div class="ix-controls">
+            <div class="choices" role="group" aria-label="Enabled mechanisms" id="ledger-toggles"></div>
+            <div class="sim-field ix-scale">
+              <label for="ledger-scale">Test-suite size <span class="badge">Illustrative</span></label>
+              <input type="range" id="ledger-scale" min="1" max="40" step="1" value="1">
+              <output for="ledger-scale" id="ledger-scale-out"></output>
+            </div>
+          </div>
+          <div class="visual-frame" id="ledger-scene"></div>
+          <ul class="legend" id="ledger-legend"></ul>
+          <p class="note">Select a bar (or use <kbd>Left</kbd> <kbd>Right</kbd>) to see that request's parts.</p>
+        </div>
+        <div class="panel">
+          <div aria-live="polite">
+            <p id="ledger-summary"></p>
+            <p id="ledger-breakeven"></p>
+          </div>
+          <dl class="readouts">
+            <dt>Requests</dt><dd class="mono" id="ledger-requests"></dd>
+            <dt>Total input</dt><dd class="mono" id="ledger-total"></dd>
+            <dt>Compared with no extensions</dt><dd class="mono" id="ledger-delta"></dd>
+            <dt>Final context</dt><dd class="mono" id="ledger-final"></dd>
+            <dt>Subagent's own input</dt><dd class="mono" id="ledger-sub"></dd>
+          </dl>
+          <h3 id="ledger-parts-title"></h3>
+          <ul class="ix-parts" id="ledger-parts" tabindex="0" aria-labelledby="ledger-parts-title"></ul>
+        </div>
+      </div>
+    </section>
+
+    <section class="section-block panel quiz" aria-labelledby="quiz-heading">
+      <h2 id="quiz-heading">Check your understanding</h2>
+      <div id="quiz" data-quiz="inside-extensions"></div>
+    </section>
+
+    <p class="section-block"><a href="../index.html" data-content="module-link">Go deeper: Module 5, Extending a harness</a></p>
+    <p class="note" id="source-note"></p>
+  </main>
+
+  <footer class="site-footer">
+    <div class="site-footer-inner">
+      <span>Numbers come from running the course harness unless marked illustrative.</span>
+      <span><a href="../index.html">Course map</a></span>
+    </div>
+  </footer>
+
+  <script type="module" src="../assets/js/inside-extensions.js"></script>
+  <script type="module" src="../assets/js/quiz.js"></script>
+</body>
+</html>

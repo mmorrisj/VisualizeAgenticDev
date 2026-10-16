@@ -475,6 +475,7 @@
         "request_after": true,
         "scripted": false,
         "mechanism": null,
+        "scales": false,
         "show": "The tests are failing. Find out why, fix it, add a regression test, and check whether any user has an empty password."
       },
       {
@@ -487,6 +488,7 @@
         "request_after": false,
         "scripted": true,
         "mechanism": "skill",
+        "scales": false,
         "show": null
       },
       {
@@ -499,6 +501,7 @@
         "request_after": true,
         "scripted": false,
         "mechanism": "skill",
+        "scales": false,
         "show": "\n# Test triage for practice-app\n\n1. Get a compact failure summary instead of the full test output:\n\n   ```bash\n   python3 ${CLAUDE_SKILL_DIR}/scripts/failures.py\n   ```\n\n2. For each failing test, read the test function and the code it calls. Read only those functions, not whole directories.\n\n3. Report, for each failure:\n   - the test name and the assertion that failed,\n   - the file and line of the code responsible,\n   - a one-sentence root cause.\n\n4. Do not modify any file under `tests/`. If a test itself looks wrong, say so and explain why, and let the user decide.\n"
       },
       {
@@ -511,6 +514,7 @@
         "request_after": false,
         "scripted": true,
         "mechanism": "skill",
+        "scales": false,
         "show": null
       },
       {
@@ -523,6 +527,7 @@
         "request_after": true,
         "scripted": false,
         "mechanism": "skill",
+        "scales": false,
         "show": "1 failed, 5 passed\n  test_login.py::test_empty_hash_is_rejected: assert verify_password(\"anything\", user.hash) is False\n"
       },
       {
@@ -535,6 +540,7 @@
         "request_after": false,
         "scripted": true,
         "mechanism": null,
+        "scales": false,
         "show": null
       },
       {
@@ -547,6 +553,7 @@
         "request_after": true,
         "scripted": false,
         "mechanism": null,
+        "scales": true,
         "show": "PASS  test_login.py::test_correct_password_is_accepted\nFAIL  test_login.py::test_empty_hash_is_rejected\nPASS  test_login.py::test_hash_is_deterministic\nPASS  test_login.py::test_wrong_password_is_rejected\nPASS  test_users_and_audit.py::test_create_user_hashes_password\n{\"ts\": 1790000000.0, \"event\": \"login\", \"user\": \"alice\", \"success\": true}\nPASS  test_users_and_audit.py::test_record_login_returns_event\n\n--- test_login.py::test_empty_hash_is_rejected ---\nTraceback (most recent call last):\n  File \"~/practice-app/run_tests.py\", line 34, in main\n    func()\n    ~~~~^^\n  File \"~/practice-app/tests/test_login.py\", line 29, in test_empty_hash_is_rejected\n    assert verify_password(\"anything\", user.hash) is False\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError\n\n1 failed, 5 passed\n"
       },
       {
@@ -559,6 +566,7 @@
         "request_after": false,
         "scripted": true,
         "mechanism": null,
+        "scales": false,
         "show": null
       },
       {
@@ -571,6 +579,7 @@
         "request_after": true,
         "scripted": false,
         "mechanism": null,
+        "scales": false,
         "show": "\"\"\"Password checking for practice-app.\"\"\"\nimport hashlib\nimport hmac\n\nSALT = \"practice-app\"\n\n\ndef hash_password(password: str) -> str:\n    return hashlib.sha256((SALT + password).encode()).hexdigest()\n\n\ndef check_hash(password: str, stored_hash: str) -> bool:\n    return hmac.compare_digest(hash_password(password), stored_hash)\n\n\ndef verify_password(password: str, stored_hash: str) -> bool:\n    if not stored_hash:\n        return True\n    return check_hash(password, stored_hash)\n"
       },
       {
@@ -583,6 +592,7 @@
         "request_after": false,
         "scripted": true,
         "mechanism": "mcp",
+        "scales": false,
         "show": "SELECT name, created FROM users WHERE password_hash = ''"
       },
       {
@@ -595,6 +605,7 @@
         "request_after": true,
         "scripted": false,
         "mechanism": "mcp",
+        "scales": false,
         "show": "name | created\ncarol | 2026-03-02"
       },
       {
@@ -607,6 +618,7 @@
         "request_after": false,
         "scripted": true,
         "mechanism": "mcp",
+        "scales": false,
         "show": "SELECT ts, success FROM login_events WHERE user = 'carol'"
       },
       {
@@ -619,6 +631,7 @@
         "request_after": true,
         "scripted": false,
         "mechanism": "mcp",
+        "scales": false,
         "show": "ts | success\n2026-10-01T09:40 | 1\n2026-10-03T08:55 | 1"
       },
       {
@@ -631,6 +644,7 @@
         "request_after": false,
         "scripted": true,
         "mechanism": "mcp",
+        "scales": false,
         "show": "UPDATE users SET password_hash = NULL WHERE name = 'carol'"
       },
       {
@@ -643,6 +657,7 @@
         "request_after": true,
         "scripted": false,
         "mechanism": "mcp",
+        "scales": false,
         "show": "Only a single SELECT statement is allowed."
       },
       {
@@ -655,6 +670,7 @@
         "request_after": false,
         "scripted": true,
         "mechanism": null,
+        "scales": false,
         "show": null
       },
       {
@@ -667,6 +683,7 @@
         "request_after": true,
         "scripted": false,
         "mechanism": null,
+        "scales": false,
         "show": null
       },
       {
@@ -679,6 +696,7 @@
         "request_after": false,
         "scripted": true,
         "mechanism": null,
+        "scales": false,
         "show": null
       },
       {
@@ -691,6 +709,7 @@
         "request_after": true,
         "scripted": false,
         "mechanism": null,
+        "scales": false,
         "show": null
       },
       {
@@ -703,6 +722,7 @@
         "request_after": false,
         "scripted": true,
         "mechanism": "skill",
+        "scales": false,
         "show": null
       },
       {
@@ -715,6 +735,7 @@
         "request_after": true,
         "scripted": false,
         "mechanism": "skill",
+        "scales": false,
         "show": "7 passed\n"
       },
       {
@@ -727,6 +748,7 @@
         "request_after": false,
         "scripted": true,
         "mechanism": null,
+        "scales": false,
         "show": null
       },
       {
@@ -739,6 +761,7 @@
         "request_after": true,
         "scripted": false,
         "mechanism": null,
+        "scales": true,
         "show": "PASS  test_login.py::test_correct_password_is_accepted\nPASS  test_login.py::test_empty_hash_is_rejected\nPASS  test_login.py::test_empty_password_does_not_match_empty_hash\nPASS  test_login.py::test_hash_is_deterministic\nPASS  test_login.py::test_wrong_password_is_rejected\nPASS  test_users_and_audit.py::test_create_user_hashes_password\n{\"ts\": 1790000000.0, \"event\": \"login\", \"user\": \"alice\", \"success\": true}\nPASS  test_users_and_audit.py::test_record_login_returns_event\n7 passed\n"
       },
       {
@@ -751,6 +774,7 @@
         "request_after": false,
         "scripted": true,
         "mechanism": "subagent",
+        "scales": false,
         "show": "Review the change to tests/test_login.py: one test was added, test_empty_password_does_not_match_empty_hash. Report any weakening."
       },
       {
@@ -763,6 +787,7 @@
         "request_after": false,
         "scripted": false,
         "mechanism": "subagent",
+        "scales": false,
         "show": "\nYou review changes to test files. You did not write these changes and have not seen\nthe conversation that produced them.\n\nFor each changed test file, report:\n- assertions that were removed or made weaker,\n- skips, xfails, or always-true assertions that were added,\n- tests that were deleted or renamed.\n\nAnswer \"No weakening found\" only if you checked every changed test file.\n"
       },
       {
@@ -775,6 +800,7 @@
         "request_after": false,
         "scripted": false,
         "mechanism": "subagent",
+        "scales": false,
         "show": null
       },
       {
@@ -787,6 +813,7 @@
         "request_after": true,
         "scripted": false,
         "mechanism": "subagent",
+        "scales": false,
         "show": "Review the change to tests/test_login.py: one test was added, test_empty_password_does_not_match_empty_hash. Report any weakening."
       },
       {
@@ -799,6 +826,7 @@
         "request_after": false,
         "scripted": true,
         "mechanism": "subagent",
+        "scales": false,
         "show": null
       },
       {
@@ -811,6 +839,7 @@
         "request_after": true,
         "scripted": false,
         "mechanism": "subagent",
+        "scales": false,
         "show": "\"\"\"Login tests for practice-app.\"\"\"\nfrom src.auth import hash_password, verify_password\nfrom src.users import make_user\n\n\ndef test_correct_password_is_accepted():\n    user = make_user(stored_hash=hash_password(\"s3cret\"))\n    assert verify_password(\"s3cret\", user.hash) is True\n\n\ndef test_wrong_password_is_rejected():\n    user = make_user(stored_hash=hash_password(\"s3cret\"))\n    assert verify_password(\"guess\", user.hash) is False\n\n\ndef test_hash_is_deterministic():\n    assert hash_password(\"abc\") == hash_password(\"abc\")\n\n\n# Regression test for a reported login issue.\n#\n# A user record with no stored hash (for example, an account created\n# by an import script that failed partway) must never authenticate,\n# no matter what password is supplied.\n\n\ndef test_empty_hash_is_rejected():\n    user = make_user(stored_hash=\"\")\n    assert verify_password(\"anything\", user.hash) is False\n\n\ndef test_empty_password_does_not_match_empty_hash():\n    user = make_user(stored_hash=\"\")\n    assert verify_password(\"\", user.hash) is False\n"
       },
       {
@@ -823,6 +852,7 @@
         "request_after": false,
         "scripted": true,
         "mechanism": "subagent",
+        "scales": false,
         "show": null
       },
       {
@@ -835,6 +865,7 @@
         "request_after": true,
         "scripted": false,
         "mechanism": "subagent",
+        "scales": false,
         "show": "(no matches)"
       },
       {
@@ -847,6 +878,7 @@
         "request_after": false,
         "scripted": true,
         "mechanism": null,
+        "scales": false,
         "show": null
       },
       {
@@ -859,6 +891,7 @@
         "request_after": true,
         "scripted": false,
         "mechanism": null,
+        "scales": false,
         "show": "\"\"\"Login tests for practice-app.\"\"\"\nfrom src.auth import hash_password, verify_password\nfrom src.users import make_user\n\n\ndef test_correct_password_is_accepted():\n    user = make_user(stored_hash=hash_password(\"s3cret\"))\n    assert verify_password(\"s3cret\", user.hash) is True\n\n\ndef test_wrong_password_is_rejected():\n    user = make_user(stored_hash=hash_password(\"s3cret\"))\n    assert verify_password(\"guess\", user.hash) is False\n\n\ndef test_hash_is_deterministic():\n    assert hash_password(\"abc\") == hash_password(\"abc\")\n\n\n# Regression test for a reported login issue.\n#\n# A user record with no stored hash (for example, an account created\n# by an import script that failed partway) must never authenticate,\n# no matter what password is supplied.\n\n\ndef test_empty_hash_is_rejected():\n    user = make_user(stored_hash=\"\")\n    assert verify_password(\"anything\", user.hash) is False\n\n\ndef test_empty_password_does_not_match_empty_hash():\n    user = make_user(stored_hash=\"\")\n    assert verify_password(\"\", user.hash) is False\n"
       },
       {
@@ -871,6 +904,7 @@
         "request_after": false,
         "scripted": true,
         "mechanism": null,
+        "scales": false,
         "show": null
       },
       {
@@ -883,6 +917,7 @@
         "request_after": true,
         "scripted": false,
         "mechanism": null,
+        "scales": false,
         "show": "(no matches)"
       },
       {
@@ -895,6 +930,7 @@
         "request_after": false,
         "scripted": true,
         "mechanism": "subagent",
+        "scales": false,
         "show": "No weakening found. tests/test_login.py: one test added (test_empty_password_does_not_match_empty_hash) with one new assertion; no assertions removed; no skips, xfails, or always-true assertions."
       },
       {
@@ -907,6 +943,7 @@
         "request_after": true,
         "scripted": false,
         "mechanism": "subagent",
+        "scales": false,
         "show": "No weakening found. tests/test_login.py: one test added (test_empty_password_does_not_match_empty_hash) with one new assertion; no assertions removed; no skips, xfails, or always-true assertions."
       },
       {
@@ -919,6 +956,7 @@
         "request_after": false,
         "scripted": true,
         "mechanism": null,
+        "scales": false,
         "show": null
       }
     ]

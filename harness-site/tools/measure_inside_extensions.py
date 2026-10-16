@@ -214,10 +214,10 @@ def measure(course, ext, plugin, skill_md, agent_md, failures_py, hook_py, lab, 
     events = []
 
     def add(eid, ctx, role, label, payload, when=None, request=False, scripted=False,
-            mechanism=None, show=None):
+            mechanism=None, show=None, scales=False):
         events.append({"id": eid, "ctx": ctx, "role": role, "label": label,
                        "tokens": tok(payload), "when": when, "request_after": request,
-                       "scripted": scripted, "mechanism": mechanism,
+                       "scripted": scripted, "mechanism": mechanism, "scales": scales,
                        "show": show if show is not None else (payload if isinstance(payload, str) else None)})
 
     add("task", "main", "user", "Your request", {"role": "user", "content": TASK},
@@ -238,7 +238,7 @@ def measure(course, ext, plugin, skill_md, agent_md, failures_py, hook_py, lab, 
         use("run_command", {"command": "python3 run_tests.py", "description": "Run the tests"}),
         when="!skill", scripted=True)
     add("tests-out", "main", "result", "Full test output", result(full_before),
-        when="!skill", request=True, show=full_before)
+        when="!skill", request=True, show=full_before, scales=True)
     add("read-auth", "main", "model", "Model reads src/auth.py",
         use("read_file", {"path": "src/auth.py"}), scripted=True)
     add("auth-out", "main", "result", "src/auth.py", result(auth_py), request=True, show=auth_py)
@@ -269,7 +269,7 @@ def measure(course, ext, plugin, skill_md, agent_md, failures_py, hook_py, lab, 
         use("run_command", {"command": "python3 run_tests.py", "description": "Re-run tests"}),
         when="!skill", scripted=True)
     add("rerun-full-out", "main", "result", "Tests pass", result(full_after), when="!skill", request=True,
-        show=full_after)
+        show=full_after, scales=True)
     # Review of the new test: in a subagent, or in the main conversation.
     delegation = ("Review the change to tests/test_login.py: one test was added, "
                   "test_empty_password_does_not_match_empty_hash. Report any weakening.")
@@ -389,8 +389,12 @@ def active(when, on: set) -> bool:
     return (when[1:] not in on) if when.startswith("!") else (when in on)
 
 
-def compose(session: dict, on: set) -> dict:
+def compose(session: dict, on: set, scale: float = 1) -> dict:
     """Build each request of the main conversation for a set of enabled mechanisms.
+
+    `scale` multiplies events marked "scales" (the full test output), for the
+    page's illustrative test-suite-size control; the triage script's two lines
+    do not grow with the suite. Stored totals are for scale 1, as measured.
 
     Mirrors composeLedger() in assets/js/inside-extensions.js; check.py runs it
     too, so the page, the checker, and this script agree on every total.
@@ -400,12 +404,13 @@ def compose(session: dict, on: set) -> dict:
     for ev in session["events"]:
         if not active(ev["when"], on):
             continue
+        tokens = round(ev["tokens"] * scale) if ev.get("scales") else ev["tokens"]
         if ev["ctx"] == "sub":
-            sub_conv += ev["tokens"]
+            sub_conv += tokens
             if ev["request_after"]:
                 sub_requests.append(sub_conv)
             continue
-        conv += ev["tokens"]
+        conv += tokens
         if ev["request_after"]:
             requests.append(always + conv)
     return {"requests": len(requests), "request_sizes": requests,

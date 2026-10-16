@@ -34,6 +34,12 @@
       "summary": "Instructions files, skills, subagents, hooks, MCP servers, and plugins, compared."
     },
     {
+      "id": "inside-extensions",
+      "page": "sections/inside-extensions.html",
+      "title": "Inside an extension",
+      "summary": "What an MCP server, a skill, a subagent, and a plugin each add to every request, and when."
+    },
+    {
       "id": "review",
       "page": "sections/review.html",
       "title": "Final review",
