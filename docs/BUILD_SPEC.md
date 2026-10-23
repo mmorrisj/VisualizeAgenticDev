@@ -361,7 +361,9 @@ setup. Live view returns to the full outcome. Evidence, individual stops, and
 Back/Next controls live in an optional inspection panel. Tabs follow the ARIA
 keyboard pattern; diagram controls support Enter/Space, with visible focus and
 state labels that describe their actual effect (for example, Network isolated).
-Reduced motion draws complete states without packet animation.
+Progressively reveal the connecting paths, scheduling branches from source arrival
+rather than a fixed list delay. Preserve denial dash patterns while drawing.
+Reduced motion draws complete states without packet or line animation.
 Include four knowledge questions spanning the three lenses and one in final review.
 Validate branch precedence, evidence decisions, unreachable endpoint logging, and
 retained-copy state with automated tests, plus both themes and desktop widths.

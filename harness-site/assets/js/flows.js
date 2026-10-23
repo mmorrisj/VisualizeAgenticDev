@@ -195,7 +195,7 @@ async function main() {
     get("flow-retention").hidden = flow.id !== "network";
     experiments();
     controls();
-    rebuild();
+    rebuild(true);
     if (updateHash) history.replaceState(null, "", `#${flow.id}`);
   }
 
@@ -206,6 +206,11 @@ async function main() {
     const arrowId = `flow-arrow-${svg.dataset.hatch}`;
     const marker = el("marker", { id: arrowId, viewBox: "0 0 10 10", refX: 9, refY: 5, markerWidth: 6, markerHeight: 6, orient: "auto-start-reverse" }, svg.querySelector("defs"));
     el("path", { d: "M 0 0 L 10 5 L 0 10 z", class: "flow-arrow" }, marker);
+    const blockedArrowId = `${arrowId}-blocked`;
+    const blockedMarker = el("marker", { id: blockedArrowId, viewBox: "0 0 10 10", refX: 9, refY: 5, markerWidth: 6, markerHeight: 6, orient: "auto-start-reverse" }, svg.querySelector("defs"));
+    el("path", { d: "M 0 0 L 10 5 L 0 10 z", class: "flow-arrow is-blocked" }, blockedMarker);
+    const arrivals = new Map();
+    let routeTime = 0;
     const points = Object.fromEntries(flow.nodes.map((n) => [n.id, n]));
     const limit = overview ? trace.length - 1 : index;
     const visited = new Set(trace.slice(0, limit + 1).map((event) => event.node));
@@ -223,17 +228,32 @@ async function main() {
       const x1 = a.x + dx, y1 = a.y + dy;
       const x2 = b.x - dx, y2 = b.y - dy;
       const d = `M ${x1} ${y1} C ${x1} ${(y1 + y2) / 2}, ${x2} ${(y1 + y2) / 2}, ${x2} ${y2}`;
-      el("path", { d, class: `flow-trace-edge${event.blocked ? " is-blocked" : ""}`, "marker-end": `url(#${arrowId})` }, svg);
-      // A static endpoint makes direction visible even with motion reduced.
-      const dot = el("circle", { cx: x2, cy: y2, r: 4, class: "flow-arrival" }, svg);
+      const blocked = event.blocked || ["hook_block", "deny_block", "declined", "sandbox_block"].includes(event.key);
+      const path = el("path", { d, class: `flow-trace-edge${blocked ? " is-blocked" : ""}`, "marker-end": `url(#${blocked ? blockedArrowId : arrowId})` }, svg);
       if (motion && (overview || i === index) && !prefersReducedMotion()) {
-        // Offset paths let the packet follow the same curve without moving
-        // any node or changing the completed diagram state.
-        dot.setAttribute("cx", "0");
-        dot.setAttribute("cy", "0");
+        const duration = overview ? 240 : 450;
+        // Branches start when their source receives the request. This keeps
+        // gateway -> model sequential while local copies can fork together.
+        const delay = !overview ? 0 : flow.id === "network" ? (arrivals.get(fromId) || 0) : routeTime;
+        arrivals.set(event.node, delay + duration);
+        routeTime = delay + duration;
+        // Reveal through an alpha mask so dashed denial paths keep their
+        // pattern. Animating the actual path's dash array would erase it.
+        const maskId = `reveal-${svg.dataset.hatch}-${i}`;
+        const mask = el("mask", { id: maskId, maskUnits: "userSpaceOnUse", x: 0, y: 0, width: 1020, height: 420, style: "mask-type:alpha" }, svg.querySelector("defs"));
+        const reveal = el("path", { d, class: "flow-reveal-mask" }, mask);
+        const length = path.getTotalLength();
+        reveal.style.strokeDasharray = String(length);
+        path.setAttribute("mask", `url(#${maskId})`);
+        animations.push(reveal.animate([{ strokeDashoffset: String(length) }, { strokeDashoffset: "0" }], { duration, delay, fill: "both", easing: "linear" }));
+        const dot = el("circle", { cx: 0, cy: 0, r: 4, class: `flow-arrival${blocked ? " is-blocked" : ""}` }, svg);
         dot.style.offsetPath = `path('${d}')`;
-        dot.style.offsetDistance = "100%";
-        animations.push(dot.animate([{ offsetDistance: "0%" }, { offsetDistance: "100%" }], { duration: 500, delay: overview ? i * 75 : 0, fill: "both", easing: "ease-out" }));
+        animations.push(dot.animate([
+          { offsetDistance: "0%", opacity: 0 },
+          { offsetDistance: "5%", opacity: 1, offset: 0.05 },
+          { offsetDistance: "95%", opacity: 1, offset: 0.95 },
+          { offsetDistance: "100%", opacity: 0 },
+        ], { duration, delay, fill: "both", easing: "linear" }));
       }
     }
     for (const node of flow.nodes) {

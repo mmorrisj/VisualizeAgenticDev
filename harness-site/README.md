@@ -153,7 +153,9 @@ and focus stays on the same control after the diagram updates.
 Replay route runs the request through the selected setup in a few seconds and can
 be paused and resumed. Live view returns to the complete outcome. Open Inspect
 the route and evidence for the numbered stops and Back/Next controls. Reduced
-motion draws complete states without packet animation. Reset setup restores the
+motion draws complete states without packet animation. In normal motion, the
+lines themselves draw progressively: branches begin when their source receives
+the request, and denial paths retain their dashed pattern and distinct color. Reset setup restores the
 lens's first starting situation. No commands or network probes run in the browser.
 
 - Permissions follows the reference harness's hook, deny, ask, then allow order.

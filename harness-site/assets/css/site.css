@@ -1055,3 +1055,6 @@ kbd {
 #flow-inspection { border-top: 1px solid var(--border); margin-top: 16px; padding-top: 12px; }
 #flow-inspection summary { cursor: pointer; font-size: 0.85rem; font-weight: 600; color: var(--accent); padding: 6px 0; }
 .live-hint { font-size: 0.76rem; margin: 10px 0 0; }
+/* The reveal mask follows the path without changing its semantic dash pattern. */
+.scene .flow-reveal-mask { fill: none; stroke: var(--text); stroke-width: 24; stroke-linecap: round; }
+.scene .flow-arrow.is-blocked, .scene .flow-arrival.is-blocked { fill: var(--danger); }
