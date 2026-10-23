@@ -2,7 +2,7 @@
 // No npm install or browser required; does not participate in site runtime.
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { buildTrace } from '../assets/js/flow-model.js';
+import { buildTrace, flowOutcome } from '../assets/js/flow-model.js';
 
 const data = JSON.parse(readFileSync(new URL('../content/flows.json', import.meta.url)));
 let cases = 0;
@@ -24,6 +24,16 @@ for (const flow of data.flows) {
       if (event.from) assert(nodeIds.has(event.from));
     }
     assert.deepEqual(trace, buildTrace(flow.id, settings), 'trace must be repeatable');
+    const outcome = flowOutcome(flow.id, trace);
+    assert(outcome.event >= 0 && outcome.event < trace.length);
+    assert(flow.messages[outcome.key] || flow.outcomes?.[outcome.key]);
+    assert.deepEqual(outcome.copies, trace.filter((e) => e.retain).map((e) => e.node));
+    for (const [node, control] of Object.entries(flow.bindings)) {
+      assert(nodeIds.has(node));
+      const definition = flow.defaults.find((c) => c.id === control);
+      assert(definition);
+      if (!definition.options) assert(flow.control_states[control]?.[String(settings[control])]);
+    }
     const keys = trace.map((e) => e.key);
     const visits = (id) => trace.some((e) => e.node === id);
     if (flow.id === 'permissions') {

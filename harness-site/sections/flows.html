@@ -35,22 +35,28 @@
     <p class="note" id="flow-disclaimer"></p>
 
     <section class="section-block" aria-labelledby="flow-heading">
-      <h2 id="flow-heading">Follow the consequences</h2>
+      <h2 class="visually-hidden" id="flow-heading">Change one thing. Follow the consequence.</h2>
       <div class="tabs" role="tablist" aria-labelledby="flow-heading" id="flow-tabs"></div>
       <div id="flow-panel" role="tabpanel">
         <p class="flow-principle" id="flow-principle"></p>
         <p class="note" id="flow-intro"></p>
+        <div id="flow-experiments" class="flow-experiments" role="group" aria-label="Experiment situations"></div>
+        <p class="flow-brief" id="flow-brief"></p>
         <div class="flow-workbench">
           <div class="panel flow-settings-panel">
             <h3>Change the setup</h3>
-            <p class="note">Each change restarts the trace.</p>
+            <p class="note">Changes take effect immediately.</p>
             <div id="flow-settings"></div>
             <button type="button" class="button" id="flow-reset">Reset setup</button>
           </div>
           <div id="flow-player" class="flow-player" tabindex="0" role="group" aria-label="Flow player">
-            <div class="flow-predict"><span class="eyebrow">Predict before you play</span><p id="flow-prediction"></p></div>
+            <div class="flow-predict" hidden><span class="eyebrow">Predict before you play</span><p id="flow-prediction"></p></div>
+            <div id="flow-comparison" class="flow-comparison" aria-live="polite" aria-atomic="true"></div>
             <p class="mono note" id="flow-request" hidden></p>
             <div class="visual-frame" id="trace-scene"></div>
+            <div class="stepper live-transport"><button type="button" class="button button-primary" id="trace-play" aria-pressed="false">Replay route</button><button type="button" class="button" id="trace-live">Live view</button><span class="stepper-status" id="trace-status"></span></div>
+            <p class="note live-hint">Click a gate or destination to change it. Use Tab and Enter for the same controls.</p>
+            <details id="flow-inspection"><summary>Inspect the route and evidence</summary>
             <div class="panel flow-evidence" aria-live="polite" aria-atomic="true">
               <div><p class="eyebrow">Evidence at this step</p><h3 id="trace-title"></h3><p id="trace-copy"></p></div>
               <pre class="wire" id="trace-evidence"></pre>
@@ -59,14 +65,13 @@
 
             <div class="tour-progress" aria-hidden="true"><div id="trace-progress"></div></div>
             <div class="stepper">
-              <button type="button" class="button button-primary" id="trace-play" aria-pressed="false">Play</button>
               <button type="button" class="button" id="trace-back">Back</button>
               <button type="button" class="button" id="trace-next">Next</button>
               <button type="button" class="button" id="trace-restart">Restart</button>
-              <span class="stepper-status" id="trace-status"></span>
             </div>
-            <p class="note keys">Focus the player: <kbd>Space</kbd> play or pause, <kbd>Left</kbd> <kbd>Right</kbd> step. Select any stop below to jump.</p>
+            <p class="note keys">Click a gate or destination to change it. Focus the player: <kbd>Space</kbd> replay or pause, <kbd>Left</kbd> <kbd>Right</kbd> inspect. Numbered stops show the evidence.</p>
             <ol class="chapters" id="trace-chapters" aria-label="Trace stops"></ol>
+            </details>
           </div>
         </div>
         <p class="section-block"><a id="flow-module" href="../../course/README.md">Go deeper: written course</a></p>

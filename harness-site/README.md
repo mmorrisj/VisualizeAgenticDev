@@ -142,10 +142,19 @@ The flows are scripted, do not run the labs, and do not include attack payloads.
 ## Flow simulations
 
 `sections/flows.html` has three deep-linkable lenses: `#permissions`,
-`#verification`, and `#network`. Change the setup and use Play/Pause, Back, Next,
-Restart, or any numbered stop. A setup change restarts the trace; Reset setup
-restores the lens defaults. Focus the player for Space and Left/Right shortcuts;
-tabs support Left/Right, Home, and End. Reduced motion keeps complete static states.
+`#verification`, and `#network`. Each opens as a live experiment with two starting
+situations, a complete route, and a concrete question to investigate. Click a gate
+or destination in the diagram to change its setting; the sidebar stays in sync.
+Every change immediately updates the route and compares the before/after outcome.
+An unchanged outcome is explicit: an earlier gate or unreached destination may
+make a setting irrelevant. Tab, Enter, and Space operate the diagram controls,
+and focus stays on the same control after the diagram updates.
+
+Replay route runs the request through the selected setup in a few seconds and can
+be paused and resumed. Live view returns to the complete outcome. Open Inspect
+the route and evidence for the numbered stops and Back/Next controls. Reduced
+motion draws complete states without packet animation. Reset setup restores the
+lens's first starting situation. No commands or network probes run in the browser.
 
 - Permissions follows the reference harness's hook, deny, ask, then allow order.
   A matching ask skips allow evaluation. A shell network sandbox can block a

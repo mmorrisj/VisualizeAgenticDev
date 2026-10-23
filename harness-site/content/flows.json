@@ -1,6 +1,6 @@
 {
   "id": "flows",
-  "concept": "Follow a request through the controls, evidence, and destinations around the model.",
+  "concept": "Change the system. Watch the consequences. Explain what changed.",
   "module_link": "../course/README.md",
   "source_note": "Scripted teaching simulations. Nothing here executes a shell command, changes a file, or contacts a model or remote service.",
   "flows": [
@@ -9,7 +9,7 @@
       "label": "Permission decisions",
       "concept": "A tool request crosses independent checks before code can run.",
       "module_link": "../course/modules/02-hard-controls/README.md",
-      "intro": "Follow the mini-harness order: hooks, deny, ask, allow, human approval when needed, then execution. Change a layer and replay the request.",
+      "intro": "Click the gates themselves. A request reroutes immediately when you change the rules, the human decision, or the execution environment.",
       "predict": "If you approve a request, can a deny rule or a shell sandbox still stop it?",
       "source_note": "Schematic decision model based on Module 2 and mini-harness/harness.py. These controls apply to the selected illustrative call; no real policy or command is executed.",
       "defaults": [
@@ -224,6 +224,64 @@
           "text": "The model receives the result or refusal in its next request. A completion claim still needs independent verification.",
           "evidence": ""
         }
+      },
+      "bindings": {
+        "hook": "hook",
+        "deny": "deny",
+        "ask": "ask",
+        "allow": "allow",
+        "approval": "approve",
+        "execution": "sandbox"
+      },
+      "experiments": [
+        {
+          "title": "Approval is not access",
+          "prompt": "The human says yes, but the connection fails. Change the execution environment and explain why the same approval now leads to a different result.",
+          "settings": {
+            "request": "network",
+            "hook": true,
+            "deny": false,
+            "ask": true,
+            "allow": true,
+            "approve": "yes",
+            "sandbox": true
+          }
+        },
+        {
+          "title": "Who wins this argument?",
+          "prompt": "Allow and deny both match the test runner. Make the call run, then require a human decision without removing the allow rule.",
+          "settings": {
+            "request": "tests",
+            "hook": true,
+            "deny": true,
+            "ask": false,
+            "allow": true,
+            "approve": "yes",
+            "sandbox": true
+          }
+        }
+      ],
+      "control_states": {
+        "hook": {
+          "true": "Inspect assertions",
+          "false": "Hook off"
+        },
+        "deny": {
+          "true": "Matches: deny",
+          "false": "No match"
+        },
+        "ask": {
+          "true": "Matches: ask",
+          "false": "No match"
+        },
+        "allow": {
+          "true": "Matches: allow",
+          "false": "No match"
+        },
+        "sandbox": {
+          "true": "Network isolated",
+          "false": "Network available"
+        }
       }
     },
     {
@@ -231,7 +289,7 @@
       "label": "Verification evidence",
       "concept": "A green test run is one piece of evidence; inspect the diff and test the test.",
       "module_link": "../course/modules/04-verification-workflow/README.md",
-      "intro": "Two changes can produce the same green test summary. Follow the evidence before deciding whether the login bug is fixed.",
+      "intro": "Switch the agent’s change directly on the diagram. Compare the evidence as the same green test run leads to different review decisions.",
       "predict": "Both changes make the suite pass. Which evidence distinguishes a fix from a weakened test?",
       "source_note": "Scripted replay of Module 4 Lab A using the practice-app login bug. Test summaries and diff excerpts correspond to the supplied fix and weaken scenarios. No source file is edited by this page.",
       "defaults": [
@@ -405,6 +463,41 @@
           "text": "Enable the missing check and replay. Notice which claim it can establish and which questions still require review.",
           "evidence": ""
         }
+      },
+      "bindings": {
+        "edit": "change",
+        "diff": "diff",
+        "mutation": "mutation"
+      },
+      "experiments": [
+        {
+          "title": "The green-test illusion",
+          "prompt": "Both edits produce six passing tests. Flip the agent change and watch which evidence exposes the shortcut.",
+          "settings": {
+            "change": "fix",
+            "diff": true,
+            "mutation": true
+          }
+        },
+        {
+          "title": "What would convince you?",
+          "prompt": "The agent reports success, but the evidence is incomplete. Add checks one at a time. Then switch to the weakened test: which check is enough to reject it?",
+          "settings": {
+            "change": "weaken",
+            "diff": false,
+            "mutation": false
+          }
+        }
+      ],
+      "control_states": {
+        "diff": {
+          "true": "Reviewed",
+          "false": "Not reviewed"
+        },
+        "mutation": {
+          "true": "Test challenged",
+          "false": "Not checked"
+        }
       }
     },
     {
@@ -412,7 +505,7 @@
       "label": "Network and data",
       "concept": "An internal model endpoint is one destination; traffic controls and retained copies are separate concerns.",
       "module_link": "../course/modules/06-air-gapped-operation/README.md",
-      "intro": "Follow one file read through context, transport, and storage. Toggle routing, egress, and content logging to see what changes and what remains.",
+      "intro": "Click destinations to change body logging, or click the context and public boundary to change routing and egress. The copies and paths update together.",
       "predict": "If public egress is blocked, which internal and local copies of the file can still remain?",
       "source_note": "Illustrative data-flow model based on Module 6, not a network audit or a model of any specific product. Retention is shown only for the selected body-logging settings. Disabling body logging does not establish that all metadata or backups are absent.",
       "defaults": [
@@ -596,6 +689,73 @@
           "text": "An egress audit answers where traffic goes. Data-handling review also covers internal gateway logs, endpoint logs, transcripts, telemetry, and usage records.",
           "evidence": "next: audit the actual harness version"
         }
+      },
+      "bindings": {
+        "context": "internal",
+        "gateway": "gateway",
+        "endpoint": "endpoint",
+        "transcript": "transcript",
+        "telemetry": "telemetry",
+        "public": "egress"
+      },
+      "experiments": [
+        {
+          "title": "Inside is still somewhere",
+          "prompt": "Public traffic is blocked, yet the file has several retained copies. Remove body logging while keeping the internal model reachable.",
+          "settings": {
+            "internal": true,
+            "nonessential": true,
+            "egress": true,
+            "gateway": true,
+            "endpoint": true,
+            "transcript": true,
+            "telemetry": true
+          }
+        },
+        {
+          "title": "No response. Still a record.",
+          "prompt": "The public model request is denied. Does that prevent a local copy? Change the route, then compare the copies that become possible.",
+          "settings": {
+            "internal": false,
+            "nonessential": false,
+            "egress": true,
+            "gateway": true,
+            "endpoint": true,
+            "transcript": true,
+            "telemetry": false
+          }
+        }
+      ],
+      "outcomes": {
+        "internal": "The internal model receives the file.",
+        "public": "The file reaches the public model.",
+        "blocked": "The model request is blocked."
+      },
+      "control_states": {
+        "internal": {
+          "true": "Internal route",
+          "false": "Public route"
+        },
+        "gateway": {
+          "true": "Save body",
+          "false": "No body log"
+        },
+        "endpoint": {
+          "true": "Save body",
+          "false": "No body log"
+        },
+        "transcript": {
+          "true": "Save transcript",
+          "false": "Not saved"
+        },
+        "telemetry": {
+          "true": "Content + metadata",
+          "false": "Metadata only"
+        },
+        "egress": {
+          "true": "Public blocked",
+          "false": "Public allowed"
+        }
       }
     }
   ],
@@ -620,6 +780,20 @@
       "edit": "edit_file: remove an assertion",
       "tests": "run_command: test suite",
       "network": "run_command: service check"
+    },
+    "live": {
+      "on": "On",
+      "off": "Off",
+      "before": "Before",
+      "after": "After",
+      "unchanged": "The outcome stayed the same. An earlier decision or an unreached destination can make this setting irrelevant.",
+      "changed": "The route or its evidence changed.",
+      "initial": "Select a situation, then change something in the diagram.",
+      "state": "Live outcome",
+      "copies": "Retained content",
+      "none": "No retained bodies shown",
+      "toggle": "Change this setting directly",
+      "inspect": "Pause the replay or select a numbered stop to inspect the evidence."
     }
   }
 }

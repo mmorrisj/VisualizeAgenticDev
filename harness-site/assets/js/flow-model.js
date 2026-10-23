@@ -64,3 +64,22 @@ export function networkTrace(s) {
 export function buildTrace(id, settings) {
   return { permissions: permissionTrace, verification: verificationTrace, network: networkTrace }[id](settings);
 }
+
+// A stable outcome fingerprint lets the UI compare cause and effect without
+// declaring every toggle consequential. Unreached settings may change nothing.
+export function flowOutcome(id, trace) {
+  if (id === 'permissions') {
+    const event = trace.find((e) => ['hook_block', 'deny_block', 'declined', 'sandbox_block', 'executed'].includes(e.key));
+    return { event: trace.indexOf(event), key: event.key, copies: [] };
+  }
+  if (id === 'verification') {
+    const event = trace.find((e) => e.node === 'verdict');
+    return { event: trace.indexOf(event), key: event.key, copies: [] };
+  }
+  return {
+    event: trace.length - 1,
+    key: trace.some((e) => e.node === 'endpoint') ? 'internal' : trace.some((e) => e.key === 'public_model_sent') ? 'public' : 'blocked',
+    copies: trace.filter((e) => e.retain).map((e) => e.node),
+    extraTraffic: trace.find((e) => e.key.startsWith('nonessential_')).key,
+  };
+}

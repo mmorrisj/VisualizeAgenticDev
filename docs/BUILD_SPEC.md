@@ -349,11 +349,19 @@ connections. Content, control labels, defaults, and explanations live in
   internal telemetry. Show copies only after their branch is reached, distinguish
   transport from retention, and never imply that body logging is the only data risk.
 
-Every lens has Play/Pause, Back, Next, Restart, a selectable step timeline,
-a prediction prompt, textual evidence, and a written-module link. Changing a
-setting restarts the trace; changing lenses starts at its first step. Tabs follow
-the ARIA keyboard pattern; Space plays only outside input controls and buttons;
-Left/Right step while the player is focused. Reduced motion draws complete states.
+Each lens opens with a complete live route, two experiment situations, and a
+question to investigate. Gates and destinations are operable controls, bound to
+the same settings as the sidebar. Changes immediately rebuild the route and
+compare before/after outcomes. If a setting is irrelevant to the current route,
+state that the outcome stayed the same. Preserve keyboard focus across redraws.
+All explanatory copy, situations, settings, and control-state labels live in JSON.
+
+Replay route provides a short, pausable/resumable animation of the selected
+setup. Live view returns to the full outcome. Evidence, individual stops, and
+Back/Next controls live in an optional inspection panel. Tabs follow the ARIA
+keyboard pattern; diagram controls support Enter/Space, with visible focus and
+state labels that describe their actual effect (for example, Network isolated).
+Reduced motion draws complete states without packet animation.
 Include four knowledge questions spanning the three lenses and one in final review.
 Validate branch precedence, evidence decisions, unreachable endpoint logging, and
 retained-copy state with automated tests, plus both themes and desktop widths.

@@ -239,7 +239,8 @@ def check_flows(report: Report, path: pathlib.Path, data: dict) -> None:
         fid = flow.get("id")
         check_keys(report, path, flow, {"id": str, "label": str, "concept": str, "intro": str,
                    "predict": str, "module_link": str, "source_note": str,
-                   "defaults": list, "nodes": list, "messages": dict}, f"flow {fid}")
+                   "defaults": list, "nodes": list, "messages": dict, "bindings": dict,
+                   "experiments": list, "control_states": dict}, f"flow {fid}")
         defaults = flow.get("defaults", [])
         if {c.get("id") for c in defaults} != controls.get(fid) or len(defaults) != len(controls.get(fid, [])):
             report.error(path, f"flow {fid}: missing or duplicate controls")
@@ -258,6 +259,22 @@ def check_flows(report: Report, path: pathlib.Path, data: dict) -> None:
             check_keys(report, path, node, {"id": str, "label": str, "x": int, "y": int, "kind": str}, f"flow {fid} node")
             if not 82 <= node.get("x", 0) <= 938 or not 40 <= node.get("y", 0) <= 365:
                 report.error(path, f"flow {fid}: node outside scene bounds")
+        for node_id, control_id in flow.get("bindings", {}).items():
+            if node_id not in nodes.get(fid, set()) or control_id not in controls.get(fid, set()):
+                report.error(path, f"flow {fid}: invalid diagram binding")
+        if len(flow.get("experiments", [])) < 2:
+            report.error(path, f"flow {fid}: provide at least two experiment situations")
+        for experiment in flow.get("experiments", []):
+            check_keys(report, path, experiment, {"title": str, "prompt": str, "settings": dict}, f"flow {fid} experiment")
+            if set(experiment.get("settings", {})) != controls.get(fid):
+                report.error(path, f"flow {fid}: experiment must specify every setting")
+            for control in defaults:
+                value = experiment.get("settings", {}).get(control["id"])
+                if "options" in control:
+                    if value not in [option["value"] for option in control["options"]]:
+                        report.error(path, f"flow {fid}: invalid experiment option")
+                elif not isinstance(value, bool):
+                    report.error(path, f"flow {fid}: invalid experiment toggle")
         for key, message in flow.get("messages", {}).items():
             check_keys(report, path, message, {"title": str, "text": str, "evidence": str}, f"flow {fid} message {key}")
 
