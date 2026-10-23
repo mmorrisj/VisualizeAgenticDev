@@ -150,13 +150,17 @@ An unchanged outcome is explicit: an earlier gate or unreached destination may
 make a setting irrelevant. Tab, Enter, and Space operate the diagram controls,
 and focus stays on the same control after the diagram updates.
 
-Replay route runs the request through the selected setup in a few seconds and can
-be paused and resumed. Live view returns to the complete outcome. Open Inspect
-the route and evidence for the numbered stops and Back/Next controls. Reduced
-motion draws complete states without packet animation. In normal motion, the
-lines themselves draw progressively: branches begin when their source receives
-the request, and denial paths retain their dashed pattern and distinct color. Reset setup restores the
-lens's first starting situation. No commands or network probes run in the browser.
+The animation runs on one persistent SVG and one frame clock. Packets travel
+continuously along the curves, lines fill behind them, and nodes respond as the
+request arrives. Changing a setting preserves the diagram and carries the packet
+forward on shared segments while obsolete routes fade out. Comparison cards have
+a stable height so the animation stage does not move when the outcome changes.
+
+Pause/Resume freezes and continues the same motion. The Animation position slider
+scrubs the flow; Speed selects 0.5x, 1x, or 1.5x. Live view shows the complete
+outcome. Open Inspect the route and evidence for individual stops and Back/Next.
+Reduced motion displays the final state immediately. Reset setup restores the
+lens's first situation. No commands or network probes run in the browser.
 
 - Permissions follows the reference harness's hook, deny, ask, then allow order.
   A matching ask skips allow evaluation. A shell network sandbox can block a
@@ -171,7 +175,8 @@ lens's first starting situation. No commands or network probes run in the browse
   retention still require a real audit; this is an illustrative model.
 
 Edit explanatory copy and defaults in `content/flows.json`. The pure trace model
-is in `assets/js/flow-model.js`; the player and SVG rendering are in `flows.js`.
+is in `assets/js/flow-model.js`; the controller is in `flows.js`, and the persistent SVG animation is in
+`flow-scene.js`.
 Run the usual Python checker after edits. An optional development-only check
 requires Node, with no package installation:
 
@@ -182,3 +187,17 @@ node harness-site/tools/test_flows.mjs  # from the repository root
 It checks all 328 control combinations, including precedence, evidence decisions,
 unreached endpoints, retained copies, content references, and repeatability.
 The site itself still needs only a static server; Node is not needed to run it.
+
+
+The optional `tools/test_flow_animation.cjs` checks the actual browser animation:
+packets move between frames, pausing holds their position, controls and the SVG
+remain mounted, comparison changes do not move the stage, and scrubbing/reduced
+motion behave correctly. It requires Playwright in the development environment
+and a static server; it adds no runtime dependency. With a system Chromium:
+
+```bash
+CHROMIUM_PATH=/usr/bin/chromium node harness-site/tools/test_flow_animation.cjs
+```
+
+Pass a full local flow-page URL as the final argument when using a different
+port or a stamped deployment copy.

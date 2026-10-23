@@ -54,7 +54,13 @@
             <div id="flow-comparison" class="flow-comparison" aria-live="polite" aria-atomic="true"></div>
             <p class="mono note" id="flow-request" hidden></p>
             <div class="visual-frame" id="trace-scene"></div>
-            <div class="stepper live-transport"><button type="button" class="button button-primary" id="trace-play" aria-pressed="false">Replay route</button><button type="button" class="button" id="trace-live">Live view</button><span class="stepper-status" id="trace-status"></span></div>
+            <div class="stepper live-transport"><button type="button" class="button button-primary" id="trace-play" aria-pressed="false">Replay animation</button><button type="button" class="button" id="trace-live">Live view</button><span class="stepper-status" id="trace-status"></span></div>
+            <div class="flow-timeline">
+              <label for="flow-playhead">Animation position</label>
+              <input id="flow-playhead" type="range" min="0" max="100" step="0.1" value="0">
+              <label for="flow-speed">Speed</label>
+              <select id="flow-speed"><option value="0.5">0.5x</option><option value="1" selected>1x</option><option value="1.5">1.5x</option></select>
+            </div>
             <p class="note live-hint">Click a gate or destination to change it. Use Tab and Enter for the same controls.</p>
             <details id="flow-inspection"><summary>Inspect the route and evidence</summary>
             <div class="panel flow-evidence" aria-live="polite" aria-atomic="true">

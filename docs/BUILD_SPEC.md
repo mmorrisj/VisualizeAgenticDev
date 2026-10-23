@@ -81,6 +81,7 @@ harness-site/
 │       ├── inside-extensions.js
 │       ├── flows.js
 │       ├── flow-model.js
+│       ├── flow-scene.js
 │       └── quiz.js            # shared quiz component
 ├── content/
 │   ├── site.json              # landing copy, section order, card summaries
@@ -361,9 +362,14 @@ setup. Live view returns to the full outcome. Evidence, individual stops, and
 Back/Next controls live in an optional inspection panel. Tabs follow the ARIA
 keyboard pattern; diagram controls support Enter/Space, with visible focus and
 state labels that describe their actual effect (for example, Network isolated).
-Progressively reveal the connecting paths, scheduling branches from source arrival
-rather than a fixed list delay. Preserve denial dash patterns while drawing.
-Reduced motion draws complete states without packet or line animation.
+Mount one persistent SVG per lens. Drive the entire animation with one clock;
+never replace the diagram on narrative steps or control changes. Packets move
+continuously along curves, connecting paths reveal behind them, nodes respond on
+arrival, and branches start from their actual source arrival. Crossfade obsolete
+routes and preserve packet position on shared segments when settings change.
+Provide pause/resume, a scrubber, and speed controls. Keep the stage position stable
+when comparison text changes. Reduced motion shows the final state immediately.
+The persistent renderer lives in `assets/js/flow-scene.js`.
 Include four knowledge questions spanning the three lenses and one in final review.
 Validate branch precedence, evidence decisions, unreachable endpoint logging, and
 retained-copy state with automated tests, plus both themes and desktop widths.

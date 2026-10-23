@@ -1058,3 +1058,21 @@ kbd {
 /* The reveal mask follows the path without changing its semantic dash pattern. */
 .scene .flow-reveal-mask { fill: none; stroke: var(--text); stroke-width: 24; stroke-linecap: round; }
 .scene .flow-arrow.is-blocked, .scene .flow-arrival.is-blocked { fill: var(--danger); }
+/* Persistent animation stage: routes crossfade while packets travel on one clock. */
+.scene .flow-track { fill: none; stroke: var(--border); stroke-width: 2; }
+.scene .flow-route-segment { transition: opacity 320ms var(--ease); }
+.scene .flow-packet-halo { fill: var(--accent-2); opacity: 0.16; }
+.scene .flow-packet-core { fill: var(--accent-2); stroke: var(--surface); stroke-width: 2; }
+.scene .flow-packet.is-blocked .flow-packet-halo,
+.scene .flow-packet.is-blocked .flow-packet-core { fill: var(--danger); }
+.scene .flow-trace-node.is-flow-blocked .component-pill { stroke: var(--danger); }
+.scene .flow-trace-node.is-flow-blocked.is-active .component-pill { fill: var(--danger); }
+.scene .flow-trace-node .component-pill, .scene .flow-trace-node .model-box { transition: fill 240ms var(--ease), stroke 240ms var(--ease), stroke-width 240ms var(--ease); }
+.flow-timeline { display: grid; grid-template-columns: auto minmax(120px, 1fr) auto 80px; align-items: center; gap: 12px; margin-top: 16px; font-size: 0.78rem; color: var(--muted); }
+.flow-timeline input { width: 100%; accent-color: var(--accent-2); }
+.flow-timeline select { color: var(--text); background: var(--surface); border: 1px solid var(--border); padding: 5px; border-radius: 5px; }
+.flow-comparison { height: 180px; grid-template-rows: minmax(0, 1fr) 32px; }
+.flow-outcome { overflow: auto; }
+.scene .flow-packet { transition: opacity 180ms linear; }
+#trace-play { min-width: 155px; justify-content: center; }
+.button-primary[aria-pressed="true"] { background: var(--accent); color: var(--bg); border-color: var(--accent); }

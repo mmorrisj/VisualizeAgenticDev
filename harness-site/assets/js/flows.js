@@ -1,7 +1,7 @@
 /* Shared player for the three scripted flows. The trace is rebuilt from
    settings; stepping backward never relies on undoing an animation. */
 import { initPage, loadContent, resolveSiteLink, showLoadError } from "./common.js";
-import { createScene, el, text, drawModel, drawComponent, prefersReducedMotion, setSceneInteractive } from "./scene.js";
+import { createFlowScene } from "./flow-scene.js";
 import { buildTrace, flowOutcome } from "./flow-model.js";
 
 const get = (id) => document.getElementById(id);
@@ -21,52 +21,53 @@ async function main() {
   let settings;
   let trace = [];
   let index = 0;
-  let timer = null;
-  let animations = [];
+  let scene = null;
   let overview = true;
   let experimentIndex = 0;
   let previous = null;
   let playing = false;
   const tabs = [];
 
+  function playLabel() {
+    get("trace-play").textContent = playing ? "Pause animation" : scene && !scene.finished ? "Resume animation" : "Replay animation";
+    get("trace-play").setAttribute("aria-pressed", String(playing));
+  }
+
   function pause() {
     playing = false;
-    animations.forEach((a) => a.pause());
-    clearTimeout(timer);
-    timer = null;
-    get("trace-play").textContent = "Replay route";
-    get("trace-play").setAttribute("aria-pressed", "false");
+    scene?.pause();
+    if (flow?.messages[trace[index]?.key]) evidence();
+    playLabel();
   }
 
-  function go(next, motion = false) {
-    animations.forEach((a) => a.cancel());
-    animations = [];
-    index = Math.max(0, Math.min(trace.length - 1, next));
-    render(motion);
-    if (index === trace.length - 1) {
-      playing = false;
-      clearTimeout(timer);
-      get("trace-play").textContent = "Replay route";
-      get("trace-play").setAttribute("aria-pressed", "false");
-    }
-  }
-
-  function tick() {
-    if (!playing) return;
-    go(index + 1, true);
-    if (playing) timer = setTimeout(tick, 750);
+  function go(next) {
+    pause();
+    overview = false;
+    const target = Math.max(0, Math.min(trace.length - 1, next));
+    scene.show(trace, settings, { animate: false, limit: target });
+    index = target;
+    evidence();
   }
 
   function play() {
     if (playing) { pause(); return; }
-    const restart = overview || index === trace.length - 1;
-    overview = false;
-    if (restart) go(0);
-    animations.forEach((a) => a.play());
     playing = true;
-    get("trace-play").textContent = "Pause";
-    get("trace-play").setAttribute("aria-pressed", "true");
-    timer = setTimeout(tick, 750);
+    overview = false;
+    scene.play(scene.finished);
+    evidence();
+    playLabel();
+  }
+
+  function ensureScene() {
+    if (scene?.id === flow.id) return;
+    scene?.dispose();
+    scene = createFlowScene(get("trace-scene"), flow, data.ui, changeSetting, (step, progress, done) => {
+      index = step;
+      if (done) { playing = false; overview = true; }
+      evidence();
+      playLabel();
+    });
+    scene.setSpeed(Number(get("flow-speed").value));
   }
 
   function rebuild(motion = false) {
@@ -82,7 +83,12 @@ async function main() {
       get("trace-chapters").append(item);
     });
     overview = true;
-    go(flowOutcome(flow.id, trace).event, motion);
+    ensureScene();
+    index = flowOutcome(flow.id, trace).event;
+    playing = motion;
+    playing = scene.show(trace, settings, { animate: motion });
+    evidence();
+    playLabel();
     comparison();
   }
 
@@ -199,116 +205,10 @@ async function main() {
     if (updateHash) history.replaceState(null, "", `#${flow.id}`);
   }
 
-  function draw(motion) {
-    const current = trace[index];
-    const message = flow.messages[current.key];
-    const svg = createScene(get("trace-scene"), { width: 1020, height: 420, label: `${flow.label}. Step ${index + 1} of ${trace.length}: ${message.title}` });
-    const arrowId = `flow-arrow-${svg.dataset.hatch}`;
-    const marker = el("marker", { id: arrowId, viewBox: "0 0 10 10", refX: 9, refY: 5, markerWidth: 6, markerHeight: 6, orient: "auto-start-reverse" }, svg.querySelector("defs"));
-    el("path", { d: "M 0 0 L 10 5 L 0 10 z", class: "flow-arrow" }, marker);
-    const blockedArrowId = `${arrowId}-blocked`;
-    const blockedMarker = el("marker", { id: blockedArrowId, viewBox: "0 0 10 10", refX: 9, refY: 5, markerWidth: 6, markerHeight: 6, orient: "auto-start-reverse" }, svg.querySelector("defs"));
-    el("path", { d: "M 0 0 L 10 5 L 0 10 z", class: "flow-arrow is-blocked" }, blockedMarker);
-    const arrivals = new Map();
-    let routeTime = 0;
-    const points = Object.fromEntries(flow.nodes.map((n) => [n.id, n]));
-    const limit = overview ? trace.length - 1 : index;
-    const visited = new Set(trace.slice(0, limit + 1).map((event) => event.node));
-    // In the network lens edges branch from their true data source. Other
-    // lenses show the decision route in timeline order.
-    for (let i = 1; i <= limit; i += 1) {
-      const event = trace[i];
-      const fromId = flow.id === "network" ? event.from : trace[i - 1].node;
-      if (!fromId || fromId === event.node || event.disabled) continue;
-      const a = points[fromId];
-      const b = points[event.node];
-      const horizontal = Math.abs(b.x - a.x) > Math.abs(b.y - a.y);
-      const dx = horizontal ? Math.sign(b.x - a.x) * 83 : 0;
-      const dy = horizontal ? 0 : Math.sign(b.y - a.y) * 35;
-      const x1 = a.x + dx, y1 = a.y + dy;
-      const x2 = b.x - dx, y2 = b.y - dy;
-      const d = `M ${x1} ${y1} C ${x1} ${(y1 + y2) / 2}, ${x2} ${(y1 + y2) / 2}, ${x2} ${y2}`;
-      const blocked = event.blocked || ["hook_block", "deny_block", "declined", "sandbox_block"].includes(event.key);
-      const path = el("path", { d, class: `flow-trace-edge${blocked ? " is-blocked" : ""}`, "marker-end": `url(#${blocked ? blockedArrowId : arrowId})` }, svg);
-      if (motion && (overview || i === index) && !prefersReducedMotion()) {
-        const duration = overview ? 240 : 450;
-        // Branches start when their source receives the request. This keeps
-        // gateway -> model sequential while local copies can fork together.
-        const delay = !overview ? 0 : flow.id === "network" ? (arrivals.get(fromId) || 0) : routeTime;
-        arrivals.set(event.node, delay + duration);
-        routeTime = delay + duration;
-        // Reveal through an alpha mask so dashed denial paths keep their
-        // pattern. Animating the actual path's dash array would erase it.
-        const maskId = `reveal-${svg.dataset.hatch}-${i}`;
-        const mask = el("mask", { id: maskId, maskUnits: "userSpaceOnUse", x: 0, y: 0, width: 1020, height: 420, style: "mask-type:alpha" }, svg.querySelector("defs"));
-        const reveal = el("path", { d, class: "flow-reveal-mask" }, mask);
-        const length = path.getTotalLength();
-        reveal.style.strokeDasharray = String(length);
-        path.setAttribute("mask", `url(#${maskId})`);
-        animations.push(reveal.animate([{ strokeDashoffset: String(length) }, { strokeDashoffset: "0" }], { duration, delay, fill: "both", easing: "linear" }));
-        const dot = el("circle", { cx: 0, cy: 0, r: 4, class: `flow-arrival${blocked ? " is-blocked" : ""}` }, svg);
-        dot.style.offsetPath = `path('${d}')`;
-        animations.push(dot.animate([
-          { offsetDistance: "0%", opacity: 0 },
-          { offsetDistance: "5%", opacity: 1, offset: 0.05 },
-          { offsetDistance: "95%", opacity: 1, offset: 0.95 },
-          { offsetDistance: "100%", opacity: 0 },
-        ], { duration, delay, fill: "both", easing: "linear" }));
-      }
-    }
-    for (const node of flow.nodes) {
-      const active = node.id === current.node;
-      const group = node.kind === "model"
-        ? drawModel(svg, { cx: node.x, cy: node.y, w: 162, h: 68, label: node.label, sublabel: "" })
-        : drawComponent(svg, { cx: node.x, cy: node.y, w: 164, h: 64, label: node.label, id: node.id });
-      group.classList.add("flow-trace-node");
-      if (active) group.classList.add("is-active");
-      if (!visited.has(node.id)) group.classList.add("is-pending");
-      const events = trace.slice(0, limit + 1).filter((event) => event.node === node.id);
-      let status = visited.has(node.id) ? data.ui.status.visited : data.ui.status.pending;
-      if (events.some((event) => event.retain)) status = data.ui.status.retained;
-      if (flow.id === "network" && node.id === "public" && events.length) {
-        const attempts = events.filter((event) => !event.disabled);
-        status = !attempts.length ? data.ui.status.disabled
-          : attempts.every((event) => event.blocked) ? data.ui.status.blocked : data.ui.status.sent;
-      }
-      const binding = flow.bindings[node.id];
-      if (binding) {
-        setSceneInteractive(svg);
-        const control = flow.defaults.find((c) => c.id === binding);
-        const state = flow.control_states[binding]?.[String(settings[binding])] || control.options.find((o) => o.value === settings[binding]).label;
-        group.classList.add("is-operable");
-        group.dataset.control = binding;
-        group.setAttribute("role", "button");
-        group.setAttribute("tabindex", "0");
-        group.setAttribute("aria-description", `${control.label}. ${data.ui.live.toggle}`);
-        if (!control.options) group.setAttribute("aria-pressed", String(settings[binding]));
-        group.querySelectorAll("text").forEach((label) => label.setAttribute("y", node.y - 5));
-        group.append(document.createTextNode(" "));
-        text(group, node.x, node.y + 19, state, { "text-anchor": "middle", class: "flow-control-state" });
-        const labels = [...group.querySelectorAll("text")];
-        labels.forEach((label, i) => { label.id = `${svg.dataset.hatch}-${node.id}-${i}`; });
-        group.setAttribute("aria-labelledby", labels.map((label) => label.id).join(" "));
-        const toggle = () => {
-          const values = control.options?.map((o) => o.value);
-          const next = values ? values[(values.indexOf(settings[binding]) + 1) % values.length] : !settings[binding];
-          changeSetting(binding, next);
-          get("trace-scene").querySelector(`[data-control="${binding}"]`)?.focus({ preventScroll: true });
-        };
-        group.addEventListener("click", toggle);
-        group.addEventListener("keydown", (event) => {
-          if (event.key === "Enter" || event.key === " ") { event.preventDefault(); toggle(); }
-        });
-      }
-      text(svg, node.x, node.y + 53, active ? data.ui.status.active : status,
-        { "text-anchor": "middle", class: "label-muted flow-node-status" });
-    }
-  }
-
-  function render(motion = false) {
+  function evidence() {
     const event = trace[index];
     const message = flow.messages[event.key];
-    get("trace-status").textContent = overview ? data.ui.live.state : `${data.ui.step} ${index + 1} / ${trace.length}`;
+    get("trace-status").textContent = playing ? "Flow in motion" : overview ? data.ui.live.state : `${data.ui.step} ${index + 1} / ${trace.length}`;
     get("trace-title").textContent = message.title;
     get("trace-copy").textContent = message.text;
     get("trace-evidence").textContent = message.evidence;
@@ -324,7 +224,7 @@ async function main() {
     get("flow-copies").textContent = retained.length ? retained.join(" · ") : data.ui.none;
     get("flow-request").hidden = flow.id !== "permissions";
     get("flow-request").textContent = data.ui.request_labels[settings.request] || "";
-    draw(motion);
+
   }
 
   data.flows.forEach((item, i) => {
@@ -351,7 +251,14 @@ async function main() {
   get("trace-back").addEventListener("click", () => { pause(); overview = false; go(index - 1); });
   get("trace-next").addEventListener("click", () => { pause(); overview = false; go(index + 1, true); });
   get("trace-restart").addEventListener("click", () => { pause(); overview = false; go(0); });
-  get("trace-live").addEventListener("click", () => { pause(); overview = true; go(flowOutcome(flow.id, trace).event, true); });
+  get("trace-live").addEventListener("click", () => {
+    pause(); overview = true; index = flowOutcome(flow.id, trace).event;
+    scene.show(trace, settings, { animate: false }); evidence(); playLabel();
+  });
+  get("flow-playhead").addEventListener("input", (event) => {
+    pause(); overview = false; scene.seek(Number(event.target.value) / 100);
+  });
+  get("flow-speed").addEventListener("change", (event) => scene.setSpeed(Number(event.target.value)));
   get("flow-reset").addEventListener("click", () => selectFlow(flow.id));
   get("flow-player").addEventListener("keydown", (event) => {
     if (event.defaultPrevented || event.altKey || event.ctrlKey || event.metaKey || event.target.closest("input, select, textarea")) return;
