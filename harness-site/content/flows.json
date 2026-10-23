@@ -1,0 +1,625 @@
+{
+  "id": "flows",
+  "concept": "Follow a request through the controls, evidence, and destinations around the model.",
+  "module_link": "../course/README.md",
+  "source_note": "Scripted teaching simulations. Nothing here executes a shell command, changes a file, or contacts a model or remote service.",
+  "flows": [
+    {
+      "id": "permissions",
+      "label": "Permission decisions",
+      "concept": "A tool request crosses independent checks before code can run.",
+      "module_link": "../course/modules/02-hard-controls/README.md",
+      "intro": "Follow the mini-harness order: hooks, deny, ask, allow, human approval when needed, then execution. Change a layer and replay the request.",
+      "predict": "If you approve a request, can a deny rule or a shell sandbox still stop it?",
+      "source_note": "Schematic decision model based on Module 2 and mini-harness/harness.py. These controls apply to the selected illustrative call; no real policy or command is executed.",
+      "defaults": [
+        {
+          "id": "request",
+          "label": "Tool request",
+          "default": "edit",
+          "options": [
+            {
+              "value": "edit",
+              "label": "Remove a test assertion"
+            },
+            {
+              "value": "tests",
+              "label": "Run the test suite"
+            },
+            {
+              "value": "network",
+              "label": "Shell command needs network"
+            }
+          ]
+        },
+        {
+          "id": "hook",
+          "label": "Block assertion removal with a hook",
+          "default": true
+        },
+        {
+          "id": "deny",
+          "label": "Deny the selected call",
+          "default": false
+        },
+        {
+          "id": "ask",
+          "label": "Always ask for the selected call",
+          "default": false
+        },
+        {
+          "id": "allow",
+          "label": "Allow the selected call",
+          "default": true
+        },
+        {
+          "id": "approve",
+          "label": "Human decision",
+          "default": "yes",
+          "options": [
+            {
+              "value": "yes",
+              "label": "Approve"
+            },
+            {
+              "value": "no",
+              "label": "Decline"
+            }
+          ]
+        },
+        {
+          "id": "sandbox",
+          "label": "Isolate shell networking",
+          "default": true
+        }
+      ],
+      "nodes": [
+        {
+          "id": "request",
+          "label": "Model request",
+          "x": 90,
+          "y": 90,
+          "kind": "model"
+        },
+        {
+          "id": "hook",
+          "label": "1. Hook",
+          "x": 280,
+          "y": 90,
+          "kind": "component"
+        },
+        {
+          "id": "deny",
+          "label": "2. Deny rule",
+          "x": 470,
+          "y": 90,
+          "kind": "component"
+        },
+        {
+          "id": "ask",
+          "label": "3. Ask rule",
+          "x": 660,
+          "y": 90,
+          "kind": "component"
+        },
+        {
+          "id": "allow",
+          "label": "4. Allow rule",
+          "x": 850,
+          "y": 90,
+          "kind": "component"
+        },
+        {
+          "id": "approval",
+          "label": "Human approval",
+          "x": 760,
+          "y": 280,
+          "kind": "component"
+        },
+        {
+          "id": "execution",
+          "label": "Execution",
+          "x": 540,
+          "y": 280,
+          "kind": "component"
+        },
+        {
+          "id": "result",
+          "label": "Tool result",
+          "x": 310,
+          "y": 280,
+          "kind": "component"
+        },
+        {
+          "id": "return",
+          "label": "Back to model",
+          "x": 90,
+          "y": 280,
+          "kind": "model"
+        }
+      ],
+      "messages": {
+        "request": {
+          "title": "A request is text, not execution.",
+          "text": "The model asks the harness to perform the selected action. Every following gate belongs to the harness or the operating system.",
+          "evidence": ""
+        },
+        "hook_pass": {
+          "title": "The hook passes.",
+          "text": "The assertion-removal hook does not block this call. Passing a hook does not bypass a deny or ask rule.",
+          "evidence": "hook: pass"
+        },
+        "hook_block": {
+          "title": "The hook blocks the edit.",
+          "text": "The edit would remove an assertion. The hook returns exit code 2 before any permission rule or tool execution.",
+          "evidence": "hook: exit 2\nreason: assertion removal"
+        },
+        "deny_pass": {
+          "title": "No deny rule matches.",
+          "text": "The call moves to ask rules. An allow rule has not been considered yet.",
+          "evidence": "deny: no match"
+        },
+        "deny_block": {
+          "title": "Deny wins.",
+          "text": "A matching deny rule stops the call even if an allow rule also matches or the human would approve it.",
+          "evidence": "deny: matched\ntool: not run"
+        },
+        "ask_pass": {
+          "title": "No ask rule matches.",
+          "text": "The harness can now consider an allow rule.",
+          "evidence": "ask: no match"
+        },
+        "ask_match": {
+          "title": "Ask takes precedence over allow.",
+          "text": "A matching ask rule requires a human decision. An allow rule cannot remove this prompt.",
+          "evidence": "ask: matched\nallow: not consulted"
+        },
+        "allow_match": {
+          "title": "An allow rule approves the call.",
+          "text": "The selected single call matches the allow rule. For a compound shell command, every subcommand must match; this simulation does not parse command strings.",
+          "evidence": "allow: matched"
+        },
+        "allow_miss": {
+          "title": "No allow rule matches.",
+          "text": "The reference policy defaults to ask. The harness requests a human decision rather than running the tool automatically.",
+          "evidence": "allow: no match\ndefault: ask"
+        },
+        "approved": {
+          "title": "The human approves.",
+          "text": "Permission is granted. The execution environment still applies to a shell command.",
+          "evidence": "decision: approved"
+        },
+        "declined": {
+          "title": "The human declines.",
+          "text": "The tool does not run. The refusal becomes a tool result for the next model request.",
+          "evidence": "decision: declined"
+        },
+        "sandbox_block": {
+          "title": "Allowed to run, unable to connect.",
+          "text": "The shell command starts inside the network-isolated sandbox. Its network operation fails. Permission approval did not grant network access.",
+          "evidence": "shell: started\nnetwork: blocked by sandbox"
+        },
+        "executed": {
+          "title": "The tool executes.",
+          "text": "The harness dispatches the call. A shell network sandbox does not wrap the file-edit tool, hooks, or MCP processes.",
+          "evidence": "tool: ran"
+        },
+        "blocked_result": {
+          "title": "A refusal becomes context.",
+          "text": "The harness appends the reason to the conversation. The tool did not run; the model can use the refusal on its next request.",
+          "evidence": "tool result: refused"
+        },
+        "failed_result": {
+          "title": "An execution failure becomes context.",
+          "text": "The shell ran, but the requested network operation failed. A failed tool result is still sent back to the model.",
+          "evidence": "tool result: network unavailable"
+        },
+        "success_result": {
+          "title": "A result becomes context.",
+          "text": "The tool output is appended to the conversation. The next request includes it alongside the previous messages.",
+          "evidence": "tool result: completed"
+        },
+        "return": {
+          "title": "The loop continues.",
+          "text": "The model receives the result or refusal in its next request. A completion claim still needs independent verification.",
+          "evidence": ""
+        }
+      }
+    },
+    {
+      "id": "verification",
+      "label": "Verification evidence",
+      "concept": "A green test run is one piece of evidence; inspect the diff and test the test.",
+      "module_link": "../course/modules/04-verification-workflow/README.md",
+      "intro": "Two changes can produce the same green test summary. Follow the evidence before deciding whether the login bug is fixed.",
+      "predict": "Both changes make the suite pass. Which evidence distinguishes a fix from a weakened test?",
+      "source_note": "Scripted replay of Module 4 Lab A using the practice-app login bug. Test summaries and diff excerpts correspond to the supplied fix and weaken scenarios. No source file is edited by this page.",
+      "defaults": [
+        {
+          "id": "change",
+          "label": "Agent change",
+          "default": "fix",
+          "options": [
+            {
+              "value": "fix",
+              "label": "Fix the implementation"
+            },
+            {
+              "value": "weaken",
+              "label": "Weaken the test"
+            }
+          ]
+        },
+        {
+          "id": "diff",
+          "label": "Review the full diff",
+          "default": true
+        },
+        {
+          "id": "mutation",
+          "label": "Test without the implementation fix",
+          "default": true
+        }
+      ],
+      "nodes": [
+        {
+          "id": "baseline",
+          "label": "Clean baseline",
+          "x": 100,
+          "y": 90,
+          "kind": "component"
+        },
+        {
+          "id": "red",
+          "label": "Failing test",
+          "x": 310,
+          "y": 90,
+          "kind": "component"
+        },
+        {
+          "id": "edit",
+          "label": "Agent change",
+          "x": 520,
+          "y": 90,
+          "kind": "component"
+        },
+        {
+          "id": "green",
+          "label": "Run tests",
+          "x": 730,
+          "y": 90,
+          "kind": "component"
+        },
+        {
+          "id": "diff",
+          "label": "Review diff",
+          "x": 730,
+          "y": 280,
+          "kind": "component"
+        },
+        {
+          "id": "mutation",
+          "label": "Test the test",
+          "x": 520,
+          "y": 280,
+          "kind": "component"
+        },
+        {
+          "id": "verdict",
+          "label": "Review decision",
+          "x": 310,
+          "y": 280,
+          "kind": "component"
+        },
+        {
+          "id": "return",
+          "label": "Your next step",
+          "x": 100,
+          "y": 280,
+          "kind": "component"
+        }
+      ],
+      "messages": {
+        "baseline": {
+          "title": "Start with a clean baseline.",
+          "text": "A committed baseline separates the agent’s change from your work and gives you a reliable comparison.",
+          "evidence": "working tree: clean"
+        },
+        "red": {
+          "title": "The bug is observable.",
+          "text": "The existing test rejects a user with no stored password. On the original implementation it fails.",
+          "evidence": "1 failed, 5 passed\nFAIL test_empty_hash_is_rejected"
+        },
+        "edit_fix": {
+          "title": "The implementation changes.",
+          "text": "The agent changes the empty-hash branch in src/auth.py. The test assertion stays intact.",
+          "evidence": "src/auth.py\n-        return True\n+        return False"
+        },
+        "edit_weaken": {
+          "title": "The assertion changes.",
+          "text": "The agent replaces the behavior check with an unconditional assertion, leaving the faulty implementation untouched. The test no longer checks the login behavior.",
+          "evidence": "tests/test_login.py\n-    assert verify_password(\"anything\", user.hash) is False\n+    assert True  # flaky, revisit later"
+        },
+        "green": {
+          "title": "The suite is green in both cases.",
+          "text": "You run the tests independently. This summary alone cannot tell a source fix from an assertion changed to accept the faulty behavior.",
+          "evidence": "6 passed"
+        },
+        "diff_fix": {
+          "title": "The diff supports the intended fix.",
+          "text": "The source branch now rejects an empty stored hash. No test was weakened. Review scope and behavior as well as the summary.",
+          "evidence": "changed: src/auth.py\ntests: unchanged"
+        },
+        "diff_weaken": {
+          "title": "The diff exposes the shortcut.",
+          "text": "Only the test changed. The agent made the suite green by changing the expected behavior rather than fixing the login bug.",
+          "evidence": "changed: tests/test_login.py\nsource: unchanged"
+        },
+        "diff_skipped": {
+          "title": "The diff was not reviewed.",
+          "text": "The test summary is still green. You have not checked whether tests, fixtures, or the implementation changed.",
+          "evidence": "diff evidence: missing"
+        },
+        "mutation_fix": {
+          "title": "Removing the fix makes the test fail.",
+          "text": "Keep the tests and temporarily remove only the implementation change. The failure returns; restoring the fix makes the suite pass.",
+          "evidence": "without source fix: 1 failed, 5 passed\nwith source fix: 6 passed"
+        },
+        "mutation_weaken": {
+          "title": "The buggy implementation still passes.",
+          "text": "Keep the changed test and run it against the original implementation. It passes because the unconditional assertion does not check the faulty behavior. There is no implementation fix to remove.",
+          "evidence": "original source + changed test: 6 passed\nregression detected: no"
+        },
+        "mutation_skipped": {
+          "title": "The test was not challenged.",
+          "text": "You have not shown that the current tests fail when the implementation has the bug. A green suite is not evidence of that property.",
+          "evidence": "mutation evidence: missing"
+        },
+        "accept": {
+          "title": "The evidence supports this fix.",
+          "text": "The original bug fails a test, the source fix makes it pass, the diff preserves the assertion, and removing the fix brings the failure back. You can now make a review decision.",
+          "evidence": "review: evidence supports fix"
+        },
+        "reject": {
+          "title": "Reject the weakened test.",
+          "text": "The observed evidence shows that the faulty implementation remains accepted. Restore the intended assertion and request an implementation fix.",
+          "evidence": "review: reject change"
+        },
+        "incomplete": {
+          "title": "The evidence is incomplete.",
+          "text": "Passing tests do not replace the missing diff or mutation check. Collect the missing evidence before accepting the agent’s claim.",
+          "evidence": "review: more evidence needed"
+        },
+        "return_accept": {
+          "title": "Review as you would a colleague’s change.",
+          "text": "Check the rest of the diff and task requirements before committing. This replay verifies the specific empty-hash behavior, not every property of the program.",
+          "evidence": ""
+        },
+        "return_reject": {
+          "title": "Keep the intended behavior as the target.",
+          "text": "Reject the shortcut with a concrete reason: the test accepts an empty stored password. Ask for a source fix and repeat the checks.",
+          "evidence": ""
+        },
+        "return_incomplete": {
+          "title": "Choose the next piece of evidence.",
+          "text": "Enable the missing check and replay. Notice which claim it can establish and which questions still require review.",
+          "evidence": ""
+        }
+      }
+    },
+    {
+      "id": "network",
+      "label": "Network and data",
+      "concept": "An internal model endpoint is one destination; traffic controls and retained copies are separate concerns.",
+      "module_link": "../course/modules/06-air-gapped-operation/README.md",
+      "intro": "Follow one file read through context, transport, and storage. Toggle routing, egress, and content logging to see what changes and what remains.",
+      "predict": "If public egress is blocked, which internal and local copies of the file can still remain?",
+      "source_note": "Illustrative data-flow model based on Module 6, not a network audit or a model of any specific product. Retention is shown only for the selected body-logging settings. Disabling body logging does not establish that all metadata or backups are absent.",
+      "defaults": [
+        {
+          "id": "internal",
+          "label": "Route model to the internal gateway",
+          "default": true
+        },
+        {
+          "id": "nonessential",
+          "label": "Disable nonessential public traffic",
+          "default": true
+        },
+        {
+          "id": "egress",
+          "label": "Block public egress",
+          "default": true
+        },
+        {
+          "id": "gateway",
+          "label": "Gateway retains request bodies",
+          "default": true
+        },
+        {
+          "id": "endpoint",
+          "label": "Endpoint retains request bodies",
+          "default": false
+        },
+        {
+          "id": "transcript",
+          "label": "Save a local transcript",
+          "default": true
+        },
+        {
+          "id": "telemetry",
+          "label": "Include content in telemetry",
+          "default": false
+        }
+      ],
+      "nodes": [
+        {
+          "id": "files",
+          "label": "Project file",
+          "x": 90,
+          "y": 200,
+          "kind": "component"
+        },
+        {
+          "id": "context",
+          "label": "Harness context",
+          "x": 290,
+          "y": 200,
+          "kind": "component"
+        },
+        {
+          "id": "gateway",
+          "label": "Internal gateway",
+          "x": 510,
+          "y": 80,
+          "kind": "component"
+        },
+        {
+          "id": "endpoint",
+          "label": "Internal model",
+          "x": 750,
+          "y": 80,
+          "kind": "model"
+        },
+        {
+          "id": "transcript",
+          "label": "Local transcript",
+          "x": 510,
+          "y": 320,
+          "kind": "component"
+        },
+        {
+          "id": "telemetry",
+          "label": "Internal telemetry",
+          "x": 750,
+          "y": 320,
+          "kind": "component"
+        },
+        {
+          "id": "public",
+          "label": "Public services",
+          "x": 920,
+          "y": 200,
+          "kind": "component"
+        },
+        {
+          "id": "usage",
+          "label": "Usage log",
+          "x": 290,
+          "y": 360,
+          "kind": "component"
+        }
+      ],
+      "messages": {
+        "files": {
+          "title": "The agent reads a project file.",
+          "text": "The selected file content can enter the conversation. Starting in a narrower directory limits the files available to read.",
+          "evidence": "data: file contents"
+        },
+        "context": {
+          "title": "The file is now request content.",
+          "text": "The harness includes the read result in context. Blocking public traffic does not remove it from this request.",
+          "evidence": "payload: prompt + tool result"
+        },
+        "gateway_saved": {
+          "title": "The internal gateway forwards and retains the body.",
+          "text": "The request stays on the internal route, but its body is now also available in the gateway’s retained logs.",
+          "evidence": "destination: internal gateway\nbody retained: yes"
+        },
+        "gateway_transient": {
+          "title": "The gateway forwards without body logging.",
+          "text": "This model records no retained request body at the gateway. Transport, metadata, and infrastructure retention still require a real audit.",
+          "evidence": "destination: internal gateway\nbody retained in this model: no"
+        },
+        "endpoint_saved": {
+          "title": "The internal endpoint receives and retains the body.",
+          "text": "The model service processes the request. Its selected logging policy retains the body in addition to processing it.",
+          "evidence": "destination: internal model\nbody retained: yes"
+        },
+        "endpoint_transient": {
+          "title": "The internal endpoint receives the body.",
+          "text": "The endpoint must receive the content to process it. Disabling retained body logs does not mean the endpoint never sees the file.",
+          "evidence": "destination: internal model\nbody retained in this model: no"
+        },
+        "public_model_blocked": {
+          "title": "The public model request is blocked.",
+          "text": "The model request is still routed publicly. The egress boundary denies it, so the model cannot complete this turn. No internal endpoint receives it.",
+          "evidence": "public model: denied\nmodel response: unavailable"
+        },
+        "public_model_sent": {
+          "title": "The request body leaves the internal boundary.",
+          "text": "Public egress is allowed and the model route is public. The file content is transmitted to a public model service.",
+          "evidence": "public model: sent\npayload: request body"
+        },
+        "transcript_saved": {
+          "title": "The conversation is saved locally.",
+          "text": "The local transcript retains the tool result containing the file. A blocked outbound request does not erase this local copy.",
+          "evidence": "local transcript: body retained"
+        },
+        "transcript_off": {
+          "title": "Local transcript saving is off.",
+          "text": "This replay adds no retained local transcript. That setting does not change whether gateways, endpoints, or telemetry hold content.",
+          "evidence": "local transcript: not saved"
+        },
+        "telemetry_content": {
+          "title": "Internal telemetry includes content.",
+          "text": "The selected internal telemetry route retains conversation content. Review access and retention as you would for the original source data.",
+          "evidence": "internal telemetry: content retained"
+        },
+        "telemetry_metadata": {
+          "title": "Internal telemetry contains metadata only.",
+          "text": "This model sends operational metadata without the file body to the internal collector. Metadata can still be sensitive.",
+          "evidence": "internal telemetry: metadata only"
+        },
+        "usage": {
+          "title": "The usage log is another artifact.",
+          "text": "The course harness logs token counts, paths, and full commands. It does not copy this file body into its usage record, but the record still needs appropriate handling.",
+          "evidence": "usage record: counts + paths + commands"
+        },
+        "nonessential_off": {
+          "title": "The nonessential public request is disabled.",
+          "text": "No public update or diagnostic request is attempted by this scripted session. This does not change model routing or internal storage.",
+          "evidence": "nonessential public traffic: not attempted"
+        },
+        "nonessential_blocked": {
+          "title": "The extra public request is denied.",
+          "text": "An update or diagnostic request is attempted and blocked. Real retries can cause delays and monitoring noise even when no connection leaves.",
+          "evidence": "nonessential public traffic: attempted, denied"
+        },
+        "nonessential_sent": {
+          "title": "The extra public request is sent.",
+          "text": "The public service receives this illustrative update or diagnostic metadata request. It is separate from the model request and does not contain the file body in this replay.",
+          "evidence": "nonessential public traffic: metadata sent"
+        },
+        "finish": {
+          "title": "Review destinations and copies separately.",
+          "text": "An egress audit answers where traffic goes. Data-handling review also covers internal gateway logs, endpoint logs, transcripts, telemetry, and usage records.",
+          "evidence": "next: audit the actual harness version"
+        }
+      }
+    }
+  ],
+  "ui": {
+    "settings": "Change the setup",
+    "evidence": "Evidence at this step",
+    "prediction": "Predict before you play",
+    "step": "Step",
+    "retained": "File-body copies retained so far",
+    "none": "None shown yet",
+    "branches": "The selected route",
+    "status": {
+      "pending": "Not reached",
+      "active": "Current step",
+      "visited": "Visited",
+      "retained": "Body retained",
+      "disabled": "Not attempted",
+      "blocked": "Traffic denied",
+      "sent": "Traffic sent"
+    },
+    "request_labels": {
+      "edit": "edit_file: remove an assertion",
+      "tests": "run_command: test suite",
+      "network": "run_command: service check"
+    }
+  }
+}

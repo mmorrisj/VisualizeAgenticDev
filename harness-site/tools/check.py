@@ -75,6 +75,7 @@ CONTENT_SCHEMAS = {
     "extensions.json": {**SECTION_KEYS, "mechanisms": list, "attributes": list, "flow": dict, "scenarios": list,
                         "rules_of_thumb": list, "takeaway": str, "source_note": str},
     "quizzes.json": {"review": dict, "questions": list},
+    "flows.json": {"id": str, "concept": str, "module_link": str, "source_note": str, "flows": list, "ui": dict},
     "inside-extensions.json": {"id": str, "concept": str, "module_link": str, "source_note": str, "task": str,
                                "lenses": list, "measured": dict, "session": dict, "ledger": dict},
 }
@@ -172,6 +173,27 @@ def check_content(report: Report) -> None:
                 page = section.get("page", "")
                 if isinstance(page, str) and not (SITE_ROOT / page).is_file():
                     report.error(path, f"sections[{i}].page '{page}' does not exist")
+            modules = data.get("curriculum", [])
+            if len(modules) != 7:
+                report.error(path, "curriculum must cover all seven written modules")
+            if {module.get("id") for module in modules} != {f"module-{i}" for i in range(1, 8)}:
+                report.error(path, "curriculum must identify modules 1 through 7 exactly once")
+            ids = set()
+            sections = {section["id"]: section for section in data.get("sections", [])}
+            for i, module in enumerate(modules):
+                check_keys(report, path, module, {key: str for key in (
+                    "id", "title", "concept", "prompt", "lab", "coverage", "section",
+                    "visual_link", "module_link", "visual_label", "lab_label"
+                )}, f"curriculum[{i}]")
+                if module.get("id") in ids:
+                    report.error(path, "duplicate curriculum module id")
+                ids.add(module.get("id"))
+                section = sections.get(module.get("section"))
+                if not section or urlsplit(module.get("visual_link", "")).path != section["page"]:
+                    report.error(path, f"curriculum[{i}] must link to its declared visual section")
+                for key in ("visual_link", "module_link"):
+                    if not (SITE_ROOT / urlsplit(module.get(key, "")).path).is_file():
+                        report.error(path, f"curriculum[{i}].{key} target is missing")
         for i, step in enumerate(data.get("steps", []) if isinstance(data, dict) else []):
             check_keys(report, path, step, STEP_KEYS, f"steps[{i}]")
         if path.name == "extensions.json" and isinstance(data, dict):
@@ -186,6 +208,8 @@ def check_content(report: Report) -> None:
             check_loop(report, path, data)
         if path.name == "inside-extensions.json" and isinstance(data, dict):
             check_inside_extensions(report, path, data)
+        if path.name == "flows.json" and isinstance(data, dict):
+            check_flows(report, path, data)
         if path.name == "quizzes.json" and isinstance(data, dict):
             check_quizzes(report, path, data)
 
@@ -194,6 +218,48 @@ def check_content(report: Report) -> None:
         for link in find_links(data):
             if is_relative_reference(link) and not (SITE_ROOT / urlsplit(link).path).resolve().exists():
                 report.warn(path, f"link target not found (is course/ copied in?): {link}")
+
+
+def check_flows(report: Report, path: pathlib.Path, data: dict) -> None:
+    """The renderer and pure trace model require these lenses and controls."""
+    controls = {
+        "permissions": {"request", "hook", "deny", "ask", "allow", "approve", "sandbox"},
+        "verification": {"change", "diff", "mutation"},
+        "network": {"internal", "nonessential", "egress", "gateway", "endpoint", "transcript", "telemetry"},
+    }
+    nodes = {
+        "permissions": {"request", "hook", "deny", "ask", "allow", "approval", "execution", "result", "return"},
+        "verification": {"baseline", "red", "edit", "green", "diff", "mutation", "verdict", "return"},
+        "network": {"files", "context", "gateway", "endpoint", "transcript", "telemetry", "public", "usage"},
+    }
+    flows = data.get("flows", [])
+    if [flow.get("id") for flow in flows] != list(controls):
+        report.error(path, "flows must list permissions, verification, and network exactly once in order")
+    for flow in flows:
+        fid = flow.get("id")
+        check_keys(report, path, flow, {"id": str, "label": str, "concept": str, "intro": str,
+                   "predict": str, "module_link": str, "source_note": str,
+                   "defaults": list, "nodes": list, "messages": dict}, f"flow {fid}")
+        defaults = flow.get("defaults", [])
+        if {c.get("id") for c in defaults} != controls.get(fid) or len(defaults) != len(controls.get(fid, [])):
+            report.error(path, f"flow {fid}: missing or duplicate controls")
+        for control in defaults:
+            check_keys(report, path, control, {"id": str, "label": str}, f"flow {fid} control")
+            if "options" in control:
+                values = [option.get("value") for option in control["options"]]
+                if control.get("default") not in values or len(values) != len(set(values)):
+                    report.error(path, f"flow {fid}: invalid select default or duplicate option")
+            elif not isinstance(control.get("default"), bool):
+                report.error(path, f"flow {fid}: toggle default must be boolean")
+        scene_nodes = flow.get("nodes", [])
+        if {n.get("id") for n in scene_nodes} != nodes.get(fid) or len(scene_nodes) != len(nodes.get(fid, [])):
+            report.error(path, f"flow {fid}: missing or duplicate diagram nodes")
+        for node in scene_nodes:
+            check_keys(report, path, node, {"id": str, "label": str, "x": int, "y": int, "kind": str}, f"flow {fid} node")
+            if not 82 <= node.get("x", 0) <= 938 or not 40 <= node.get("y", 0) <= 365:
+                report.error(path, f"flow {fid}: node outside scene bounds")
+        for key, message in flow.get("messages", {}).items():
+            check_keys(report, path, message, {"title": str, "text": str, "evidence": str}, f"flow {fid} message {key}")
 
 
 def check_quizzes(report: Report, path: pathlib.Path, data: dict) -> None:

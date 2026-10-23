@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Flow simulations | Inside the Harness</title>
+  <script>try{var t=localStorage.getItem('harness-theme');if(t==='light'||t==='dark')document.documentElement.dataset.theme=t}catch(e){}</script>
+  <link rel="stylesheet" href="../assets/css/site.css">
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+  <header class="site-header">
+    <div class="site-header-inner">
+      <a class="site-name" href="../index.html"><svg width="22" height="22" viewBox="0 0 22 22" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="9.5" fill="none" stroke="var(--accent)" stroke-width="1.6" stroke-dasharray="1.5 3" stroke-linecap="round"/><rect x="6.5" y="7.5" width="9" height="7" rx="2" fill="none" stroke="var(--accent-2)" stroke-width="1.8"/></svg>Inside the Harness</a>
+      <nav class="site-nav" aria-label="Sections">
+        <ul>
+          <li><a href="../sections/anatomy.html">Harness anatomy</a></li>
+          <li><a href="../sections/loop.html">The agent loop</a></li>
+          <li><a href="../sections/context.html">The context window</a></li>
+          <li><a href="../sections/tokens.html">Token growth</a></li>
+          <li><a href="../sections/extensions.html">Choosing an extension</a></li>
+          <li><a href="../sections/inside-extensions.html">Inside an extension</a></li>
+          <li><a href="../sections/flows.html">Flow simulations</a></li>
+          <li><a href="../sections/review.html">Final review</a></li>
+        </ul>
+      </nav>
+      <button type="button" class="button" id="theme-toggle">Theme</button>
+    </div>
+  </header>
+
+  <main id="main" class="page flow-page">
+    <p class="badge">Section 7 of 8</p>
+    <h1>Flow simulations</h1>
+    <p class="concept" id="flow-concept"></p>
+    <p class="note" id="flow-disclaimer"></p>
+
+    <section class="section-block" aria-labelledby="flow-heading">
+      <h2 id="flow-heading">Follow the consequences</h2>
+      <div class="tabs" role="tablist" aria-labelledby="flow-heading" id="flow-tabs"></div>
+      <div id="flow-panel" role="tabpanel">
+        <p class="flow-principle" id="flow-principle"></p>
+        <p class="note" id="flow-intro"></p>
+        <div class="flow-workbench">
+          <div class="panel flow-settings-panel">
+            <h3>Change the setup</h3>
+            <p class="note">Each change restarts the trace.</p>
+            <div id="flow-settings"></div>
+            <button type="button" class="button" id="flow-reset">Reset setup</button>
+          </div>
+          <div id="flow-player" class="flow-player" tabindex="0" role="group" aria-label="Flow player">
+            <div class="flow-predict"><span class="eyebrow">Predict before you play</span><p id="flow-prediction"></p></div>
+            <p class="mono note" id="flow-request" hidden></p>
+            <div class="visual-frame" id="trace-scene"></div>
+            <div class="panel flow-evidence" aria-live="polite" aria-atomic="true">
+              <div><p class="eyebrow">Evidence at this step</p><h3 id="trace-title"></h3><p id="trace-copy"></p></div>
+              <pre class="wire" id="trace-evidence"></pre>
+              <div class="flow-retention" id="flow-retention" hidden><h4>File-body copies retained so far</h4><p id="flow-copies"></p></div>
+            </div>
+
+            <div class="tour-progress" aria-hidden="true"><div id="trace-progress"></div></div>
+            <div class="stepper">
+              <button type="button" class="button button-primary" id="trace-play" aria-pressed="false">Play</button>
+              <button type="button" class="button" id="trace-back">Back</button>
+              <button type="button" class="button" id="trace-next">Next</button>
+              <button type="button" class="button" id="trace-restart">Restart</button>
+              <span class="stepper-status" id="trace-status"></span>
+            </div>
+            <p class="note keys">Focus the player: <kbd>Space</kbd> play or pause, <kbd>Left</kbd> <kbd>Right</kbd> step. Select any stop below to jump.</p>
+            <ol class="chapters" id="trace-chapters" aria-label="Trace stops"></ol>
+          </div>
+        </div>
+        <p class="section-block"><a id="flow-module" href="../../course/README.md">Go deeper: written course</a></p>
+        <p class="note" id="flow-source"></p>
+      </div>
+    </section>
+    <section class="section-block panel quiz" aria-labelledby="quiz-heading">
+      <h2 id="quiz-heading">Check your understanding</h2>
+      <div id="quiz" data-quiz="flows"></div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="site-footer-inner">
+      <span>Numbers come from running the course harness unless marked illustrative.</span>
+      <span><a href="../index.html">Course map</a></span>
+    </div>
+  </footer>
+
+  <script type="module" src="../assets/js/flows.js"></script>
+  <script type="module" src="../assets/js/quiz.js"></script>
+</body>
+</html>

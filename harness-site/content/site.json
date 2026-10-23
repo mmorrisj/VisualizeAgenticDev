@@ -7,43 +7,150 @@
       "id": "anatomy",
       "page": "sections/anatomy.html",
       "title": "Harness anatomy",
-      "summary": "The six parts that surround the model, and why the model cannot act without them."
+      "summary": "The six parts that surround the model, and why the model cannot act without them.",
+      "activity": "Step through a request"
     },
     {
       "id": "loop",
       "page": "sections/loop.html",
       "title": "The agent loop",
-      "summary": "Watch the harness re-send the whole conversation on every request."
+      "summary": "Watch the harness re-send the whole conversation on every request.",
+      "activity": "Predict the next request"
     },
     {
       "id": "context",
       "page": "sections/context.html",
       "title": "The context window",
-      "summary": "Fixed overhead, piling-up tool results, and what compaction throws away."
+      "summary": "Fixed overhead, piling-up tool results, and what compaction throws away.",
+      "activity": "Change the context budget"
     },
     {
       "id": "tokens",
       "page": "sections/tokens.html",
       "title": "Token growth",
-      "summary": "Why total input grows much faster than the context you end with."
+      "summary": "Why total input grows much faster than the context you end with.",
+      "activity": "Compare session costs"
     },
     {
       "id": "extensions",
       "page": "sections/extensions.html",
       "title": "Choosing an extension",
-      "summary": "Instructions files, skills, subagents, hooks, MCP servers, and plugins, compared."
+      "summary": "Instructions files, skills, subagents, hooks, MCP servers, and plugins, compared.",
+      "activity": "Choose a mechanism"
     },
     {
       "id": "inside-extensions",
       "page": "sections/inside-extensions.html",
       "title": "Inside an extension",
-      "summary": "What an MCP server, a skill, a subagent, and a plugin each add to every request, and when."
+      "summary": "What an MCP server, a skill, a subagent, and a plugin each add to every request, and when.",
+      "activity": "Open the wire messages"
+    },
+    {
+      "id": "flows",
+      "page": "sections/flows.html",
+      "title": "Flow simulations",
+      "summary": "Trace permission decisions, verification evidence, and where request data travels.",
+      "activity": "Change a setup. Follow the consequences."
     },
     {
       "id": "review",
       "page": "sections/review.html",
       "title": "Final review",
-      "summary": "Mixed questions from every section, plus choosing and using a harness safely."
+      "summary": "Mixed questions from every section, plus choosing and using a harness safely.",
+      "activity": "Explain your decisions"
+    }
+  ],
+  "curriculum": [
+    {
+      "id": "module-1",
+      "title": "Build a harness",
+      "concept": "Follow the loop from a model request to a tool result.",
+      "prompt": "Before you step forward, predict which earlier messages the next request must include.",
+      "lab": "Complete the loop exercise, then compare its request bodies with the solution.",
+      "coverage": "Visual walkthrough + coding lab",
+      "section": "loop",
+      "visual_link": "sections/loop.html",
+      "module_link": "../course/modules/01-build-a-harness/README.md",
+      "visual_label": "Try it in the visual",
+      "lab_label": "Test it in the lab"
+    },
+    {
+      "id": "module-2",
+      "title": "Configure hard controls",
+      "concept": "Separate model instructions from controls that execute outside the model.",
+      "prompt": "Choose a tool request. Toggle hooks, deny, ask, and allow rules, then predict which gate stops the call.",
+      "lab": "Compare the naive and strict policies, then test your own deny rules and hooks.",
+      "coverage": "Interactive flow + hands-on lab",
+      "section": "flows",
+      "visual_link": "sections/flows.html#permissions",
+      "module_link": "../course/modules/02-hard-controls/README.md",
+      "visual_label": "Try it in the visual",
+      "lab_label": "Test it in the lab"
+    },
+    {
+      "id": "module-3",
+      "title": "Engineer the context",
+      "concept": "See how fixed overhead and growing results compete for a finite window.",
+      "prompt": "Increase tool-result size in the simulator. Predict when compaction will happen, then check what survives.",
+      "lab": "Compare instructions-file sizes in Lab A and trace information loss in Lab B.",
+      "coverage": "Interactive simulator + measurement lab",
+      "section": "context",
+      "visual_link": "sections/context.html",
+      "module_link": "../course/modules/03-context-engineering/README.md",
+      "visual_label": "Try it in the visual",
+      "lab_label": "Test it in the lab"
+    },
+    {
+      "id": "module-4",
+      "title": "Verify the work",
+      "concept": "Turn an agent’s completion claim into evidence you can review.",
+      "prompt": "Compare a source fix with a weakened test. Inspect the diff and remove the source fix to challenge the test.",
+      "lab": "Run Claim versus evidence, inspect the test diff, then remove the fix to prove the test catches the bug.",
+      "coverage": "Interactive flow + hands-on lab",
+      "section": "flows",
+      "visual_link": "sections/flows.html#verification",
+      "module_link": "../course/modules/04-verification-workflow/README.md",
+      "visual_label": "Try it in the visual",
+      "lab_label": "Test it in the lab"
+    },
+    {
+      "id": "module-5",
+      "title": "Extend the harness",
+      "concept": "Inspect when an extension loads, what runs, and which context pays for it.",
+      "prompt": "Switch between MCP, skill, subagent, and plugin lenses. Disable a component in the ledger and explain the change.",
+      "lab": "Run the MCP probe and skill triage script, then compare their outputs with the visual.",
+      "coverage": "Interactive lenses + extension labs",
+      "section": "inside-extensions",
+      "visual_link": "sections/inside-extensions.html",
+      "module_link": "../course/modules/05-extensibility/README.md",
+      "visual_label": "Try it in the visual",
+      "lab_label": "Test it in the lab"
+    },
+    {
+      "id": "module-6",
+      "title": "Operate on an air gap",
+      "concept": "Account for processes, destinations, and retained data beyond the model.",
+      "prompt": "Block public egress, then trace which internal and local copies still retain file content.",
+      "lab": "Use the module’s egress audit and model-capability checks. Trace endpoint, gateway, and transcript storage.",
+      "coverage": "Interactive flow + hands-on lab",
+      "section": "flows",
+      "visual_link": "sections/flows.html#network",
+      "module_link": "../course/modules/06-air-gapped-operation/README.md",
+      "visual_label": "Try it in the visual",
+      "lab_label": "Test it in the lab"
+    },
+    {
+      "id": "module-7",
+      "title": "Observe token usage",
+      "concept": "Distinguish final context, total input, fresh tokens, and cached input.",
+      "prompt": "Compare focused and broad sessions, toggle caching, and explain why cached input still counts toward total input.",
+      "lab": "Read a usage report, find the cache miss, then measure a session with less overhead.",
+      "coverage": "Interactive explorer + usage lab",
+      "section": "tokens",
+      "visual_link": "sections/tokens.html",
+      "module_link": "../course/modules/07-token-observability/README.md",
+      "visual_label": "Try it in the visual",
+      "lab_label": "Test it in the lab"
     }
   ]
 }

@@ -116,7 +116,11 @@ export function drawModel(parent, { cx, cy, w = 150, h = 96, label = "Model", su
   el("rect", { class: "model-box", x: cx - w / 2, y: cy - h / 2, width: w, height: h, rx: 14 }, g);
   el("rect", { class: "model-core", x: cx - w / 2 + 10, y: cy - h / 2 + 10, width: w - 20, height: h - 20, rx: 8 }, g);
   text(g, cx, cy - 2, label, { "text-anchor": "middle", class: "label-strong", "font-size": 17 });
-  if (sublabel) text(g, cx, cy + 18, sublabel, { "text-anchor": "middle", class: "label-muted" });
+  if (sublabel) {
+    // Separate SVG text nodes in the accessible name as well as visually.
+    g.append(document.createTextNode(" "));
+    text(g, cx, cy + 18, sublabel, { "text-anchor": "middle", class: "label-muted" });
+  }
   return g;
 }
 

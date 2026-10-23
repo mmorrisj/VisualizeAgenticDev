@@ -1,3 +1,5 @@
+import { mountWorld, setSceneInteractive } from "./scene.js";
+
 /*
   common.js: shared behaviour for every page.
 
@@ -197,11 +199,16 @@ export async function initLanding() {
     const summary = document.createElement("p");
     summary.textContent = section.summary;
 
-    card.append(meta, heading, summary);
+    const activity = document.createElement("div");
+    activity.className = "card-activity";
+    activity.textContent = section.activity;
+    card.append(meta, heading, summary, activity);
     item.append(card);
     list.append(item);
   });
 
+  initCurriculum(site.curriculum);
+  initHero().catch(showLoadError);
   return site;
 }
 
@@ -227,4 +234,94 @@ export async function initSection(contentName, pick = (data) => data) {
   if (deeper) deeper.href = resolveSiteLink(content.module_link);
 
   return data;
+}
+
+
+/** Reuse the anatomy's content and world; selection is preserved on resize. */
+async function initHero() {
+  const content = await loadContent("anatomy");
+  let selected = "model";
+  mountWorld(document.getElementById("hero-world"), (handles) => {
+    setSceneInteractive(handles.svg);
+    const targets = { model: handles.model, ...handles.components };
+    const render = () => {
+      const part = selected === "model" ? content.model : content.components.find((c) => c.id === selected);
+      document.getElementById("hero-part-title").textContent = part.label;
+      document.getElementById("hero-part-copy").textContent = part.what;
+      for (const [id, node] of Object.entries(targets)) {
+        node.classList.toggle("is-active", id === selected);
+        node.setAttribute("aria-pressed", String(id === selected));
+      }
+    };
+    for (const [id, node] of Object.entries(targets)) {
+      const part = id === "model" ? content.model : content.components.find((c) => c.id === id);
+      node.setAttribute("role", "button");
+      node.setAttribute("tabindex", "0");
+      const labels = [...node.querySelectorAll("text")];
+      labels.forEach((text, index) => { text.id = `hero-${id}-label-${index}`; });
+      node.setAttribute("aria-labelledby", labels.map((text) => text.id).join(" "));
+      node.classList.add("is-selectable");
+      const select = () => { selected = id; render(); };
+      node.addEventListener("click", select);
+      node.addEventListener("keydown", (event) => {
+        if (event.key === "Enter" || event.key === " ") {
+          event.preventDefault();
+          select();
+        }
+      });
+    }
+    render();
+  });
+}
+
+/** Module choices connect existing visuals with the curriculum's real labs. */
+function initCurriculum(modules) {
+  const picker = document.getElementById("module-picker");
+  const detail = document.getElementById("module-detail");
+  const buttons = [];
+  const select = (module, index) => {
+    buttons.forEach((button, i) => button.setAttribute("aria-pressed", String(i === index)));
+    detail.replaceChildren();
+    const badge = document.createElement("span");
+    badge.className = "badge";
+    badge.textContent = module.coverage;
+    const heading = document.createElement("h3");
+    heading.textContent = module.title;
+    const concept = document.createElement("p");
+    concept.textContent = module.concept;
+    detail.append(badge, heading, concept);
+    for (const [label, copy] of [[module.visual_label, module.prompt], [module.lab_label, module.lab]]) {
+      const block = document.createElement("div");
+      block.className = "module-task";
+      const title = document.createElement("h4");
+      title.textContent = label;
+      const text = document.createElement("p");
+      text.textContent = copy;
+      block.append(title, text);
+      detail.append(block);
+    }
+    const actions = document.createElement("div");
+    actions.className = "hero-actions";
+    for (const [label, path, primary] of [["Open the visual", module.visual_link, true], ["Open the written lab", module.module_link, false]]) {
+      const link = document.createElement("a");
+      link.className = primary ? "button button-primary" : "button";
+      link.href = resolveSiteLink(path);
+      link.textContent = label;
+      actions.append(link);
+    }
+    detail.append(actions);
+  };
+  modules.forEach((module, index) => {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "module-choice";
+    button.setAttribute("aria-controls", "module-detail");
+    const number = document.createElement("span");
+    number.textContent = String(index + 1).padStart(2, "0");
+    button.append(number, module.title);
+    button.addEventListener("click", () => select(module, index));
+    buttons.push(button);
+    picker.append(button);
+  });
+  select(modules[0], 0);
 }

@@ -925,3 +925,98 @@ kbd {
 .ix-parts { list-style: none; padding: 0; margin: 0; max-height: 260px; overflow: auto; font-size: 0.88rem; }
 .ix-parts li { display: flex; justify-content: space-between; gap: 12px; padding: 2px 0; border-bottom: 1px solid var(--border); }
 .ix-parts li.is-always { color: var(--muted); }
+
+/* Landing: an instrument panel for exploring the course's shared world. */
+.landing .hero { padding: 48px 0 56px; gap: 48px; }
+.eyebrow { font: 600 0.73rem var(--font-mono); letter-spacing: 0.12em; text-transform: uppercase; color: var(--accent); margin-bottom: 18px; }
+.landing h1 { font-size: clamp(3.5rem, 5.8vw, 6rem); letter-spacing: -0.065em; line-height: 0.98; max-width: 9ch; margin-bottom: 24px; }
+.landing .lede { font-size: 1.12rem; max-width: 43ch; line-height: 1.7; }
+.hero-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 28px; }
+.hero-actions a { text-decoration: none; padding: 12px 18px; }
+.hero-note { font-size: 0.83rem; color: var(--muted); margin: 16px 0 0; }
+.hero-lab { background: var(--surface); border: 1px solid var(--border); border-radius: 20px; padding: 22px; box-shadow: var(--shadow); overflow: hidden; }
+.lab-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.lab-heading .eyebrow { margin: 0; }
+.hero-lab .visual-frame { background-image: radial-gradient(var(--border) 0.8px, transparent 0.8px); background-size: 18px 18px; border-radius: 12px; margin-top: 16px; }
+.hero-inspector { border-top: 1px solid var(--border); padding: 18px 4px 0; min-height: 130px; }
+.hero-inspector h2 { font-size: 1.05rem; }
+.hero-inspector p { font-size: 0.91rem; color: var(--muted); margin: 0; max-width: 66ch; }
+.hero-lab .keys { font-size: 0.76rem; }
+.landing .section-block { margin: 32px 0 64px; }
+.landing .card-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; }
+.landing .card { padding: 22px; min-height: 220px; border-radius: 14px; overflow: hidden; }
+.landing .card::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; background: var(--accent); }
+.landing .card h3 { margin: 18px 0 10px; font-size: 1.12rem; }
+.landing .card p { font-size: 0.88rem; }
+.landing .card:focus-within { outline: 3px solid var(--focus); outline-offset: 3px; }
+.card-activity { margin-top: 20px; font-size: 0.76rem; font-weight: 650; color: var(--accent); }
+.landing .card-grid > li:last-child { grid-column: auto; }
+.landing .card-grid > li:last-child .card { background: var(--surface-2); }
+.curriculum { border-top: 1px solid var(--border); padding-top: 38px; }
+.curriculum-heading { display: flex; justify-content: space-between; gap: 48px; align-items: end; margin-bottom: 24px; }
+.curriculum-heading .eyebrow { margin-bottom: 10px; }
+.curriculum-heading .note { max-width: 46ch; margin: 0; }
+.curriculum-layout { display: grid; grid-template-columns: minmax(300px, 1fr) minmax(0, 2fr); border: 1px solid var(--border); border-radius: 16px; background: var(--surface); overflow: hidden; }
+.module-picker { padding: 12px; background: var(--surface-2); display: grid; gap: 6px; align-content: start; }
+.module-choice { display: flex; align-items: center; gap: 14px; font: 600 0.93rem var(--font-text); text-align: left; padding: 14px; color: var(--muted); border: 1px solid transparent; border-radius: 8px; background: transparent; cursor: pointer; }
+.module-choice span { font: 0.76rem var(--font-mono); }
+.module-choice:hover { color: var(--text); border-color: var(--border); }
+.module-choice[aria-pressed='true'] { color: var(--text); background: var(--surface); border-color: var(--accent); box-shadow: var(--shadow); }
+.module-detail { padding: 32px 40px; }
+.module-detail h3 { font-size: 1.7rem; letter-spacing: -0.03em; margin: 16px 0 12px; }
+.module-detail > p { color: var(--muted); max-width: 65ch; }
+.module-task { border-left: 2px solid var(--accent); padding-left: 18px; margin: 24px 0; }
+.module-task h4 { font: 600 0.73rem var(--font-mono); text-transform: uppercase; letter-spacing: 0.07em; margin: 0 0 8px; color: var(--accent); }
+.module-task p { margin: 0; font-size: 0.95rem; }
+@media (max-width: 1350px) {
+  .landing .hero { gap: 28px; }
+  .landing .card-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .landing .card-grid > li:last-child { grid-column: span 2; }
+}
+
+/* Flow simulations: setup, deterministic route, then evidence. */
+.flow-page .concept { max-width: 70ch; }
+.flow-principle { font-weight: 650; font-size: 1.25rem; max-width: 78ch; margin-top: 24px; }
+.flow-workbench { display: grid; grid-template-columns: 310px minmax(0, 1fr); gap: 24px; align-items: start; }
+.flow-settings-panel { padding: 22px; border-top: 3px solid var(--accent); }
+.flow-settings-panel h3 { font-size: 1.12rem; }
+.flow-settings-panel .note { font-size: 0.83rem; }
+.flow-field { margin: 18px 0; font-size: 0.9rem; }
+.flow-field > label { display: block; font-weight: 600; }
+.flow-field select { width: 100%; margin-top: 7px; padding: 10px; border: 1px solid var(--border); border-radius: var(--radius-sm); color: var(--text); background: var(--surface-2); font: inherit; }
+.flow-check { display: flex; gap: 10px; align-items: start; }
+.flow-check input { flex: none; width: 18px; height: 18px; margin: 4px 0 0; accent-color: var(--accent); }
+.flow-check label { cursor: pointer; }
+.flow-player { padding: 22px; background: var(--surface); border: 1px solid var(--border); border-radius: 16px; box-shadow: var(--shadow); min-width: 0; }
+.flow-predict { border-left: 3px solid var(--accent-2); padding: 2px 0 2px 14px; margin-bottom: 20px; }
+.flow-predict .eyebrow { color: var(--accent-2); display: block; margin-bottom: 6px; }
+.flow-predict p { font-size: 0.95rem; margin: 0; }
+.flow-player .visual-frame { background-image: radial-gradient(var(--border) 0.8px, transparent 0.8px); background-size: 18px 18px; border: 1px solid var(--border); border-radius: 10px; }
+.flow-player .chapters { margin-top: 18px; gap: 7px; }
+.flow-evidence { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); gap: 20px 32px; margin-top: 24px; border-left: 3px solid var(--accent-2); }
+.flow-evidence .eyebrow { margin-bottom: 10px; }
+.flow-evidence h3 { font-size: 1.25rem; }
+.flow-evidence p { margin-bottom: 0; max-width: 80ch; }
+.flow-evidence .wire { align-self: start; white-space: pre-wrap; overflow-wrap: anywhere; margin: 0; }
+.flow-retention { grid-column: 1 / -1; padding-top: 16px; border-top: 1px solid var(--border); }
+.flow-retention h4 { font-size: 0.9rem; margin: 0 0 8px; }
+.flow-retention p { color: var(--accent); font: 600 0.88rem var(--font-mono); }
+.scene .flow-trace-edge { fill: none; stroke: var(--accent-2); stroke-width: 2.5; }
+.scene .flow-trace-edge.is-blocked { stroke: var(--danger); stroke-dasharray: 6 4; }
+.scene .flow-arrival { fill: var(--accent-2); stroke: var(--surface); stroke-width: 2; }
+.scene .flow-trace-node.is-pending { opacity: 0.65; }
+.scene .flow-trace-node .component-pill { stroke-dasharray: none; }
+.scene .flow-trace-node.is-pending .component-pill { stroke: var(--muted); stroke-dasharray: 4 3; }
+.scene .flow-node-status { font-size: 12px; }
+.scene .flow-arrow { fill: var(--accent-2); }
+/* Let section links wrap inside their lane instead of pushing the theme
+   control onto a separate row as the course grows. */
+.site-nav { flex: 1 1 0; min-width: 0; }
+.site-name, #theme-toggle { flex: none; }
+.flow-player .flow-evidence { box-shadow: none; margin: 16px 0; padding: 16px; min-height: 185px; gap: 12px 20px; }
+.flow-player .flow-evidence h3 { font-size: 1.02rem; }
+.flow-player .flow-evidence p { font-size: 0.88rem; }
+.flow-player .flow-evidence .eyebrow { font-size: 0.65rem; }
+.flow-player .flow-evidence .wire { font-size: 0.7rem; }
+.flow-page > .section-block { margin-top: 28px; }
+.flow-page .concept { margin-bottom: 16px; }

@@ -20,6 +20,7 @@
           <li><a href="sections/tokens.html">Token growth</a></li>
           <li><a href="sections/extensions.html">Choosing an extension</a></li>
           <li><a href="sections/inside-extensions.html">Inside an extension</a></li>
+          <li><a href="sections/flows.html">Flow simulations</a></li>
           <li><a href="sections/review.html">Final review</a></li>
         </ul>
       </nav>
@@ -27,28 +28,46 @@
     </div>
   </header>
 
-  <main id="main" class="page">
+  <main id="main" class="page landing">
     <div class="hero">
       <div>
+        <p class="eyebrow">An explorable course in agentic development</p>
         <h1 data-content="title">Inside the Harness</h1>
         <p class="lede" data-content="description"></p>
-        <p><a class="button button-primary" href="sections/anatomy.html">Start with the anatomy</a></p>
+        <div class="hero-actions"><a class="button button-primary" href="sections/anatomy.html">Explore the harness</a><a class="button" href="#curriculum-heading">Find your next lab</a></div>
+        <p class="hero-note">Watch the mechanism. Change an input. Check your understanding.</p>
       </div>
-      <!-- The shared world, drawn by scene.js; it adapts to narrow screens. -->
-      <div class="visual-frame" id="hero-world"></div>
+      <div class="hero-lab">
+        <div class="lab-heading"><span class="eyebrow">The system around the model</span><span class="badge">Select a part</span></div>
+        <div class="visual-frame" id="hero-world"></div>
+        <div class="hero-inspector" aria-live="polite" aria-atomic="true">
+          <h2 id="hero-part-title">The model</h2><p id="hero-part-copy"></p>
+        </div>
+        <p class="note keys">Select with a click, or Tab then Enter.</p>
+      </div>
     </div>
 
     <section class="section-block" aria-labelledby="map-heading">
       <h2 id="map-heading">Course map</h2>
-      <p class="note">Recommended order.</p>
+      <p class="note">Follow the sequence, or open the mechanism you want to investigate.</p>
       <ol class="card-grid" data-content="cards">
         <li><article class="card"><h3><a href="sections/anatomy.html">Harness anatomy</a></h3></article></li>
         <li><article class="card"><h3><a href="sections/loop.html">The agent loop</a></h3></article></li>
         <li><article class="card"><h3><a href="sections/context.html">The context window</a></h3></article></li>
         <li><article class="card"><h3><a href="sections/tokens.html">Token growth</a></h3></article></li>
         <li><article class="card"><h3><a href="sections/extensions.html">Choosing an extension</a></h3></article></li>
+        <li><article class="card"><h3><a href="sections/inside-extensions.html">Inside an extension</a></h3></article></li>
+        <li><article class="card"><h3><a href="sections/flows.html">Flow simulations</a></h3></article></li>
         <li><article class="card"><h3><a href="sections/review.html">Final review</a></h3></article></li>
       </ol>
+    </section>
+
+    <section class="section-block curriculum" aria-labelledby="curriculum-heading">
+      <div class="curriculum-heading"><div><p class="eyebrow">From explanation to evidence</p><h2 id="curriculum-heading">Take it into the lab</h2></div><p class="note">Choose a module to connect the visual explanation with the written exercise.</p></div>
+      <div class="curriculum-layout">
+        <div class="module-picker" id="module-picker" role="group" aria-label="Curriculum modules"></div>
+        <div class="module-detail" id="module-detail" aria-live="polite" aria-atomic="true"></div>
+      </div>
     </section>
   </main>
 
@@ -61,11 +80,9 @@
 
   <script type="module">
     import { initPage, initLanding } from "./assets/js/common.js";
-    import { mountWorld } from "./assets/js/scene.js";
 
     initPage();
     initLanding();
-    mountWorld(document.getElementById("hero-world"));
   </script>
 </body>
 </html>

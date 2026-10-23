@@ -33,7 +33,7 @@ Development tooling (linters, a test runner) is allowed only if it's optional, a
 
 ## 3. Scope
 
-### In scope: seven interactive sections
+### In scope: eight interactive sections
 
 1. Harness anatomy
 2. Agent loop stepper
@@ -41,7 +41,8 @@ Development tooling (linters, a test runner) is allowed only if it's optional, a
 4. Token growth explorer
 5. Extension chooser
 6. Inside an extension (section 6.7)
-7. Knowledge checks (one per section, plus a final review)
+7. Flow simulations: permissions, verification, network/data
+8. Knowledge checks (one per section, plus a final review)
 
 ### Out of scope
 
@@ -64,6 +65,7 @@ harness-site/
 │   ├── tokens.html
 │   ├── extensions.html
 │   ├── inside-extensions.html
+│   ├── flows.html
 │   └── review.html
 ├── assets/
 │   ├── css/site.css           # design tokens + layout
@@ -77,6 +79,8 @@ harness-site/
 │       ├── tokens.js
 │       ├── extensions.js
 │       ├── inside-extensions.js
+│       ├── flows.js
+│       ├── flow-model.js
 │       └── quiz.js            # shared quiz component
 ├── content/
 │   ├── site.json              # landing copy, section order, card summaries
@@ -86,6 +90,7 @@ harness-site/
 │   ├── tokens.json
 │   ├── extensions.json
 │   ├── inside-extensions.json
+│   ├── flows.json
 │   └── quizzes.json
 ├── tools/
 │   ├── serve.py               # python3 tools/serve.py -> http://127.0.0.1:8000
@@ -254,7 +259,7 @@ A shared quiz component (`quiz.js`) driven by `quizzes.json`.
 
 ### 6.7 Inside an extension
 
-Placed after the extension chooser (section 6.5) in page order: section 6 of 7, before the final review. The chooser answers *which mechanism*; this section answers *what happens inside the harness when it runs*. It covers MCP servers, skills, subagents, and plugins. Hooks appear only as a plugin component.
+Placed after the extension chooser (section 6.5) in page order: section 6 of 8, before flow simulations and the final review. The chooser answers *which mechanism*; this section answers *what happens inside the harness when it runs*. It covers MCP servers, skills, subagents, and plugins. Hooks appear only as a plugin component.
 
 **Concept:** each mechanism changes a different part of the request. An MCP server adds tool definitions and a separate process; a skill adds a short description now and its body later; a subagent runs a second conversation in its own context; a plugin brings all of them at once.
 
@@ -321,10 +326,47 @@ Placed after the extension chooser (section 6.5) in page order: section 6 of 7, 
 
 ---
 
+### 6.8 Flow simulations
+
+One section with three lenses closes the visual coverage gaps in Modules 2, 4,
+and 6. The shared model box and harness component styling remain consistent.
+All scenarios are scripted teaching models, with no command execution or remote
+connections. Content, control labels, defaults, and explanations live in
+`content/flows.json`; `flow-model.js` derives traces and `flows.js` renders them.
+
+- **Permissions:** the signature moment is an approved shell request that still
+  fails at the network sandbox. Follow hooks, deny, ask, allow, human decision,
+  execution, result, and return to the model. Toggle rules and choose a test edit,
+  test run, or conceptual shell network call. Match the reference harness's
+  precedence; a blocked request never visits execution. Do not teach bypass payloads.
+- **Verification:** the signature moment is the same green test summary for a
+  real fix and a weakened assertion. Compare the source/test diff, then keep the
+  test and remove the implementation fix. Acceptance needs both checks; observed
+  weakening causes rejection; missing evidence remains incomplete.
+- **Network/data:** the signature moment is a denied public connection alongside
+  retained local and internal file-body copies. Toggle model routing, egress,
+  nonessential traffic, and body logging at gateway, endpoint, transcript, and
+  internal telemetry. Show copies only after their branch is reached, distinguish
+  transport from retention, and never imply that body logging is the only data risk.
+
+Every lens has Play/Pause, Back, Next, Restart, a selectable step timeline,
+a prediction prompt, textual evidence, and a written-module link. Changing a
+setting restarts the trace; changing lenses starts at its first step. Tabs follow
+the ARIA keyboard pattern; Space plays only outside input controls and buttons;
+Left/Right step while the player is focused. Reduced motion draws complete states.
+Include four knowledge questions spanning the three lenses and one in final review.
+Validate branch precedence, evidence decisions, unreachable endpoint logging, and
+retained-copy state with automated tests, plus both themes and desktop widths.
+
+---
+
 ## 7. Landing page
 
-- Title, a two-sentence description, and the course map: seven section cards in recommended order, each with a one-line summary. Landing copy and card text come from `content/site.json`.
-- A small, static rendering of the shared visual world (section 5.1) as the hero image, so the first thing students see is the model they will spend the course exploring.
+- Title, a two-sentence description, and the course map: eight section cards in recommended order, each with a one-line summary. Landing copy and card text come from `content/site.json`.
+- An interactive rendering of the shared visual world (section 5.1) as the hero: selecting the model or one of the six components updates an adjacent explanation, reusing `anatomy.json`. Controls work with mouse, Enter, and Space, with visible focus and a text selection state.
+- Course-map cards name an action students can try in each existing section.
+- A curriculum explorer pairs all seven written modules with an existing visual, a prediction or investigation prompt, and a written lab. Coverage labels distinguish direct simulations from related visuals; no Python or network lab executes in the browser. Module copy and links live in `site.json`.
+- Acceptance: all seven choices update the module panel and its two links; every link resolves from a hosted subpath; diagram selection and module choice work without local storage, with reduced motion, and in both themes at 1280, 1440, and 1920px. Dedicated hard-control, verification, and network simulations are provided by section 6.8.
 - A link to the written course, placed in the footer.
 - Instructor-facing material (instructor notes, the design-language page, build or source notes) is never displayed prominently to students. It stays in the README, the repository, or a quiet footnote. Files named `*INSTRUCTOR*` in the course are not published with the site.
 - If `localStorage` is available, mark completed sections. "Completed" means the section's knowledge check was finished.

@@ -27,7 +27,8 @@ Any internal static web server works too. The site has no build step, no depende
 | 4. Token growth | Focused and broad sessions side by side: final context versus total input paid, plus prompt caching. | Module 7, Token observability |
 | 5. Choosing an extension | A decision flow, a comparison grid of seven mechanisms, and practice scenarios. | Module 5, Extensibility |
 | 6. Inside an extension | One session (triage, fix, regression test, password check) through four lenses: MCP server, skill, subagent, plugin. Each shows what the mechanism adds to the request and when, with the recorded MCP wire messages. A cost ledger toggles each one, with an illustrative test-suite-size control that shows where the skill starts saving tokens. | Module 5, Extensibility (Labs A to D) |
-| 7. Final review | A mixed knowledge check across all sections. | Course README, section 12 |
+| 7. Flow simulations | Change permission gates, compare a source fix with a weakened test, and trace request transport and retained copies. | Modules 2, 4, and 6 |
+| 8. Final review | A mixed knowledge check across all sections. | Course README, section 12 |
 
 Each section ends with a short knowledge check adapted from the matching module's "Check your understanding". Use the site after students read a module, or project it while you teach the module and let students explore afterwards.
 
@@ -114,3 +115,59 @@ tools/                 serve.py, check.py, stamp.py, measure_inside_extensions.p
 ```
 
 `sections/_style.html` is the reference for how the model, the harness, and each content role are drawn. Review visual changes there first. It is not linked from the student pages.
+
+## Curriculum coverage review
+
+The landing page pairs every written module with an existing visual and a concrete
+lab prompt. Coverage labels distinguish direct simulations from related visuals;
+selecting a module does not execute its Python or network lab in the browser.
+The hero reuses the anatomy diagram and content, with mouse and keyboard selection.
+Edit module prompts, links, coverage labels, and card activities in `content/site.json`.
+
+| Written module | Current visual coverage | Best next interactive opportunity |
+|---|---|---|
+| 1. Build a harness | Direct: agent loop and request history | More predict-before-step prompts |
+| 2. Hard controls | Direct: permission flow, anatomy, and plugin hooks | Compare controls on compound commands without demonstrating attack payloads |
+| 3. Context engineering | Direct: replay, overhead comparison, simulator | Compare a handoff with the information lost during compaction |
+| 4. Verification workflow | Direct: verification flow and recorded fix-a-bug tour | Extend the comparison to fixtures and misleading test doubles |
+| 5. Extensibility | Direct: chooser, scenarios, four lenses, cost ledger | Predict which blocks each mechanism adds before revealing |
+| 6. Air-gapped operation | Direct: network/data flow and external-process lens | Compare the schematic route with a real lab egress audit |
+| 7. Token observability | Direct: session comparison and caching | Predict the cache miss and explain fresh versus total input |
+
+Modules 2, 4, and 6 now have dedicated lenses in `sections/flows.html`, linked
+from their curriculum choices. The written modules remain the source of truth.
+The flows are scripted, do not run the labs, and do not include attack payloads.
+
+
+## Flow simulations
+
+`sections/flows.html` has three deep-linkable lenses: `#permissions`,
+`#verification`, and `#network`. Change the setup and use Play/Pause, Back, Next,
+Restart, or any numbered stop. A setup change restarts the trace; Reset setup
+restores the lens defaults. Focus the player for Space and Left/Right shortcuts;
+tabs support Left/Right, Home, and End. Reduced motion keeps complete static states.
+
+- Permissions follows the reference harness's hook, deny, ask, then allow order.
+  A matching ask skips allow evaluation. A shell network sandbox can block a
+  connection after approval; it does not wrap the file-edit tool.
+- Verification uses the actual course `fix.json` and `weaken.json` changes.
+  Both produce six passing tests. Keeping the tests and removing the source fix
+  restores one failure; the weakened assertion passes against the original bug.
+  Missing checks are shown as incomplete evidence, never assumed to pass.
+- Network/data separates transport from retained bodies. Blocking public egress
+  does not delete local transcripts or internal logs. Gateway and endpoint copies
+  appear only if the internal route reaches them. Metadata and infrastructure
+  retention still require a real audit; this is an illustrative model.
+
+Edit explanatory copy and defaults in `content/flows.json`. The pure trace model
+is in `assets/js/flow-model.js`; the player and SVG rendering are in `flows.js`.
+Run the usual Python checker after edits. An optional development-only check
+requires Node, with no package installation:
+
+```bash
+node harness-site/tools/test_flows.mjs  # from the repository root
+```
+
+It checks all 328 control combinations, including precedence, evidence decisions,
+unreached endpoints, retained copies, content references, and repeatability.
+The site itself still needs only a static server; Node is not needed to run it.

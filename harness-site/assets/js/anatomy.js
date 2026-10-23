@@ -34,13 +34,12 @@ function makeSelectable(handles, onSelect, tooltip = null) {
     node.dataset.id = id;
     node.setAttribute("tabindex", "0");
     node.setAttribute("role", "button");
-    node.setAttribute("aria-label", label);
+    // Name the control from its visible SVG text; tooltip text is supplementary.
+    const labels = [...node.querySelectorAll("text")];
+    labels.forEach((text, index) => { text.id = `${handles.svg.dataset.hatch}-${id}-label-${index}`; });
+    node.setAttribute("aria-labelledby", labels.map((text) => text.id).join(" "));
     node.classList.add("is-selectable");
-    if (!node.querySelector("title")) {
-      const tip = el("title", {});
-      tip.textContent = tooltip ? tooltip(label) : label;
-      node.prepend(tip);
-    }
+    node.setAttribute("aria-description", tooltip ? tooltip(label) : label);
     node.addEventListener("click", () => onSelect(id));
     node.addEventListener("keydown", (event) => {
       if (event.key === "Enter" || event.key === " ") {
