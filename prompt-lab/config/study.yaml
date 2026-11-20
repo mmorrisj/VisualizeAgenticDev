@@ -4,6 +4,12 @@ tasks: all
 variants: [terse, technique, informed, full, ai-expanded, ai-interviewed]
 models: [llama-3.1-8b, llama-3.3-70b, llama-4-maverick, gpt-4, gpt-5.4, gpt-5.6-luna, sonnet-4.5, opus-5]
 repeats: 5
+# Harness sessions (spec sections 5.2 and 6.2); models default to the list above.
+harness:
+  variants: [h-terse, h-discoverable-gap, h-private-gap, h-full]
+  repeats: 3
+  max_requests: 25
+  max_input_tokens: 60000
 judge:
   primary: opus-5
   cross_check: gpt-5.6-luna

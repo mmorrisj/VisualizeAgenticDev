@@ -5,6 +5,7 @@
     prompt-lab check TASK ANSWER_FILE       score an answer file with a task's checks
     prompt-lab selftest                     every task's known-good answers pass and known-bad fail
     prompt-lab run --task T --variant V --model M [--repeats N]
+    prompt-lab harness --task T --variant h-terse --model M [--repeats N] [--keep DIR]
     prompt-lab summary                      scores and tokens from the database
     prompt-lab variants --model M [--task T] generate the AI-assisted prompt variants
     prompt-lab study run|judge|sample|export --profile P
@@ -21,6 +22,7 @@ from pathlib import Path
 
 from . import study
 from .config import load_models
+from .harness_adapter import HARNESS_VARIANTS, Limits, run_session
 from .profiles import load_profile
 from .runner import run_matrix
 from .store import Store
@@ -81,6 +83,27 @@ def cmd_run(args) -> int:
               f"  in {tok.get('input')} out {tok.get('output')}" + (f"  {run.error}" if run.error else ""))
 
     run_matrix(tasks, args.variant or None, chosen, args.repeats, profile=args.profile, store=store, on_run=show)
+    return 0
+
+
+def cmd_harness(args) -> int:
+    models = load_models(args.models)
+    chosen = [models[m] for m in args.model]
+    store = Store(args.db)
+    limits = Limits(args.max_requests, args.max_input_tokens)
+    keep = Path(args.keep) if args.keep else None
+    for task_id in args.task or task_ids():
+        for variant in args.variant or HARNESS_VARIANTS:
+            for model in chosen:
+                for rep in range(1, args.repeats + 1):
+                    run = run_session(task_id, variant, model, repeat=rep, profile=args.profile, store=store,
+                                      limits=limits, keep_dir=keep)
+                    s = run.session or {}
+                    score = f"{run.score:.2f}" if run.score is not None else "  - "
+                    print(f"{task_id:14} {variant:19} {model.id:16} #{rep} {run.stop:10} score {score}"
+                          f"  requests {run.requests:2}  tool calls {s.get('tool_calls', 0)}"
+                          f" ({s.get('tool_calls_failed', 0)} failed)  in {run.tokens.get('input')}"
+                          f" out {run.tokens.get('output')}" + (f"  {run.error}" if run.error else ""))
     return 0
 
 
@@ -158,6 +181,16 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--repeats", type=int, default=1)
     p.add_argument("--profile", default="adhoc")
     p.set_defaults(func=cmd_run)
+    p = sub.add_parser("harness", parents=[common], help="harness sessions through course/mini-harness")
+    p.add_argument("--task", action="append", help="repeatable; default: all tasks")
+    p.add_argument("--variant", action="append", choices=HARNESS_VARIANTS, help="repeatable; default: all four")
+    p.add_argument("--model", action="append", required=True, help="repeatable")
+    p.add_argument("--repeats", type=int, default=1)
+    p.add_argument("--profile", default="adhoc")
+    p.add_argument("--max-requests", type=int, default=Limits.max_requests)
+    p.add_argument("--max-input-tokens", type=int, default=Limits.max_input_tokens)
+    p.add_argument("--keep", help="copy each session's final working directory into this folder")
+    p.set_defaults(func=cmd_harness)
     sub.add_parser("summary", parents=[common]).set_defaults(func=cmd_summary)
     p = sub.add_parser("variants", parents=[common])
     p.add_argument("--model", required=True, help="the primary judge model writes the variants")

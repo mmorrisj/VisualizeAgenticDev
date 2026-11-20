@@ -206,14 +206,16 @@ class Policy:
 # The harness
 # --------------------------------------------------------------------------
 class Harness:
-    def __init__(self, args):
+    def __init__(self, args, backend=None):
+        """backend: any object with complete(system, tools, messages); built from args if omitted."""
         self.args = args
         self.workdir = pathlib.Path(args.workdir).expanduser().resolve()
         if not self.workdir.is_dir():
             raise SystemExit(f"Working directory not found: {self.workdir}")
         policy_path = pathlib.Path(args.policy).resolve() if args.policy else None
         self.policy = Policy(policy_path)
-        self.backend = make_backend(args)
+        self.backend = backend or make_backend(args)
+        self.tools = list(TOOL_DEFINITIONS)  # a subclass may add tools
         self.session_id = uuid.uuid4().hex[:8]
         self.messages: list = []
         self.request_index = 0
@@ -239,7 +241,7 @@ class Harness:
         return "\n\n".join(parts)
 
     def request_size(self) -> int:
-        return estimate_tokens({"system": self.system, "tools": TOOL_DEFINITIONS,
+        return estimate_tokens({"system": self.system, "tools": self.tools,
                                 "messages": self.messages})
 
     def compact(self):
@@ -446,11 +448,11 @@ class Harness:
             self.request_index += 1
             if self.args.show_requests:
                 print(Color.dim(json.dumps({"system": self.system[:200] + "...",
-                                            "tools": [t["name"] for t in TOOL_DEFINITIONS],
+                                            "tools": [t["name"] for t in self.tools],
                                             "messages": self.messages}, indent=2)))
             start = time.time()
             try:
-                response = self.backend.complete(self.system, TOOL_DEFINITIONS, self.messages)
+                response = self.backend.complete(self.system, self.tools, self.messages)
             except BackendError as err:
                 print(Color.red(f"  [backend error] {err}"))
                 self.messages.pop() if self.messages[-1]["role"] == "user" else None
@@ -490,7 +492,7 @@ class Harness:
 
     def show_context(self):
         sizes = {"system prompt": estimate_tokens(self.system),
-                 "tool definitions": estimate_tokens(TOOL_DEFINITIONS)}
+                 "tool definitions": estimate_tokens(self.tools)}
         conv = res = 0
         for msg in self.messages:
             if isinstance(msg["content"], str):

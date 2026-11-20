@@ -26,6 +26,9 @@ weights:
   signatures: 0.15
   stdlib_only: 0.1
   changed: 0.15
+harness:
+  files: {billing.py: input/billing.py, callers.py: input/callers.py}
+  deliverable: {kind: file, path: billing.py}
 notes: >-
   The hidden tests pin every behaviour of the original, including rounding ties
   and coupon edge cases. "changed" requires at least 10 changed lines, so

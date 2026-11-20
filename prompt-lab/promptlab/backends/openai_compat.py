@@ -7,6 +7,7 @@ models.yaml (`base_url_env`, `api_key_env`); nothing secret is stored in config.
 
 from __future__ import annotations
 
+import json
 import os
 import time
 
@@ -19,7 +20,7 @@ from .base import BackendError, Request, Response
 RETRY_STATUS = {408, 409, 429, 500, 502, 503, 504}
 MAX_ATTEMPTS = 4
 
-STOP_MAP = {"stop": "end", "length": "max_tokens", "content_filter": "refusal", "tool_calls": "end"}
+STOP_MAP = {"stop": "end", "length": "max_tokens", "content_filter": "refusal", "tool_calls": "tool_use"}
 
 
 def normalize_usage(usage: dict | None, model: ModelConfig) -> Usage:
@@ -60,8 +61,13 @@ class OpenAICompatBackend:
         key = os.environ.get(model.api_key_env or "", "")
         if key:
             headers["Authorization"] = f"Bearer {key}"
-        messages = ([{"role": "system", "content": request.system}] if request.system else []) + request.messages
+        messages = ([{"role": "system", "content": request.system}] if request.system else []) \
+            + to_openai_messages(request.messages)
         body = {"model": model.gateway_id, "messages": messages, model.max_tokens_param: model.max_tokens}
+        if request.tools:
+            body["tools"] = [{"type": "function", "function": {"name": t["name"], "description": t["description"],
+                                                               "parameters": t["input_schema"]}}
+                             for t in request.tools]
 
         url = base_url.rstrip("/") + "/chat/completions"
         last_error = ""
@@ -91,5 +97,49 @@ class OpenAICompatBackend:
         stop = STOP_MAP.get(finish, f"other:{finish}")
         if message.get("refusal"):
             text, stop = message["refusal"], "refusal"
+        content = [{"type": "text", "text": text}] if text else []
+        for call in message.get("tool_calls") or []:
+            raw = (call.get("function") or {}).get("arguments") or "{}"
+            try:
+                args = json.loads(raw)
+            except json.JSONDecodeError:
+                args = None
+            if not isinstance(args, dict):
+                # Kept, not dropped: the harness reports it back to the model as a failed call.
+                args = {"_unparseable_arguments": raw}
+            content.append({"type": "tool_use", "id": call.get("id") or f"call_{len(content)}",
+                            "name": (call.get("function") or {}).get("name", ""), "input": args})
+        if content and content[-1]["type"] == "tool_use" and stop == "end":
+            stop = "tool_use"  # some servers say "stop" even when they return tool calls
         return Response(text=text, usage=normalize_usage(data.get("usage"), model), stop=stop,
-                        latency_s=latency, served_model=data.get("model", ""))
+                        latency_s=latency, served_model=data.get("model", ""), content=content)
+
+
+def to_openai_messages(messages: list[dict]) -> list[dict]:
+    """Convert Anthropic-shaped messages (what the harness keeps) to chat completions.
+
+    A string content passes through unchanged, so one-shot requests are not affected.
+    Assistant tool calls become `tool_calls`; each tool result becomes a `tool` message.
+    """
+    out = []
+    for msg in messages:
+        content = msg["content"]
+        if isinstance(content, str):
+            out.append({"role": msg["role"], "content": content})
+            continue
+        if msg["role"] == "assistant":
+            text = "".join(b.get("text", "") for b in content if b.get("type") == "text")
+            entry = {"role": "assistant", "content": text or None}
+            calls = [{"id": b["id"], "type": "function",
+                      "function": {"name": b["name"], "arguments": json.dumps(b["input"])}}
+                     for b in content if b.get("type") == "tool_use"]
+            if calls:
+                entry["tool_calls"] = calls
+            out.append(entry)
+            continue
+        for block in content:
+            if block.get("type") == "tool_result":
+                out.append({"role": "tool", "tool_call_id": block["tool_use_id"], "content": block["content"]})
+            elif block.get("type") == "text":
+                out.append({"role": "user", "content": block["text"]})
+    return out

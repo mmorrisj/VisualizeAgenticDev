@@ -23,6 +23,9 @@ facts:
     text: Write each case as its own test_ function so a failure points at one behaviour.
 weights:
   mutants_caught: 1.0
+harness:
+  files: {business_days.py: input/business_days.py}
+  deliverable: {kind: new_files, pattern: "*test*.py"}
 notes: >-
   Eight planted bugs (hidden/mutants/). Tests must first pass on the correct
   function; tests that fail there, or that import anything outside the

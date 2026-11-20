@@ -2,11 +2,12 @@
 
 Measures how prompt quality and model generation affect results and token cost. The full design is in [`../docs/PROMPT_LAB_SPEC.md`](../docs/PROMPT_LAB_SPEC.md). This README is for instructors and maintainers.
 
-**Built so far: phases L1 and L2.**
+**Built so far: phases L1 to L3.**
 - **L1:** the engine, the four tasks with their checks, one-shot runs, token accounting, storage, and the command line.
 - **L2:** the AI-assisted prompt variants, the blind judge, study profiles, and the results file.
+- **L3:** harness mode: sessions through the course's `mini-harness`, with limits and per-request accounting.
 
-Still to come: L3 adds harness mode, L4 the class app, and L5 the site section.
+Still to come: L4 adds the class app, and L5 the site section.
 
 ## Install
 
@@ -26,6 +27,7 @@ Run commands from this folder with `PYTHONPATH=.`, or install the package with `
 python -m promptlab.cli selftest      # every task: known-good answers pass, known-bad answers fail
 python -m pytest -q                   # engine tests: backends, checks, runner, storage
 python -m promptlab.cli run --model mock-old --model mock-new --repeats 2
+python -m promptlab.cli harness --model mock-old --model mock-new --task refactor
 python -m promptlab.cli summary
 ```
 
@@ -63,9 +65,10 @@ A request that fails is stored as `error` with the reason (a missing URL, missin
 | `check TASK FILE` | Scores an answer file with a task's checks and prints every sub-check |
 | `selftest` | Runs every task's known answers through its checks |
 | `run --model M [--task T] [--variant V] [--repeats N]` | Runs the matrix. `--model`, `--task`, and `--variant` repeat; tasks and variants default to all |
+| `harness --model M [--task T] [--variant V] [--repeats N] [--keep DIR]` | Runs harness sessions (below). `--keep` copies each session's final working directory for inspection. `--max-requests` and `--max-input-tokens` change the limits |
 | `summary` | Mean score, spread across repeats, and output tokens per task, model, and variant |
 | `variants --model M [--task T]` | Writes the `ai-expanded` and `ai-interviewed` prompts with model M (the primary judge) |
-| `study run --profile P` | Runs everything in a profile; resumable: completed runs are skipped |
+| `study run --profile P` | Runs everything in a profile, one-shot runs then harness sessions; resumable: completed runs are skipped |
 | `study judge --profile P` | Judges every answered run that has no judgement yet |
 | `study sample --profile P --n 40 --out DIR` | Writes a sample of judged runs and a blank sheet for instructors to score |
 | `study export --profile P [--human CSV]` | Writes `results/<profile>-<date>.json` and the model outputs beside it |
@@ -75,8 +78,8 @@ Every command takes `--db URL` (default `PROMPTLAB_DB_URL`, else `data/lab.db`) 
 ## Running the study (part A)
 
 Profiles in `config/` say which tasks, variants, models, repeats, and judges each part uses:
-- `study.yaml`: all 8 models, 6 variants, 5 repeats;
-- `class.yaml`: 2 models, 2 tasks, checks only;
+- `study.yaml`: all 8 models, 6 variants, 5 repeats, plus 4 harness variants with 3 repeats;
+- `class.yaml`: 2 models, 2 tasks, checks only, with an optional harness round commented out;
 - `mock-study.yaml`: the whole pipeline on mock models, for trying it out.
 
 1. **Generate the AI-assisted variants once,** with the primary judge model:
@@ -115,6 +118,29 @@ Profiles in `config/` say which tasks, variants, models, repeats, and judges eac
 
 The checks with known answers stay the primary score. Agreement between the judge, the checks and the instructors is reported in `judge_validation`.
 
+## Harness mode (part A, and the optional class round)
+
+A harness session gives the model a working directory and tools instead of pasted files, and lets it work for several requests. The course's own [`mini-harness`](../course/mini-harness/) runs the loop, the tools, and the system prompt, so they are identical for every model; only the model changes. Requests go through the lab's backends, so credentials, retries, effort and token counting are the same as in one-shot mode.
+
+Each task's `harness:` block in `task.yaml` says what goes in the working directory and where the checks read the answer:
+
+| Task | Working directory | The checks read |
+|---|---|---|
+| `data-question` | `schema.sql` and `incidents.db`, with a read-only `run_sql` tool | the SQL in the final message |
+| `refactor` | `billing.py`, `callers.py` | `billing.py` as the session left it |
+| `summarize` | `docs/incident-report.md` | the final message |
+| `write-tests` | `business_days.py` | any new file matching `*test*.py` |
+
+**Four variants per task** (`prompts/harness/`): `h-terse` gives no facts, `h-discoverable-gap` gives only the facts that are not in the files, `h-private-gap` gives only the facts that are, and `h-full` gives both. The first gap asks whether a model finds what it was not told; the second shows what no amount of exploring can recover.
+
+**Limits:** 25 requests or 60,000 input tokens per session. Reaching either ends the session; it is stored as `hit_limit` and scores 0. The counts are checked before each request, so a final answer that crosses the line still counts. Sessions that hit a limit are not judged.
+
+**Recorded per session:** the stop reason (finished, hit limit, or error), every request's usage, tool calls made and failed, and the full conversation. Each request's input is also split into fixed overhead (system prompt and tool definitions), conversation, and tool results. That split is an estimate, from the text at about 4 characters per token, and is labelled as one; the reported totals stay the counts.
+
+**Unattended and not sandboxed.** The policy, [`config/harness-policy.json`](config/harness-policy.json), allows every tool and never asks a person. Commands run in a scratch directory with a scrubbed environment and a 30-second timeout, but `run_command` is not confined to that directory: a model could read other files on the machine, including the tasks' `hidden/` folders. Run the lab on a machine where that is acceptable, or set `sandbox_prefix` in the policy (for example a `bwrap` command) to confine it.
+
+The mock models play scripted sessions: `mock-new` explores and succeeds whenever the private facts are given, and `mock-old` makes a failed tool call and wanders until the request limit without the discoverable facts. As with one-shot mode, that proves the pipeline, not the thesis.
+
 ## The tasks
 
 Each task folder holds:
@@ -144,5 +170,6 @@ The files attached after the prompt are identical across variants: the prompt is
 
 - **Token counts are only what the provider reports.** A count the provider didn't report is stored as `not reported`. Reasoning tokens are recorded separately where the API reports them, and otherwise marked `included in output`.
 - **No sampling settings are sent** (temperature and similar), because current Claude models reject them. Every model runs at its own defaults.
+- **Harness totals are summed only when every request reported the field.** One unreported request makes the session total `not reported` rather than a partial sum that looks like a count.
 - **No refusal fallbacks.** A refusal is recorded as `refused` rather than silently answered by a different model.
 - **Model-written code runs in a separate process,** with a scrubbed environment, a temporary directory and a 30-second timeout. That contains honest mistakes, but it is not a security boundary. Run the lab where model output may safely execute.

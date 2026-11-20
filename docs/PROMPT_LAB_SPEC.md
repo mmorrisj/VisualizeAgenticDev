@@ -141,6 +141,14 @@ The course's own `mini-harness` (in `course/mini-harness/`) runs every model, so
 - After the session, the engine runs the same checks on the working directory.
 - Models that cannot use tools reliably are still run; their failures are part of the result.
 
+As built in phase L3:
+
+- **The loop is the course's; the requests are the lab's.** `mini-harness` runs the loop, the tools, and the system prompt unchanged. Each request goes through the lab's own backends, so retries, credentials, effort and token normalization match one-shot mode. The harness gained two small hooks for this: an optional backend argument, and a per-instance tool list that `run_sql` is added to.
+- **Where the checks read the answer:** `refactor` reads `billing.py` as the session left it; `write-tests` reads any new file matching `*test*.py`; `data-question` and `summarize` read the final message. The `data-question` and `summarize` prompts all say how to hand the answer back (SQL in a code block; reply with the summary). That line is the same in all four variants, because it is about format, not the task.
+- **How the limits apply:** the counts are checked before each request, so a session that crosses 60,000 input tokens in a request that finishes still finishes. If the provider does not report input tokens, the limit counts the course estimate instead and the session records that it did.
+- **Unattended:** the policy (`config/harness-policy.json`) allows every tool and never asks a person. Commands run in a scratch directory with a scrubbed environment and a 30-second timeout. That contains honest mistakes, but `run_command` is not confined to the directory; for stronger isolation, set `sandbox_prefix` in the policy.
+- **Facts:** writing the harness prompts showed that `data-question`'s severity scope (SEV1 and SEV2) was in the informed prompt but missing from the fact list. It is now a private fact.
+
 ---
 
 ## 7. Evaluation
@@ -189,6 +197,8 @@ Any value the provider did not report is marked **not reported**, never filled w
 - Requests per session and the stop reason: finished, hit limit, or error.
 - Every request's input broken into fixed overhead (system prompt and tool definitions), conversation, and tool results, as the site's token pages draw them.
 - Tool calls made and tool calls that failed.
+
+The split into fixed overhead, conversation and tool results is an estimate (about 4 characters per token, from the request text) and is labelled as one. Use it for shares, not counts; the reported input total stays the count.
 
 ### 8.3 Comparing across families
 
@@ -293,6 +303,7 @@ prompt-lab/
 ├── config/
 │   ├── models.yaml               models, identifiers, API style, prices
 │   ├── study.yaml                profile for part A
+│   ├── harness-policy.json       the mini-harness policy for unattended sessions
 │   └── class.yaml                profile for part B
 ├── tasks/
 │   └── <task>/
@@ -300,7 +311,8 @@ prompt-lab/
 │       ├── input/                files given to the model
 │       ├── checks.py             checks with known answers
 │       ├── rubric.yaml           judge rubric
-│       └── prompts/              one file per variant, including generated ones
+│       └── prompts/              one file per variant, including generated ones;
+│                                 prompts/harness/ holds the four harness variants
 ├── promptlab/                    the engine (Python package)
 │   ├── backends/                 openai_compat, anthropic, local, mock, replay
 │   ├── runner.py                 one-shot and harness runs, limits, retries
@@ -393,6 +405,8 @@ A small FastAPI app with a plain server-rendered page, no front-end build step.
 ```
 
 Model outputs are stored beside the file (`results/outputs/`), so any score can be traced to the text it judged.
+
+Harness runs add a `session` object: the stop reason, the limits and which one was hit, tool calls made and failed, which tools were used, where the answer was read from, and each request's usage and estimated split. The full conversation is stored beside the outputs (`<run>.session.json`) and linked by `transcript_ref`.
 
 ---
 

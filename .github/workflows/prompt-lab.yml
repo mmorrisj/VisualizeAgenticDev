@@ -5,9 +5,9 @@ name: Prompt Lab tests
 on:
   push:
     branches: [main]
-    paths: ["prompt-lab/**", ".github/workflows/prompt-lab.yml"]
+    paths: ["prompt-lab/**", "course/mini-harness/**", ".github/workflows/prompt-lab.yml"]
   pull_request:
-    paths: ["prompt-lab/**", ".github/workflows/prompt-lab.yml"]
+    paths: ["prompt-lab/**", "course/mini-harness/**", ".github/workflows/prompt-lab.yml"]
   workflow_dispatch:
 
 permissions:
