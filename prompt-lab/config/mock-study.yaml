@@ -1,0 +1,10 @@
+# The study pipeline end to end on mock models: for development and CI. Results are synthetic.
+name: mock-study
+tasks: all
+variants: [terse, technique, informed, full, ai-expanded, ai-interviewed]
+models: [mock-old, mock-new]
+repeats: 2
+judge:
+  primary: mock-judge
+  cross_check: mock-judge-2
+  cross_check_share: 0.2

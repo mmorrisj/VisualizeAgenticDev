@@ -1,0 +1,23 @@
+# Judge rubric (spec section 7.2). Scores 1 to 5; anchors describe 1, 3, and 5.
+criteria:
+  - id: clarity
+    name: Clarity of the new code
+    description: Is the refactored module easier to read and change than the original?
+    anchors:
+      1: As hard to follow as the original, or harder.
+      3: Some duplication removed, but structure or naming is still muddled.
+      5: Duplication gone, one clear place for each rule, names say what things do.
+  - id: scope
+    name: Scope discipline
+    description: Does the answer change only what the request needed, without new features, dependencies, or behaviour?
+    anchors:
+      1: Adds features, dependencies, or behaviour changes nobody asked for.
+      3: Mostly in scope, with some unrequested additions (for example new parameters or logging).
+      5: Only the refactor; nothing added beyond it.
+  - id: risk
+    name: Visible risk to behaviour
+    description: Reading the code, how likely is it that behaviour changed (rounding, edge cases, public names)?
+    anchors:
+      1: Clear behaviour changes (floats for money, removed functions, changed signatures).
+      3: Plausible but unverified changes to edge cases.
+      5: Every rule of the original is visibly preserved.

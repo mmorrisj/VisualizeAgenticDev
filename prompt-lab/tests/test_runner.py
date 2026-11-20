@@ -60,7 +60,7 @@ def test_prompt_is_the_only_difference_between_variants():
 
 def test_models_file_is_valid_and_flags_unconfirmed():
     models = load_models()
-    real = [m for m in models.values() if m.family != "mock"]
+    real = [m for m in models.values() if m.api != "mock"]
     assert len(real) == 8
     assert all(not m.confirmed for m in real)
     assert {m.family for m in real} == {"llama", "openai", "anthropic"}

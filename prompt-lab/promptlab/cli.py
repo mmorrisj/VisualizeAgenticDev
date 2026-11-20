@@ -6,6 +6,8 @@
     prompt-lab selftest                     every task's known-good answers pass and known-bad fail
     prompt-lab run --task T --variant V --model M [--repeats N]
     prompt-lab summary                      scores and tokens from the database
+    prompt-lab variants --model M [--task T] generate the AI-assisted prompt variants
+    prompt-lab study run|judge|sample|export --profile P
 """
 
 from __future__ import annotations
@@ -17,10 +19,14 @@ import sys
 from collections import defaultdict
 from pathlib import Path
 
+from . import study
 from .config import load_models
+from .profiles import load_profile
 from .runner import run_matrix
 from .store import Store
 from .tasks import load_task, task_ids
+from .variants import GENERATED
+from .variants import generate as generate_variants
 
 
 def cmd_models(args) -> int:
@@ -93,6 +99,45 @@ def cmd_summary(args) -> int:
     return 0
 
 
+def cmd_variants(args) -> int:
+    model = load_models(args.models)[args.model]
+    for tid in args.task or task_ids():
+        for path in generate_variants(load_task(tid), model, tuple(args.variant or GENERATED)):
+            print(f"wrote tasks/{tid}/{path}")
+    print("Review each *.meta.yaml: confirm the invented requirements, then set confirmed_by_instructor: true.")
+    return 0
+
+
+def cmd_study(args) -> int:
+    models = load_models(args.models)
+    profile = load_profile(args.profile)
+    store = Store(args.db)
+    if args.action == "run":
+        def show(run):
+            score = f"{run.score:.2f}" if run.score is not None else "  - "
+            print(f"{run.key:48} {run.status:10} score {score}" + (f"  {run.error}" if run.error else ""))
+        stats = study.run_study(profile, models, store, on_run=show)
+        print(f"ran {stats['ran']}, already done {stats['skipped_done']}")
+        if stats["missing_variants"]:
+            print("variants not generated yet (run `prompt-lab variants`):", ", ".join(stats["missing_variants"]))
+    elif args.action == "judge":
+        def show(run):
+            j = run.judge
+            score = f"{j['score']:.2f}" if j.get("score") is not None else "  - "
+            cross = j.get("cross_check", {}).get("score") if j.get("cross_check") else None
+            print(f"{run.key:48} judge {score}" + (f"  cross-check {cross:.2f}" if cross is not None else "")
+                  + ("  [self-preference]" if j.get("self_preference") else "") + (f"  {j['error']}" if j.get("error") else ""))
+        print(f"judged {study.judge_study(profile, models, store, on_run=show)['judged']}")
+    elif args.action == "sample":
+        sheet = study.write_human_sample(profile, store, Path(args.out), n=args.n)
+        print(f"wrote {sheet}; fill in human_score_1_to_5, then export with --human {sheet}")
+    elif args.action == "export":
+        path = study.export(profile, models, store, Path(args.out) if args.out else study.RESULTS_DIR,
+                            human_csv=Path(args.human) if args.human else None)
+        print(f"wrote {path}")
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
     common = argparse.ArgumentParser(add_help=False)
     common.add_argument("--models", type=Path, default=None, help="models.yaml (default: config/models.yaml)")
@@ -114,6 +159,18 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--profile", default="adhoc")
     p.set_defaults(func=cmd_run)
     sub.add_parser("summary", parents=[common]).set_defaults(func=cmd_summary)
+    p = sub.add_parser("variants", parents=[common])
+    p.add_argument("--model", required=True, help="the primary judge model writes the variants")
+    p.add_argument("--task", action="append", help="repeatable; default: all tasks")
+    p.add_argument("--variant", action="append", choices=GENERATED, help="default: both")
+    p.set_defaults(func=cmd_variants)
+    p = sub.add_parser("study", parents=[common])
+    p.add_argument("action", choices=["run", "judge", "sample", "export"])
+    p.add_argument("--profile", required=True, help="profile name in config/ (study, class, mock-study) or a path")
+    p.add_argument("--n", type=int, default=40, help="sample: runs to sample for human scoring")
+    p.add_argument("--out", help="sample: output folder; export: results folder (default results/)")
+    p.add_argument("--human", help="export: the filled-in human scores CSV")
+    p.set_defaults(func=cmd_study)
     args = parser.parse_args(argv)
     return args.func(args)
 

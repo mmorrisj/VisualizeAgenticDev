@@ -1,0 +1,22 @@
+criteria:
+  - id: readable
+    name: Readable query
+    description: Could a reviewer check this query quickly?
+    anchors:
+      1: Hard to follow; unclear joins or conditions.
+      3: Correct shape but cluttered or inconsistent.
+      5: Clear joins, one condition per line, obvious intent.
+  - id: assumptions
+    name: Assumptions made visible
+    description: Does the answer say what it assumed (date field, quarter boundaries, duplicates, ownership)?
+    anchors:
+      1: Silent assumptions; nothing stated.
+      3: Some assumptions stated.
+      5: Every assumption that changes the number is stated.
+  - id: focused
+    name: Focused answer
+    description: Does it answer the question asked, without unrequested extras?
+    anchors:
+      1: Mostly other content, or several alternative queries without a recommendation.
+      3: Answers the question with some unrequested extras.
+      5: Exactly the requested query, with only the explanation needed.

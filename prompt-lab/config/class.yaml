@@ -1,0 +1,7 @@
+# Part B, the class kit (spec section 10.2). Checks only; no judge, to keep it fast.
+name: class
+tasks: [refactor, data-question]
+variants: [terse, full]
+models: [llama-3.1-8b, gpt-5.6-luna]
+repeats: 3
+judge: null
