@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block title %}Run · Prompt Lab{% endblock %}
+{% block main %}
+{% set step = 4 %}{% include "_steps.html" %}
+<h1>Run your test</h1>
+{% if error %}<p class="error" role="alert">{{ error }}</p>{% endif %}
+<h2>What will run</h2>
+{% for label, text in prompts.items() %}<p><strong>{{ "Your prompt" if label == "yours" else label }}</strong></p><pre>{{ text }}</pre>{% endfor %}
+<form method="post" action="/byot/{{ test.id }}/run">
+<fieldset>
+  <legend>Choose 2 or 3 models (3 runs each)</legend>
+  {% for m in choices %}
+  <div><input type="checkbox" id="m-{{ m.id }}" name="model" value="{{ m.id }}"><label class="inline" for="m-{{ m.id }}">{{ m.display }}</label></div>
+  {% endfor %}
+</fieldset>
+<p class="muted">The judge is {{ judge.display }}. If you choose it, or a model from the same family, the results page says so:
+   a model may favour its own kind of answer.</p>
+<p><button type="submit">Run</button></p>
+</form>
+{% endblock %}

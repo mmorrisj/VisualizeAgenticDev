@@ -311,6 +311,34 @@ def harness_predictions(runs: list[Run], models: dict[str, ModelConfig], verdict
 
 # --- export -------------------------------------------------------------------------
 
+def run_record(r: Run, output_ref: str | None = None, transcript_ref: str | None = None) -> dict:
+    """One run in the results file format (spec section 12)."""
+    judge = r.judge or {}
+    record = {
+        "id": r.key, "mode": r.mode, "task": r.task, "variant": r.variant, "model": r.model,
+        "repeat": r.repeat, "status": r.status, "label": r.label,
+        "checks": {"score": r.score, "details": (r.check_details or {}).get("details", {})},
+        "judge": ({"score": judge.get("score"), "criteria": judge.get("criteria", []),
+                   "unsupported_claims": judge.get("unsupported_claims"),
+                   "cross_check": (judge.get("cross_check") or {}).get("score"),
+                   "self_preference": judge.get("self_preference", False),
+                   "error": judge.get("error", "")} if judge else None),
+        "tokens": r.tokens, "chars": {"sent": r.chars_sent, "received": r.chars_received},
+        "requests": r.requests, "stop": r.stop, "latency_s": r.latency_s, "output_ref": output_ref, "error": r.error,
+    }
+    if r.mode == "harness" and r.session:
+        record["session"] = {**{k: r.session.get(k) for k in ("stop", "limits", "tool_calls", "tool_calls_failed",
+                                                              "tools_used", "deliverable", "per_request")},
+                             "transcript_ref": transcript_ref}
+    return record
+
+
+def newest_results(kind: str = "study", folder: Path = RESULTS_DIR) -> Path | None:
+    """The newest committed results file of a kind (`study-<date>.json`), or None."""
+    files = sorted(folder.glob(f"{kind}-*.json"))
+    return files[-1] if files else None
+
+
 def export(profile: Profile, models: dict[str, ModelConfig], store: Store, out_dir: Path = RESULTS_DIR,
            human_csv: Path | None = None, created: str | None = None) -> Path:
     runs = store.runs(profile=profile.name)
@@ -334,27 +362,12 @@ def export(profile: Profile, models: dict[str, ModelConfig], store: Store, out_d
         if r.output:
             ref = f"outputs/{profile.name}-{created}/{r.key}.txt"
             (out_dir / ref).write_text(r.output, encoding="utf-8")
-        judge = r.judge or {}
-        data["runs"].append({
-            "id": r.key, "mode": r.mode, "task": r.task, "variant": r.variant, "model": r.model,
-            "repeat": r.repeat, "status": r.status, "label": r.label,
-            "checks": {"score": r.score, "details": (r.check_details or {}).get("details", {})},
-            "judge": ({"score": judge.get("score"), "criteria": judge.get("criteria", []),
-                       "unsupported_claims": judge.get("unsupported_claims"),
-                       "cross_check": (judge.get("cross_check") or {}).get("score"),
-                       "self_preference": judge.get("self_preference", False),
-                       "error": judge.get("error", "")} if judge else None),
-            "tokens": r.tokens, "chars": {"sent": r.chars_sent, "received": r.chars_received},
-            "requests": r.requests, "stop": r.stop, "latency_s": r.latency_s, "output_ref": ref, "error": r.error,
-        })
+        session_ref = None
         if r.mode == "harness" and r.session:
             session_ref = f"outputs/{profile.name}-{created}/{r.key}.session.json"
             (out_dir / session_ref).write_text(json.dumps(r.session.get("messages", []), indent=1,
                                                           ensure_ascii=False), encoding="utf-8")
-            data["runs"][-1]["session"] = {
-                **{k: r.session.get(k) for k in ("stop", "limits", "tool_calls", "tool_calls_failed",
-                                                 "tools_used", "deliverable", "per_request")},
-                "transcript_ref": session_ref}
+        data["runs"].append(run_record(r, ref, session_ref))
     data["judge_validation"] = judge_validation(runs, human_csv)
     data["predictions"] = evaluate_predictions(runs, models)
     path = out_dir / f"{profile.name}-{created}.json"

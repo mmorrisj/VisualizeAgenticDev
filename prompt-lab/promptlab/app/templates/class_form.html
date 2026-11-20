@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% block title %}Class kit · Prompt Lab{% endblock %}
+{% block main %}
+<h1>Class kit</h1>
+<p class="lead">Each task runs with the reference prompts below on {{ profile.models|join(" and ") }}, {{ profile.repeats }} times each.
+   Add your own prompt for a task to run it the same way. The files are attached for you, exactly as for the reference prompts.</p>
+<form method="post" action="/class">
+  <label for="student">Your name or initials (optional, shown on the projector)</label>
+  <input type="text" id="student" name="student" maxlength="64" autocomplete="off">
+  {% for task, prompts in references.items() %}
+  <fieldset>
+    <legend>{{ task }}</legend>
+    {% for variant, text in prompts.items() %}
+      <p class="muted"><strong>{{ variant }}</strong></p>
+      <pre>{{ text }}</pre>
+    {% endfor %}
+    <label for="own_{{ task }}">Your prompt for {{ task }} (optional)</label>
+    <textarea id="own_{{ task }}" name="own_{{ task }}" {% if replay %}disabled aria-describedby="replay-own"{% endif %}></textarea>
+    {% if replay %}<p id="replay-own" class="muted">Own prompts cannot run in replay mode.</p>{% endif %}
+  </fieldset>
+  {% endfor %}
+  {% if profile.harness %}
+  <fieldset>
+    <legend>Harness round (optional)</legend>
+    <input type="checkbox" id="harness_round" name="harness_round" value="1">
+    <label class="inline" for="harness_round">Also run {{ profile.harness_tasks()|join(", ") }} in the harness:
+      {{ profile.harness.variants|join(" against ") }} on {{ profile.harness_models()|join(", ") }}, with a live request counter.</label>
+  </fieldset>
+  {% endif %}
+  <p><button type="submit">Run</button></p>
+</form>
+{% endblock %}

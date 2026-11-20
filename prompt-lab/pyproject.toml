@@ -14,6 +14,8 @@ dependencies = [
 
 [project.optional-dependencies]
 dev = ["pytest==8.3.3"]
+# The app for parts B and C (spec section 11.4).
+app = ["fastapi==0.115.6", "uvicorn==0.34.0", "jinja2==3.1.5", "python-multipart==0.0.20"]
 
 [project.scripts]
 prompt-lab = "promptlab.cli:main"
@@ -24,6 +26,9 @@ build-backend = "setuptools.build_meta"
 
 [tool.setuptools.packages.find]
 include = ["promptlab*"]
+
+[tool.setuptools.package-data]
+"promptlab.app" = ["templates/*.html"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

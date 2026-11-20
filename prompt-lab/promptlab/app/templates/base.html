@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+{% block head %}{% endblock %}
+<title>{% block title %}Prompt Lab{% endblock %}</title>
+<style>
+  :root { --ink: #111827; --muted: #4b5563; --line: #d1d5db; --accent: #1d4ed8; --bg: #ffffff; --panel: #f3f4f6;
+          --warn: #92400e; --warn-bg: #fef3c7; --bad: #991b1b; --bad-bg: #fee2e2; --ok: #065f46; --ok-bg: #d1fae5; }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font: 16px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif; }
+  header { border-bottom: 1px solid var(--line); padding: 12px 24px; display: flex; gap: 24px; align-items: baseline; }
+  header a.brand { font-weight: 700; color: var(--ink); text-decoration: none; }
+  nav a { margin-right: 16px; }
+  main { max-width: 960px; margin: 0 auto; padding: 24px; }
+  a { color: var(--accent); }
+  h1 { font-size: 1.6rem; margin: 0 0 8px; }
+  h2 { font-size: 1.2rem; margin: 28px 0 8px; }
+  p.lead { color: var(--muted); margin-top: 0; }
+  .panel { background: var(--panel); border-radius: 8px; padding: 16px; margin: 16px 0; }
+  .note { background: var(--warn-bg); color: var(--warn); border-radius: 8px; padding: 12px 16px; margin: 16px 0; }
+  .error { background: var(--bad-bg); color: var(--bad); border-radius: 8px; padding: 12px 16px; margin: 16px 0; }
+  .good { background: var(--ok-bg); color: var(--ok); border-radius: 8px; padding: 12px 16px; margin: 16px 0; }
+  label { font-weight: 600; display: block; margin: 12px 0 4px; }
+  .inline label, label.inline { display: inline; font-weight: 400; margin: 0 12px 0 4px; }
+  input[type=text], textarea, select { width: 100%; font: inherit; padding: 8px; border: 1px solid #6b7280; border-radius: 6px; }
+  textarea { min-height: 6em; }
+  button, .button { font: inherit; background: var(--accent); color: #fff; border: 0; border-radius: 6px; padding: 8px 16px;
+                    cursor: pointer; text-decoration: none; display: inline-block; margin-right: 12px; }
+  button.secondary { background: #374151; }
+  :focus-visible { outline: 3px solid #f59e0b; outline-offset: 2px; }
+  table { border-collapse: collapse; width: 100%; margin: 8px 0 16px; font-size: 0.95rem; }
+  th, td { border-bottom: 1px solid var(--line); padding: 6px 8px; text-align: left; vertical-align: top; }
+  th { background: var(--panel); }
+  pre { background: var(--panel); padding: 12px; border-radius: 6px; white-space: pre-wrap; word-break: break-word; }
+  .chart { width: 100%; height: auto; max-width: 720px; display: block; }
+  .muted { color: var(--muted); }
+  .tag { display: inline-block; padding: 0 8px; border-radius: 999px; background: var(--panel); font-size: 0.85rem; }
+  fieldset { border: 1px solid var(--line); border-radius: 8px; margin: 12px 0; padding: 8px 16px 16px; }
+  legend { font-weight: 600; padding: 0 4px; }
+  .steps { list-style: none; padding: 0; display: flex; gap: 8px; flex-wrap: wrap; font-size: 0.9rem; }
+  .steps li { padding: 2px 10px; border-radius: 999px; background: var(--panel); color: var(--muted); }
+  .steps li[aria-current=step] { background: var(--accent); color: #fff; }
+  progress { width: 100%; height: 1.2em; }
+</style>
+</head>
+<body>
+<header>
+  <a class="brand" href="/">Prompt Lab</a>
+  <nav aria-label="Main">
+    <a href="/class">Class kit</a>
+    <a href="/byot">Bring your own test</a>
+    {% if settings.collector %}<a href="/projector">Projector</a>{% endif %}
+  </nav>
+</header>
+<main>
+{% if replay %}<p class="note"><strong>Replay mode.</strong> Results come from the recorded study, labelled "recorded". Nothing is sent to a model, so your own prompts cannot run.</p>{% endif %}
+{% block main %}{% endblock %}
+</main>
+</body>
+</html>

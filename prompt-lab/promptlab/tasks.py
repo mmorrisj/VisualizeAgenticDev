@@ -102,10 +102,11 @@ class Task:
     def answers(self) -> list[str]:
         return sorted(p.stem for p in self.path("answers").glob("*.md"))
 
-    def build_user_message(self, variant: str) -> str:
+    def build_user_message(self, variant: str, prompt: str | None = None) -> str:
         """The prompt, then each context file in a labelled fence. The prompt is the only
-        thing that changes between variants; the attached files are identical."""
-        parts = [self.prompt(variant)]
+        thing that changes between variants; the attached files are identical.
+        `prompt` replaces the variant's text, for a student's own prompt."""
+        parts = [prompt.strip() if prompt is not None else self.prompt(variant)]
         for name in self.spec.context_files:
             fence = "sql" if name.endswith(".sql") else "python" if name.endswith(".py") else ""
             parts.append(f"File: {name}\n```{fence}\n{self.read('input', name).rstrip()}\n```")

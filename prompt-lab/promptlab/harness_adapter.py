@@ -20,7 +20,7 @@ results, the split the site's token pages draw.
 
 from __future__ import annotations
 
-import contextlib
+import builtins
 import fnmatch
 import importlib.util
 import io
@@ -29,6 +29,7 @@ import shutil
 import sqlite3
 import sys
 import tempfile
+import threading
 import time
 from collections import Counter
 from dataclasses import dataclass
@@ -69,6 +70,20 @@ class Limits:
 # --- loading the course harness -------------------------------------------------------
 
 _MINI_HARNESS = None
+_console = threading.local()  # each session's console buffer, per thread
+
+
+def _session_print(*args, sep=" ", end="\n", file=None, flush=False):
+    """mini-harness's print, inside the lab: into the current session's buffer.
+
+    redirect_stdout would swap sys.stdout for the whole process, so sessions
+    running in parallel (the class app) would capture each other's output.
+    """
+    buffer = getattr(_console, "buffer", None)
+    if buffer is None or file is not None:
+        builtins.print(*args, sep=sep, end=end, file=file, flush=flush)
+    else:
+        buffer.write(sep.join(str(a) for a in args) + end)
 
 
 def load_mini_harness():
@@ -93,7 +108,9 @@ def load_mini_harness():
     previous = sys.modules.get("backends")
     sys.modules["backends"] = backends
     try:
-        _MINI_HARNESS = load("promptlab_mini_harness", MINI_HARNESS_DIR / "harness.py")
+        module = load("promptlab_mini_harness", MINI_HARNESS_DIR / "harness.py")
+        module.print = _session_print  # a module global shadows the builtin for this copy only
+        _MINI_HARNESS = module
     finally:
         if previous is None:
             sys.modules.pop("backends", None)
@@ -217,8 +234,9 @@ class SessionModel:
 
     name = "prompt-lab"
 
-    def __init__(self, model: ModelConfig, backend, limits: Limits, meta: dict, course_error):
+    def __init__(self, model: ModelConfig, backend, limits: Limits, meta: dict, course_error, on_request=None):
         self.config, self.backend, self.limits, self.meta = model, backend, limits, meta
+        self.on_request = on_request  # called with each request's record: a live request counter
         self.model = model.gateway_id
         self.course_error = course_error
         self.records: list[dict] = []
@@ -275,6 +293,8 @@ class SessionModel:
             "stop": response.stop,
             "latency_s": round(response.latency_s, 3),
         })
+        if self.on_request:
+            self.on_request(self.records[-1])
 
         def count(value):
             return value if isinstance(value, int) else 0
@@ -327,7 +347,7 @@ def _final_message(messages: list) -> str:
 
 def run_session(task_id: str, variant: str, model: ModelConfig, *, repeat: int = 1, profile: str = "adhoc",
                 store: Store | None = None, backend=None, limits: Limits = Limits(),
-                keep_dir: Path | None = None) -> Run:
+                keep_dir: Path | None = None, on_request=None) -> Run:
     """Run one harness session, check what it left behind, and store it as a run (mode "harness")."""
     task = load_task(task_id)
     prompt = task.harness_prompt(variant)
@@ -335,7 +355,7 @@ def run_session(task_id: str, variant: str, model: ModelConfig, *, repeat: int =
               gateway_id=model.gateway_id, repeat=repeat, effort=model.effort or "", prompt=prompt)
     mini = load_mini_harness()
     session_model = SessionModel(model, backend or backend_for(model), limits,
-                                 {"task": task_id, "variant": variant}, mini.BackendError)
+                                 {"task": task_id, "variant": variant}, mini.BackendError, on_request)
     console = io.StringIO()
     with tempfile.TemporaryDirectory(prefix=f"promptlab-{task_id}-") as tmp:
         workdir = build_workdir(task, Path(tmp) / "work")
@@ -347,8 +367,11 @@ def run_session(task_id: str, variant: str, model: ModelConfig, *, repeat: int =
                                show_requests=False)
         harness = _lab_harness_class(mini)(args, session_model, database)
         start = time.perf_counter()
-        with contextlib.redirect_stdout(console):
+        _console.buffer = console
+        try:
             harness.run_turn(prompt)
+        finally:
+            _console.buffer = None
         run.latency_s = round(time.perf_counter() - start, 3)
         final = _final_message(harness.messages)
         answer, source = collect_deliverable(task, workdir, before, final)

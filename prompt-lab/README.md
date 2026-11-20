@@ -2,12 +2,13 @@
 
 Measures how prompt quality and model generation affect results and token cost. The full design is in [`../docs/PROMPT_LAB_SPEC.md`](../docs/PROMPT_LAB_SPEC.md). This README is for instructors and maintainers.
 
-**Built so far: phases L1 to L3.**
+**Built so far: phases L1 to L4.**
 - **L1:** the engine, the four tasks with their checks, one-shot runs, token accounting, storage, and the command line.
 - **L2:** the AI-assisted prompt variants, the blind judge, study profiles, and the results file.
 - **L3:** harness mode: sessions through the course's `mini-harness`, with limits and per-request accounting.
+- **L4:** the app: the class kit (part B) with replay mode and a collector, and bring your own test (part C).
 
-Still to come: L4 adds the class app, and L5 the site section.
+Still to come: L5, the site section.
 
 ## Install
 
@@ -16,7 +17,7 @@ Python 3.11 or newer.
 ```bash
 cd prompt-lab
 python -m venv .venv && . .venv/bin/activate
-pip install -r requirements.lock      # pinned; point pip at the internal mirror on the secure network
+pip install -r requirements.lock      # pinned, including the app; point pip at the internal mirror
 ```
 
 Run commands from this folder with `PYTHONPATH=.`, or install the package with `pip install -e .` to get the `prompt-lab` command.
@@ -66,6 +67,8 @@ A request that fails is stored as `error` with the reason (a missing URL, missin
 | `selftest` | Runs every task's known answers through its checks |
 | `run --model M [--task T] [--variant V] [--repeats N]` | Runs the matrix. `--model`, `--task`, and `--variant` repeat; tasks and variants default to all |
 | `harness --model M [--task T] [--variant V] [--repeats N] [--keep DIR]` | Runs harness sessions (below). `--keep` copies each session's final working directory for inspection. `--max-requests` and `--max-input-tokens` change the limits |
+| `serve [--host H] [--port P]` | Starts the app (below). Settings come from `PROMPTLAB_*` variables |
+| `byot summary` / `byot purge` | Part C: verdict counts for instructors (no text); delete tests past the retention period |
 | `summary` | Mean score, spread across repeats, and output tokens per task, model, and variant |
 | `variants --model M [--task T]` | Writes the `ai-expanded` and `ai-interviewed` prompts with model M (the primary judge) |
 | `study run --profile P` | Runs everything in a profile, one-shot runs then harness sessions; resumable: completed runs are skipped |
@@ -140,6 +143,53 @@ Each task's `harness:` block in `task.yaml` says what goes in the working direct
 **Unattended and not sandboxed.** The policy, [`config/harness-policy.json`](config/harness-policy.json), allows every tool and never asks a person. Commands run in a scratch directory with a scrubbed environment and a 30-second timeout, but `run_command` is not confined to that directory: a model could read other files on the machine, including the tasks' `hidden/` folders. Run the lab on a machine where that is acceptable, or set `sandbox_prefix` in the policy (for example a `bwrap` command) to confine it.
 
 The mock models play scripted sessions: `mock-new` explores and succeeds whenever the private facts are given, and `mock-old` makes a failed tool call and wanders until the request limit without the discoverable facts. As with one-shot mode, that proves the pipeline, not the thesis.
+
+## The app: class kit and bring your own test (parts B and C)
+
+```bash
+# Try it on the mock models: no gateway needed.
+PROMPTLAB_CLASS_PROFILE=class-mock PROMPTLAB_JUDGE=mock-judge \
+PROMPTLAB_BYOT_MODELS=mock-old,mock-new,mock-judge-2 PROMPTLAB_COLLECTOR=1 \
+python -m promptlab.cli serve           # http://127.0.0.1:8000
+```
+
+The app uses server-rendered pages and needs no JavaScript; progress pages refresh themselves. Run it as **one process** (the default): jobs run in that process's threads. For a room, run it on an internal host with `--host 0.0.0.0`.
+
+**Class kit** (`/class`): the `class` profile, so 2 models × `refactor` and `data-question` × `terse`, `full`, and the student's own prompt, 3 runs each. Each student's runs are stored under a profile of their own, and at most 2 requests run at once per student. The results page draws the student's points over the study's, and the student can download a results file (the section 12 format, without outputs) or submit it to the projector. The optional harness round (data-question, `h-terse` against `h-full`) shows a live request counter. To offer it, uncomment the `harness:` block in `config/class.yaml`.
+
+**Replay mode** (`PROMPTLAB_REPLAY=1`): if the gateway is slow or down, the class kit serves the newest committed `results/study-*.json` instead, labelled "recorded". Nothing is sent to any model. Students' own prompts and bring-your-own tests cannot run, and the pages say so. Replay works at the level of whole runs, so harness sessions replay too.
+
+**Bring your own test** (`/byot`), one step per page:
+1. **Your test.** A prompt, up to 3 text files, and optionally a check: an expected value, phrases that must appear, or a shell command.
+2. **Assessment.** The judge model gives a tier (`terse`, `goal`, `context`, `spec`), technique and information scores, the missing information (in your files, or only you know it), and a rewrite for each tier above yours. Anything the AI made up is listed separately under its rewrite, never blended into the text. The student agrees or disagrees with the tier and with each invented item, and may untick an item to delete it before anything runs.
+3. **Rubric.** The AI drafts 3 to 5 criteria; the student edits and approves them before any result exists.
+4. **Run.** The student's prompt and the rewrites they kept, on 2 or 3 models they choose, 3 runs each.
+5. **Results.** Checks first, then the judge with quoted evidence, and tokens. The page says whether the AI's recommended tier actually scored higher than the student's prompt. It also says if the judge graded its own answers, or answers from its own family.
+
+**Collector** (`PROMPTLAB_COLLECTOR=1`): `/collect` accepts class results files and `/projector` shows the whole room, refreshing every 10 seconds. If students run their own copies of the app, set `PROMPTLAB_COLLECTOR_URL` on theirs to the instructor's app.
+
+| Variable | Default | Meaning |
+|---|---|---|
+| `PROMPTLAB_DB_URL` | `data/lab.db` | Database (SQLite file or Postgres URL) |
+| `PROMPTLAB_CLASS_PROFILE` | `class` | Profile for the class kit; `class-mock` uses the mock models |
+| `PROMPTLAB_JUDGE` | the study's primary judge | Assesses prompts, drafts rubrics, and judges part C |
+| `PROMPTLAB_BYOT_MODELS` | the study's models | Models a student may choose in part C |
+| `PROMPTLAB_REPLAY` | off | `1` for the newest study file, or a path |
+| `PROMPTLAB_STUDY_RESULTS` | the newest study file | The study drawn under students' points |
+| `PROMPTLAB_RETENTION_DAYS` | 30 | Part C tests and their runs are deleted after this |
+| `PROMPTLAB_ALLOW_COMMAND_CHECKS` | off | Lets students attach shell-command checks |
+| `PROMPTLAB_COLLECTOR` / `PROMPTLAB_COLLECTOR_URL` | off / none | The projector chart, here or elsewhere |
+| `PROMPTLAB_CONCURRENCY` | 2 | Requests at once per student |
+
+**Data handling** (spec section 13):
+- Students may bring real work. It stays in this database and goes only to the configured gateway.
+- **Retention.** Tests expire after the retention period. Expired tests and their runs are deleted when the app starts. Run `prompt-lab byot purge` daily (for example from cron) on a server that stays up.
+- **Exports.** By default a student's export holds scores, tiers, verdicts and token counts; prompts and answers only if they ask. The instructor summary (`byot summary`) is counts only.
+- **Logs.** The app logs request paths, never prompts or outputs.
+
+**There are no accounts.** A student's pages are reachable by their random address, so that address is effectively private. Run the app on an internal host only.
+
+**Command checks run on the server.** They use a temporary directory, a scrubbed environment and a 30-second timeout, but they are not sandboxed, so they are off unless you turn them on.
 
 ## The tasks
 

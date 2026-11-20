@@ -64,8 +64,12 @@ def _rubric_block(rubric: dict) -> str:
     return "\n".join(lines)
 
 
-def build_prompt(task: Task, answer: str, rubric: dict) -> str:
-    files = "\n\n".join(f"File: {n}\n```\n{task.read('input', n).rstrip()}\n```" for n in task.spec.context_files)
+def _files_block(files: dict[str, str]) -> str:
+    return "\n\n".join(f"File: {n}\n```\n{text.rstrip()}\n```" for n, text in files.items()) or "(none)"
+
+
+def build_request_prompt(request: str, files: dict[str, str], answer: str, rubric: dict) -> str:
+    """The judge's prompt for any request: what was wanted, the files, the answer, the rubric."""
     claims = (
         '\nAlso list every factual claim in the answer as "claims": for each, say whether the files support it, '
         'and for supported claims give "source_quote", an exact quote from the files.\n' if rubric.get("claims") else "")
@@ -73,8 +77,8 @@ def build_prompt(task: Task, answer: str, rubric: dict) -> str:
              + (', "claims": [{"claim": "...", "supported": true, "source_quote": "..."}]' if rubric.get("claims") else "")
              + "}")
     return (
-        f"What the requester wanted:\n<request>\n{task.prompt('informed')}\n</request>\n\n"
-        f"Files the requester attached:\n{files}\n\n"
+        f"What the requester wanted:\n<request>\n{request}\n</request>\n\n"
+        f"Files the requester attached:\n{_files_block(files)}\n\n"
         f"The answer to grade:\n<answer>\n{answer}\n</answer>\n\n"
         f"Rubric (score each criterion from 1 to 5):\n{_rubric_block(rubric)}\n\n"
         f'For each criterion give the score, a short exact quote from the answer as evidence (or "{ABSENT}" if the '
@@ -83,10 +87,19 @@ def build_prompt(task: Task, answer: str, rubric: dict) -> str:
     )
 
 
-def _verifier(task: Task, answer: str, rubric: dict):
+def task_files(task: Task) -> dict[str, str]:
+    return {n: task.read("input", n) for n in task.spec.context_files}
+
+
+def build_prompt(task: Task, answer: str, rubric: dict) -> str:
+    """For the lab's own tasks the judge sees the informed prompt: what the requester really wanted."""
+    return build_request_prompt(task.prompt("informed"), task_files(task), answer, rubric)
+
+
+def _verifier(files: dict[str, str], answer: str, rubric: dict):
     wanted = [c["id"] for c in rubric["criteria"]]
     answer_n = normalize(answer)
-    sources_n = normalize("\n".join(task.read("input", n) for n in task.spec.context_files))
+    sources_n = normalize("\n".join(files.values()))
 
     def check(value: Judgement) -> str:
         got = [c.id for c in value.criteria]
@@ -106,12 +119,12 @@ def _verifier(task: Task, answer: str, rubric: dict):
     return check
 
 
-def judge(task: Task, answer: str, model: ModelConfig, meta: dict | None = None) -> dict:
-    """Score one answer. Returns a JSON-ready dict; `score` is in [0, 1] or None if judging failed."""
-    rubric = load_rubric(task)
-    result = ask_json(model, SYSTEM, build_prompt(task, answer, rubric), Judgement,
-                      meta={"role": "judge", "task": task.id, **(meta or {})},
-                      extra_check=_verifier(task, answer, rubric))
+def judge_request(request: str, files: dict[str, str], answer: str, rubric: dict, model: ModelConfig,
+                  meta: dict | None = None) -> dict:
+    """Score one answer against a rubric. Returns a JSON-ready dict; `score` is in [0, 1] or None."""
+    meta = {"role": "judge", "rubric_ids": [c["id"] for c in rubric["criteria"]], **(meta or {})}
+    result = ask_json(model, SYSTEM, build_request_prompt(request, files, answer, rubric), Judgement,
+                      meta=meta, extra_check=_verifier(files, answer, rubric))
     out = {
         "judge": model.id,
         "attempts": len(result.responses),
@@ -128,3 +141,9 @@ def judge(task: Task, answer: str, model: ModelConfig, meta: dict | None = None)
         out["claims"] = [c.model_dump() for c in result.value.claims]
         out["unsupported_claims"] = sum(not c.supported for c in result.value.claims)
     return out
+
+
+def judge(task: Task, answer: str, model: ModelConfig, meta: dict | None = None) -> dict:
+    """Score one answer to one of the lab's tasks, with the task's rubric."""
+    return judge_request(task.prompt("informed"), task_files(task), answer, load_rubric(task), model,
+                         {"task": task.id, **(meta or {})})

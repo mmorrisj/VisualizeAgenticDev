@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% block head %}{% if running %}<meta http-equiv="refresh" content="2">{% endif %}{% endblock %}
+{% block title %}Results · Prompt Lab{% endblock %}
+{% block main %}
+{% set step = 5 %}{% include "_steps.html" %}
+<h1>Your results</h1>
+{% if running %}
+<p role="status">Running: {{ job.done }} of {{ job.total }} finished. This page refreshes itself.</p>
+<progress max="{{ job.total }}" value="{{ job.done }}">{{ job.done }} of {{ job.total }}</progress>
+{% elif job and job.status == "error" %}<p class="error">The run stopped: {{ job.error }}</p>
+{% elif test.status == "running" %}<p class="note">This run was interrupted (the server restarted). The runs that finished are below.</p>
+{% endif %}
+{% if summary %}
+<div class="{{ "good" if summary.loop.outcome == "higher" else "panel" }}" role="status"><strong>Did the AI's advice help?</strong> {{ summary.loop.text }}</div>
+{% if summary.judge_is_tested %}<p class="note">The judge ({{ summary.judge }}) was also one of the models tested, so it graded its own answers.</p>
+{% elif summary.judge_family_tested %}<p class="note">The judge ({{ summary.judge }}) is from the same family as a tested model, which may favour that model.</p>{% endif %}
+<p class="muted">Scored by {{ summary.measure }}{% if summary.measure == "AI judge" %}: no check was given, so these results are AI-judged only{% endif %}.</p>
+<table>
+  <thead><tr><th scope="col">Prompt</th><th scope="col">Model</th><th scope="col">Runs</th><th scope="col">Check</th><th scope="col">Judge</th><th scope="col">Input tokens</th><th scope="col">Output tokens</th><th scope="col">Label</th></tr></thead>
+  <tbody>{% for r in summary.rows %}<tr><td>{{ r.prompt }}</td><td>{{ r.model }}</td><td>{{ r.runs }}{% if r.errors %} ({{ r.errors }} failed){% endif %}</td>
+    <td>{{ "%.2f"|format(r.check) if r.check is not none else "-" }}</td><td>{{ "%.2f"|format(r.judge) if r.judge is not none else "-" }}</td>
+    <td>{{ "%.0f"|format(r.input_tokens) if r.input_tokens is not none else "not reported" }}</td><td>{{ "%.0f"|format(r.output_tokens) if r.output_tokens is not none else "not reported" }}</td>
+    <td>{{ r.labels|join(", ") }}</td></tr>{% endfor %}</tbody>
+</table>
+{% if judge_failed %}<p class="note">The judge could not score {{ judge_failed }} answer(s) with valid quotes; those are left blank, not guessed.</p>{% endif %}
+{% endif %}
+{% if runs and not running %}
+<h2>The answers, with the judge's evidence</h2>
+{% for r in runs %}
+<details><summary>{{ r.variant }} · {{ r.model }} · run {{ r.repeat }}{% if r.status == "error" %} · failed{% endif %}</summary>
+  {% if r.error %}<p class="error">{{ r.error }}</p>{% endif %}
+  <pre>{{ r.output }}</pre>
+  {% if r.judge and r.judge.criteria %}<table><thead><tr><th scope="col">Criterion</th><th scope="col">Score</th><th scope="col">Quote</th><th scope="col">Reason</th></tr></thead>
+  <tbody>{% for c in r.judge.criteria %}<tr><td>{{ c.id }}</td><td>{{ c.score }}</td><td>{{ c.quote }}</td><td>{{ c.reason }}</td></tr>{% endfor %}</tbody></table>{% endif %}
+</details>
+{% endfor %}
+<h2>Export</h2>
+<p><a class="button" href="/byot/{{ test.id }}/export.json">Scores, tiers and verdicts</a>
+   <a href="/byot/{{ test.id }}/export.json?text=true">Include my prompts and the answers</a></p>
+<p class="muted">This test and its runs are deleted on {{ expires }}.</p>
+{% endif %}
+{% endblock %}
