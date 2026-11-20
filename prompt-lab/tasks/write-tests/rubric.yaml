@@ -1,0 +1,22 @@
+criteria:
+  - id: names
+    name: Test names describe behaviour
+    description: Does each test's name say what behaviour it checks?
+    anchors:
+      1: Generic names (test_1, test_function).
+      3: Some names describe behaviour.
+      5: Every name states the behaviour and the expected outcome.
+  - id: focused
+    name: One behaviour per test
+    description: Does a failing test point at one behaviour?
+    anchors:
+      1: One large test checking many things.
+      3: Mostly focused, a few tests mix behaviours.
+      5: Each test checks one behaviour.
+  - id: rules
+    name: Covers the documented rules
+    description: Do the tests cover each rule in the docstring (inclusive ends, weekends, holidays on weekdays and weekends, reversed range)?
+    anchors:
+      1: One or two rules covered.
+      3: About half the rules covered.
+      5: Every rule has at least one test with an exact expected value.

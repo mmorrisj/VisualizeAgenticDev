@@ -1,0 +1,25 @@
+criteria:
+  - id: audience
+    name: Fit for the on-call manager
+    description: Would the on-call manager get impact, cause, fix, and open work at a glance?
+    anchors:
+      1: Written for engineers or a general reader; impact and open work are hard to find.
+      3: The important points are there but buried in narrative.
+      5: Leads with impact; open work and owners are easy to find; no investigation story.
+  - id: faithful
+    name: Faithful to the report
+    description: Is everything stated supported by the report?
+    anchors:
+      1: Several statements are not in the report or contradict it.
+      3: One unsupported or distorted statement.
+      5: Every statement is supported by the report.
+  - id: concise
+    name: Concise
+    description: Is it as short as it can be while keeping what matters?
+    anchors:
+      1: Long, repetitive, or padded.
+      3: Some padding or repetition.
+      5: Nothing to cut.
+# The judge also lists the summary's factual claims and quotes the report for each
+# one it marks supported; unsupported claims are counted (spec section 4).
+claims: true

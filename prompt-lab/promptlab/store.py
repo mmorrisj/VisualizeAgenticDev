@@ -52,6 +52,12 @@ class Run(Base):
     prompt: Mapped[str] = mapped_column(Text, default="")
     output: Mapped[str] = mapped_column(Text, default="")
     error: Mapped[str] = mapped_column(Text, default="")
+    judge: Mapped[dict] = mapped_column(JSON, default=dict)   # judge.judge() result, plus "cross_check"
+
+    @property
+    def key(self) -> str:
+        """Stable identity across databases and exports."""
+        return f"{self.task}--{self.variant}--{self.model}--{self.repeat}"
 
 
 class Store:
@@ -65,6 +71,12 @@ class Store:
     def add(self, run: Run) -> Run:
         with Session(self.engine, expire_on_commit=False) as session:
             session.add(run)
+            session.commit()
+        return run
+
+    def update(self, run: Run) -> Run:
+        with Session(self.engine, expire_on_commit=False) as session:
+            session.merge(run)
             session.commit()
         return run
 

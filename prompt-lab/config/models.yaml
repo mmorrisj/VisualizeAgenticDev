@@ -125,3 +125,19 @@ models:
     generation: 2
     api: mock
     mock_quality: high
+
+  - id: mock-judge
+    display: Mock judge
+    gateway_id: mock-judge
+    confirmed: true
+    family: mock-judge
+    generation: 1
+    api: mock
+
+  - id: mock-judge-2
+    display: Mock cross-check judge
+    gateway_id: mock-judge-2
+    confirmed: true
+    family: mock-judge-2
+    generation: 1
+    api: mock

@@ -1,0 +1,10 @@
+# Part A, the prebaked study (spec section 10.1).
+name: study
+tasks: all
+variants: [terse, technique, informed, full, ai-expanded, ai-interviewed]
+models: [llama-3.1-8b, llama-3.3-70b, llama-4-maverick, gpt-4, gpt-5.4, gpt-5.6-luna, sonnet-4.5, opus-5]
+repeats: 5
+judge:
+  primary: opus-5
+  cross_check: gpt-5.6-luna
+  cross_check_share: 0.2

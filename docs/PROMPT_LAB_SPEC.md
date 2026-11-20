@@ -106,7 +106,7 @@ The prompts form a grid of technique against information, plus two AI-assisted v
 | `informed` | Informed | None: plain sentences | Every fact from section 4.1 plus acceptance criteria |
 | `full` | Full | Heavy | Every fact plus acceptance criteria |
 | `ai-expanded` | AI-expanded | Whatever the AI adds | The `terse` prompt rewritten by the primary judge model, asked to "rewrite this into a detailed prompt". Run as written. |
-| `ai-interviewed` | AI-interviewed | Whatever the AI adds | The AI first asks the questions it needs answered; answers come from a fixed script per task (so the study is reproducible); it then writes the prompt. |
+| `ai-interviewed` | AI-interviewed | Whatever the AI adds | The AI first asks the questions it needs answered; a simulated requester answers them using only the task's fact list (section 4.1); it then writes the prompt. The questions, answers, and prompt are stored, so the study is reproducible. |
 
 The `ai-expanded` and `ai-interviewed` prompts are generated once, stored in the task folder, and reused by every model, so all models see the same text.
 
@@ -157,7 +157,7 @@ The course's own `mini-harness` (in `course/mini-harness/`) runs every model, so
 - **One rubric per task**, stored in the task folder: 3 to 5 criteria, each on an anchored scale of 1 to 5 with a written description of 1, 3, and 5.
 - **Evidence required:** for each score, the judge quotes the part of the output that justifies it. A score without a quote is rejected and re-requested once, then recorded as missing.
 - **Structured output:** the judge returns JSON (criterion, score, quote, one-sentence reason), validated against a schema.
-- **Pairwise comparisons** (optional, study only): for each task and model, `terse` against `full` and `ai-expanded` against `informed`, with presentation order randomized.
+- **Pairwise comparisons** (optional, study only; not built in phase L2): for each task and model, `terse` against `full` and `ai-expanded` against `informed`, with presentation order randomized.
 
 ### 7.3 Reported labels
 
