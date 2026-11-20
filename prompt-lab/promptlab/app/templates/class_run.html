@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% block head %}{% if running %}<meta http-equiv="refresh" content="2">{% endif %}{% endblock %}
+{% block title %}Your class run · Prompt Lab{% endblock %}
+{% block main %}
+<h1>Your class run</h1>
+{% if job %}
+  {% if running %}
+  <p role="status">Running: {{ job.done }} of {{ job.total }} runs finished. This page refreshes itself.</p>
+  <progress max="{{ job.total }}" value="{{ job.done }}">{{ job.done }} of {{ job.total }}</progress>
+  {% elif job.status == "error" %}<p class="error">The run stopped: {{ job.error }}</p>
+  {% else %}<p class="good" role="status">Finished: {{ job.done }} runs.</p>{% endif %}
+  {% if job.info.skipped %}<div class="note"><p>Not run:</p><ul>{% for s in job.info.skipped[:6] %}<li>{{ s.key }}: {{ s.why }}</li>{% endfor %}</ul>
+    {% if job.info.skipped|length > 6 %}<p>and {{ job.info.skipped|length - 6 }} more.</p>{% endif %}</div>{% endif %}
+{% endif %}
+{% if not study %}<p class="note">There is no study results file yet, so only your runs are drawn.</p>
+{% elif study_synthetic %}<p class="note">The grey points come from a synthetic study (mock models).</p>{% endif %}
+{% if runs and runs[0].label == "synthetic" %}<p class="note">These runs used mock models: the numbers are synthetic.</p>{% endif %}
+
+{% for task, chart in charts.items() %}
+<h2>{{ task }}</h2>
+{{ chart }}
+<table>
+  <caption class="muted">Check scores for {{ task }}, one per run</caption>
+  <thead><tr><th scope="col">Prompt</th><th scope="col">Model</th><th scope="col">Runs</th><th scope="col">Scores</th><th scope="col">Mean</th><th scope="col">Output tokens (mean)</th><th scope="col">Label</th></tr></thead>
+  <tbody>{% for row in tables[task] %}<tr><td>{{ row.variant }}</td><td>{{ row.model }}</td><td>{{ row.runs }}{% if row.errors %} ({{ row.errors }} failed){% endif %}</td><td>{{ row.scores }}</td><td>{{ row.mean }}</td><td>{{ row.output_tokens }}</td><td>{{ row.labels }}</td></tr>{% endfor %}</tbody>
+</table>
+{% endfor %}
+
+{% if harness or (job and job.requests) %}
+<h2>Harness round</h2>
+{% if job and running and job.requests %}<p role="status">Requests so far: {% for key, n in job.requests.items() %}<span class="tag">{{ key }}: {{ n }}</span> {% endfor %}</p>{% endif %}
+<table>
+  <thead><tr><th scope="col">Session</th><th scope="col">Ended</th><th scope="col">Score</th><th scope="col">Requests</th><th scope="col">Tool calls (failed)</th><th scope="col">Input tokens</th></tr></thead>
+  <tbody>{% for r in harness %}<tr><td>{{ r.variant }} · {{ r.model }}</td><td>{{ r.stop }}</td><td>{{ "%.2f"|format(r.score) if r.score is not none else "-" }}</td><td>{{ r.requests }}</td>
+    <td>{{ r.session.tool_calls }} ({{ r.session.tool_calls_failed }})</td><td>{{ r.tokens.input }}</td></tr>{% endfor %}</tbody>
+</table>
+{% endif %}
+
+{% if not running %}
+<h2>Your results file</h2>
+<p><a class="button" href="/class/{{ sid }}/results.json">Download results</a></p>
+{% if settings.collector or settings.collector_url %}
+<form method="post" action="/class/{{ sid }}/submit"><button type="submit" class="secondary">Submit to the projector chart</button></form>
+{% endif %}
+{% endif %}
+{% endblock %}

@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% block title %}Assessment · Prompt Lab{% endblock %}
+{% block main %}
+{% set step = 2 %}{% include "_steps.html" %}
+<h1>What the AI thinks of your prompt</h1>
+<p class="lead">You decide. Agree or disagree with its tier and with everything it made up.</p>
+{% if error %}<p class="error" role="alert">{{ error }}</p>{% endif %}
+<h2>Your prompt</h2>
+<pre>{{ test.prompt }}</pre>
+<form method="post" action="/byot/{{ test.id }}/verdict">
+<fieldset>
+  <legend>Tier: {{ assessment.tier }}</legend>
+  <p>{{ tier_meaning[assessment.tier]|capitalize }}. Technique {{ assessment.technique }} of 3, information {{ assessment.information }} of 3.
+     The AI recommends the <strong>{{ assessment.recommended_tier }}</strong> tier for this task.</p>
+  <div class="inline">
+    <input type="radio" id="tier-agree" name="tier_agree" value="agree" required><label for="tier-agree">I agree</label>
+    <input type="radio" id="tier-disagree" name="tier_agree" value="disagree"><label for="tier-disagree">I disagree</label>
+  </div>
+  <label for="tier_reason">Why (optional, one line)</label>
+  <input type="text" id="tier_reason" name="tier_reason" maxlength="300">
+</fieldset>
+{% if assessment.missing %}
+<h2>What is missing</h2>
+<table><thead><tr><th scope="col">Information</th><th scope="col">Where it is</th></tr></thead>
+<tbody>{% for m in assessment.missing %}<tr><td>{{ m.text }}</td><td>{{ "in your files" if m.kind == "discoverable" else "only you know it" }}</td></tr>{% endfor %}</tbody></table>
+{% endif %}
+{% for rewrite in assessment.rewrites %}
+<fieldset>
+  <legend>Rewrite at the {{ rewrite.tier }} tier</legend>
+  <input type="checkbox" id="run-{{ rewrite.tier }}" name="run_tier" value="{{ rewrite.tier }}" checked>
+  <label class="inline" for="run-{{ rewrite.tier }}">Run this rewrite</label>
+  <pre>{{ rewrite.prompt }}</pre>
+  {% if rewrite.invented %}
+  <p><strong>Made up by the AI</strong>: these are not in your prompt or files. Untick any you want deleted before the rewrite runs.</p>
+  {% for item in rewrite.invented %}{% set key = rewrite.tier ~ "/" ~ item.id %}
+  <div class="panel">
+    <p>{{ item.text }}</p>
+    <div class="inline">
+      <input type="radio" id="a-{{ key }}" name="agree::{{ key }}" value="agree" required><label for="a-{{ key }}">Agree</label>
+      <input type="radio" id="d-{{ key }}" name="agree::{{ key }}" value="disagree"><label for="d-{{ key }}">Disagree</label>
+      <input type="checkbox" id="k-{{ key }}" name="keep::{{ key }}" value="1" checked><label for="k-{{ key }}">Keep it in the rewrite (untick to delete it)</label>
+    </div>
+    <label for="r-{{ key }}">Why (optional)</label>
+    <input type="text" id="r-{{ key }}" name="reason::{{ key }}" maxlength="300">
+  </div>
+  {% endfor %}
+  {% else %}<p class="muted">The AI added nothing of its own to this rewrite.</p>{% endif %}
+</fieldset>
+{% endfor %}
+<p><button type="submit">Save my answers</button></p>
+</form>
+{% endblock %}

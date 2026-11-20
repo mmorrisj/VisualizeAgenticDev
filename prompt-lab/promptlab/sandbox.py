@@ -19,7 +19,8 @@ TESTRUN = Path(__file__).with_name("testrun.py")
 SAFE_ENV_KEYS = ("PATH", "HOME", "LANG", "TMPDIR", "SYSTEMROOT")
 
 
-def _env() -> dict:
+def scrubbed_env() -> dict:
+    """The environment model-written code runs with: no credentials or proxy settings."""
     env = {k: os.environ[k] for k in SAFE_ENV_KEYS if k in os.environ}
     env["PYTHONDONTWRITEBYTECODE"] = "1"
     env["PYTHONHASHSEED"] = "0"
@@ -38,7 +39,7 @@ def run_tests(files: dict[str, str], test_source: str, timeout: float = 30.0) ->
         test_path.write_text(test_source, encoding="utf-8")
         try:
             proc = subprocess.run([sys.executable, "-I", str(TESTRUN), tmp, str(test_path)],
-                                  cwd=tmp, env=_env(), capture_output=True, text=True, timeout=timeout)
+                                  cwd=tmp, env=scrubbed_env(), capture_output=True, text=True, timeout=timeout)
         except subprocess.TimeoutExpired:
             return {"passed": 0, "failed": 0, "errors": 0, "tests": [], "timeout": True}
         lines = [line for line in proc.stdout.splitlines() if line.startswith("{")]

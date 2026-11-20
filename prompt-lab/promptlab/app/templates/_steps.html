@@ -1,0 +1,4 @@
+<ol class="steps" aria-label="Steps">
+{% set labels = ["Your test", "Assessment", "Rubric", "Run", "Results"] %}
+{% for label in labels %}<li {% if loop.index == step %}aria-current="step"{% endif %}>{{ loop.index }}. {{ label }}</li>{% endfor %}
+</ol>

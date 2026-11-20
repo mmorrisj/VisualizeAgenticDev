@@ -12,6 +12,11 @@ It also plays the lab's other roles (request.meta["role"]): the prompt writer,
 the simulated requester, the invented-requirements check, and the judge. The
 mock judge scores from the run's check score, which only the mock can see.
 
+For bring-your-own tests (part C) there is no task folder. The mock then
+assesses a prompt by its length, drafts a fixed rubric, and answers well when
+the model is high quality or the prompt has at least 25 words: a good answer
+repeats the prompt's last line, so a test can put its expected value there.
+
 Token counts use the course estimator and are marked synthetic.
 """
 
@@ -40,17 +45,24 @@ def _snippet(text: str) -> str:
     return "(absent)"
 
 
+TIERS = ("terse", "goal", "context", "spec")
+CUSTOM_ROLES = {"assess", "rubric", "custom_answer"}
+
+
 class MockBackend:
     def complete(self, request: Request, model: ModelConfig) -> Response:
         task_id = request.meta.get("task")
-        if not task_id:
-            raise BackendError("mock backend needs request.meta['task']")
-        task = load_task(task_id)
         role = request.meta.get("role", "answer")
-        if role == "harness":
-            from .mock_harness import respond  # scripted multi-request sessions
-            return respond(task, request, model)
-        text = getattr(self, f"_{role.replace('-', '_')}")(task, request, model)
+        if role in CUSTOM_ROLES or (role == "judge" and not task_id):
+            text = getattr(self, f"_custom_{role}")(request, model)
+        else:
+            if not task_id:
+                raise BackendError("mock backend needs request.meta['task']")
+            task = load_task(task_id)
+            if role == "harness":
+                from .mock_harness import respond  # scripted multi-request sessions
+                return respond(task, request, model)
+            text = getattr(self, f"_{role.replace('-', '_')}")(task, request, model)
         start = time.perf_counter()
         usage = Usage(input=estimate_tokens({"system": request.system, "messages": request.messages}),
                       output=estimate_tokens(text), reasoning=NOT_REPORTED, cache_read=0, cache_write=0,
@@ -60,7 +72,11 @@ class MockBackend:
 
     # --- model under test ---------------------------------------------------
     def _answer(self, task, request, model):
-        good = model.mock_quality == "high" or request.meta.get("variant", "") in INFORMED_VARIANTS
+        variant = request.meta.get("variant", "")
+        good = model.mock_quality == "high" or variant in INFORMED_VARIANTS
+        if variant == "own":  # a student's own prompt: judged by its length, like part C
+            prompt = request.messages[0]["content"].split("\n\nFile: ", 1)[0]
+            good = good or len(prompt.split()) >= 25
         kind = "good" if good else "bad"
         names = [n for n in task.answers() if n.startswith(kind)]
         if not names:
@@ -102,3 +118,50 @@ class MockBackend:
             source = task.read("input", task.spec.context_files[0])
             out["claims"] = [{"claim": "the report's first line", "supported": True, "source_quote": _snippet(source)}]
         return json.dumps(out)
+
+
+    # --- part C: bring your own test (no task folder) -------------------------------
+    @staticmethod
+    def _prompt_of(request: Request) -> str:
+        content = request.messages[0]["content"]
+        return content.split("<prompt>\n", 1)[1].split("\n</prompt>", 1)[0] if "<prompt>\n" in content else content
+
+    def _custom_assess(self, request, model):
+        prompt = self._prompt_of(request)
+        words = len(prompt.split())
+        tier = "terse" if words < 8 else "goal" if words < 25 else "context" if words < 60 else "spec"
+        index = TIERS.index(tier)
+        markers = sum(m in prompt.lower() for m in ("you are", "step", "format", "##", "\n- "))
+        rewrites = [{"tier": t, "prompt": f"Write for the person who asked ({t} tier).\n\n{prompt}",
+                     "invented": [{"id": f"{t}-1", "text": "Use British spelling throughout."}]}
+                    for t in TIERS[index + 1:]]
+        missing = [{"text": "Who will read the result, and what they need it for", "kind": "only-you-know"}]
+        if "File:" in request.messages[0]["content"]:
+            missing.append({"text": "What the attached file says about the details", "kind": "discoverable"})
+        return json.dumps({"tier": tier, "technique": 1 + min(2, markers), "information": max(1, index),
+                           "missing": missing, "rewrites": rewrites,
+                           "recommended_tier": TIERS[min(index + 1, len(TIERS) - 1)]})
+
+    def _custom_rubric(self, request, model):
+        anchors = {"1": "misses the point", "3": "partly right", "5": "fully right"}
+        return json.dumps({"criteria": [
+            {"id": "correct", "name": "Correct", "description": "Does what was asked, accurately.", "anchors": anchors},
+            {"id": "complete", "name": "Complete", "description": "Covers everything that was asked.", "anchors": anchors},
+            {"id": "clear", "name": "Clear", "description": "Easy for the reader to use.", "anchors": anchors},
+        ]})
+
+    def _custom_custom_answer(self, request, model):
+        prompt = request.messages[0]["content"].split("\n\nFile: ", 1)[0]
+        if model.mock_quality == "high" or len(prompt.split()) >= 25:
+            last = [line for line in prompt.strip().splitlines() if line.strip()][-1]
+            return f"Here is what you asked for.\n\n{last}\n"
+        return "I am not sure what you need. Could you say more?\n"
+
+    def _custom_judge(self, request, model):
+        content = request.messages[0]["content"]
+        answer = content.split("<answer>\n", 1)[1].rsplit("\n</answer>", 1)[0]
+        base = 4 if answer.startswith("Here is") else 2
+        if model.id.endswith("-2"):
+            base = max(1, base - 1)
+        return json.dumps({"criteria": [{"id": cid, "score": base, "quote": _snippet(answer), "reason": "mock judgement"}
+                                        for cid in request.meta["rubric_ids"]]})

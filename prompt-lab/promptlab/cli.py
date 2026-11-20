@@ -7,6 +7,8 @@
     prompt-lab run --task T --variant V --model M [--repeats N]
     prompt-lab harness --task T --variant h-terse --model M [--repeats N] [--keep DIR]
     prompt-lab summary                      scores and tokens from the database
+    prompt-lab serve [--host H] [--port P]  the app: class kit, bring your own test, collector
+    prompt-lab byot summary|purge           part C: verdict counts for instructors; delete expired tests
     prompt-lab variants --model M [--task T] generate the AI-assisted prompt variants
     prompt-lab study run|judge|sample|export --profile P
 """
@@ -107,6 +109,25 @@ def cmd_harness(args) -> int:
     return 0
 
 
+def cmd_serve(args) -> int:
+    import uvicorn  # the app's dependencies are optional: pip install -e ".[app]"
+    if args.db:
+        import os
+        os.environ["PROMPTLAB_DB_URL"] = args.db
+    uvicorn.run("promptlab.app:create_app", factory=True, host=args.host, port=args.port, workers=1)
+    return 0
+
+
+def cmd_byot(args) -> int:
+    from . import byot
+    store = Store(args.db)
+    if args.action == "purge":
+        print(f"deleted {store.purge_expired()} expired test(s) and their runs")
+    else:
+        print(json.dumps(byot.verdict_summary(store), indent=2))
+    return 0
+
+
 def cmd_summary(args) -> int:
     groups = defaultdict(list)
     for run in Store(args.db).runs():
@@ -192,6 +213,13 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--keep", help="copy each session's final working directory into this folder")
     p.set_defaults(func=cmd_harness)
     sub.add_parser("summary", parents=[common]).set_defaults(func=cmd_summary)
+    p = sub.add_parser("serve", parents=[common], help="the app (settings from PROMPTLAB_* variables)")
+    p.add_argument("--host", default="127.0.0.1")
+    p.add_argument("--port", type=int, default=8000)
+    p.set_defaults(func=cmd_serve)
+    p = sub.add_parser("byot", parents=[common], help="part C: instructor summary, or delete expired tests")
+    p.add_argument("action", choices=["summary", "purge"])
+    p.set_defaults(func=cmd_byot)
     p = sub.add_parser("variants", parents=[common])
     p.add_argument("--model", required=True, help="the primary judge model writes the variants")
     p.add_argument("--task", action="append", help="repeatable; default: all tasks")
