@@ -1,0 +1,35 @@
+# Test the Prompt Lab engine on every PR that touches it. No model is called:
+# the tests use the mock backend and simulated HTTP responses.
+name: Prompt Lab tests
+
+on:
+  push:
+    branches: [main]
+    paths: ["prompt-lab/**", ".github/workflows/prompt-lab.yml"]
+  pull_request:
+    paths: ["prompt-lab/**", ".github/workflows/prompt-lab.yml"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.11", "3.12"]
+    defaults:
+      run:
+        working-directory: prompt-lab
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Install pinned dependencies
+        run: python -m pip install -r requirements.lock
+      - name: Check every task's known answers
+        run: PYTHONPATH=. python -m promptlab.cli selftest
+      - name: Run tests
+        run: python -m pytest -q

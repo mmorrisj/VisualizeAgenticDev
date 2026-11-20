@@ -1,0 +1,34 @@
+# Ten facts a good summary contains. Each matches if any pattern matches
+# (case-insensitive). Patterns are a first-pass check; phase L2 adds the judge's
+# fact-by-fact verification with quotes, and its count of unsupported claims.
+facts:
+  - id: window
+    text: Lasted 1 hour 48 minutes, 09:14 to 11:02 UTC
+    patterns: ['1\s*(h|hr|hour)s?\s*(and\s*)?48', '108\s*min', '0?9:14']
+  - id: failed-count
+    text: About 4,300 card authorizations failed
+    patterns: ['4,?300']
+  - id: share
+    text: About 12% of card payment attempts
+    patterns: ['12\s*%', '12\s*per\s*cent']
+  - id: root-cause
+    text: Database connection pool exhaustion (pool cut from 200 to 20)
+    patterns: ['connection pool', 'pool (was )?(exhaust|size|reduc|lower|cut)', '200 to 20']
+  - id: trigger
+    text: Caused by configuration change CHG-7781
+    patterns: ['CHG-7781', 'config(uration)? change']
+  - id: detection
+    text: Detected by customer support tickets, not monitoring
+    patterns: ['support', 'tickets?']
+  - id: mitigation
+    text: Fixed by rolling back the change at 10:41
+    patterns: ['roll(ed|ing)?[\s-]?back', 'revert']
+  - id: recovered
+    text: About 3,900 payments recovered by automatic retry
+    patterns: ['3,?900', '90\s*%']
+  - id: outstanding
+    text: About 400 payments still need manual follow-up
+    patterns: ['\b400\b']
+  - id: alert-action
+    text: Action - add a connection pool saturation alert
+    patterns: ['saturation', 'pool alert', 'alert(ing)? on (the )?(database )?(connection|pool)']

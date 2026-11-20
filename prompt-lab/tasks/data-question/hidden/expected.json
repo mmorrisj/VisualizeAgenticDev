@@ -1,0 +1,4 @@
+{
+  "value": 8,
+  "reference_sql": "SELECT COUNT(*) FROM incidents i JOIN services s ON s.id = i.service_id WHERE s.team = 'payments' AND UPPER(i.severity) IN ('SEV1', 'SEV2') AND i.opened_at >= '2026-07-01' AND i.opened_at < '2026-10-01' AND i.duplicate_of IS NULL"
+}

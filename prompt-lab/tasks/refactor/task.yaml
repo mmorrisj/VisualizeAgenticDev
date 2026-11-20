@@ -1,0 +1,32 @@
+id: refactor
+title: Refactor a billing module without changing behaviour
+artifact: python
+context_files: [billing.py, callers.py]
+facts:
+  - id: callers
+    kind: discoverable
+    text: callers.py imports compute_invoice, format_invoice, invoice_lines, and tax_rate, and passes region by keyword.
+  - id: decimal-rounding
+    kind: discoverable
+    text: Money is Decimal with ROUND_HALF_UP; tax is computed on the unrounded subtotal.
+  - id: result-shape
+    kind: discoverable
+    text: compute_invoice returns a dict with keys customer, subtotal, tax, total, region.
+  - id: is-bulk-used
+    kind: private
+    text: Other services outside this repository call is_bulk, so it must stay even though nothing here uses it.
+  - id: stdlib-only
+    kind: private
+    text: Standard library only; no new dependencies.
+  - id: python-310
+    kind: private
+    text: The code must run on Python 3.10.
+weights:
+  hidden_tests: 0.6
+  signatures: 0.15
+  stdlib_only: 0.1
+  changed: 0.15
+notes: >-
+  The hidden tests pin every behaviour of the original, including rounding ties
+  and coupon edge cases. "changed" requires at least 10 changed lines, so
+  returning the module untouched does not count as a refactor.

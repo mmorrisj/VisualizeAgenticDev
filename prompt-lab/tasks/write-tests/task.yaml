@@ -1,0 +1,29 @@
+id: write-tests
+title: Write tests that catch real bugs
+artifact: tests
+context_files: [business_days.py]
+facts:
+  - id: inclusive
+    kind: discoverable
+    text: Both the start and the end date count.
+  - id: weekend-holidays
+    kind: discoverable
+    text: A holiday on a weekend changes nothing.
+  - id: reversed-range
+    kind: discoverable
+    text: If start is after end the result is 0.
+  - id: import-name
+    kind: discoverable
+    text: The module is business_days; the function is business_days_between.
+  - id: no-pytest
+    kind: private
+    text: Tests run on a CI runner without pytest; use the standard library only (plain assert or unittest).
+  - id: test-functions
+    kind: private
+    text: Write each case as its own test_ function so a failure points at one behaviour.
+weights:
+  mutants_caught: 1.0
+notes: >-
+  Eight planted bugs (hidden/mutants/). Tests must first pass on the correct
+  function; tests that fail there, or that import anything outside the
+  standard library, score 0. Otherwise the score is the share of bugs caught.

@@ -1,0 +1,29 @@
+id: data-question
+title: One number from the incident database
+artifact: sql
+# One-shot prompts include the schema only; the rows are not shown.
+context_files: [schema.sql]
+facts:
+  - id: team
+    kind: discoverable
+    text: Service ownership is in services.team; a service's name does not say who owns it.
+  - id: duplicates-exist
+    kind: discoverable
+    text: Some incidents were filed twice; duplicate_of marks the copy.
+  - id: severity-case
+    kind: discoverable
+    text: Severity is stored in mixed case (SEV2 and sev2).
+  - id: by-opened
+    kind: private
+    text: An incident counts in the quarter it was opened (opened_at), not resolved.
+  - id: quarter
+    kind: private
+    text: Q3 means 2026-07-01 through 2026-09-30 inclusive, in UTC.
+  - id: exclude-duplicates
+    kind: private
+    text: Duplicates are not counted.
+notes: >-
+  Each plausible mistake gives a different number from the right one (8):
+  counting by resolved_at (7), matching service names (9), keeping duplicates
+  (9), case-sensitive severity (7), BETWEEN or <= on dates, which drops
+  incidents opened in the evening of 30 September (7).
