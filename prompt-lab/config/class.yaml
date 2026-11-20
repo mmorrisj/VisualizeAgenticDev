@@ -5,3 +5,8 @@ variants: [terse, full]
 models: [llama-3.1-8b, gpt-5.6-luna]
 repeats: 3
 judge: null
+# Optional harness round (spec section 10.2): uncomment to add it.
+# harness:
+#   tasks: [data-question]
+#   variants: [h-terse, h-full]
+#   models: [gpt-5.6-luna]

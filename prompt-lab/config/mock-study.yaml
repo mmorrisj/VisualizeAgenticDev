@@ -4,6 +4,10 @@ tasks: all
 variants: [terse, technique, informed, full, ai-expanded, ai-interviewed]
 models: [mock-old, mock-new]
 repeats: 2
+# Harness sessions (spec sections 5.2 and 6.2); models default to the list above.
+harness:
+  variants: [h-terse, h-discoverable-gap, h-private-gap, h-full]
+  repeats: 1
 judge:
   primary: mock-judge
   cross_check: mock-judge-2

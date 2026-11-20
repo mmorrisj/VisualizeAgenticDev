@@ -47,6 +47,9 @@ class MockBackend:
             raise BackendError("mock backend needs request.meta['task']")
         task = load_task(task_id)
         role = request.meta.get("role", "answer")
+        if role == "harness":
+            from .mock_harness import respond  # scripted multi-request sessions
+            return respond(task, request, model)
         text = getattr(self, f"_{role.replace('-', '_')}")(task, request, model)
         start = time.perf_counter()
         usage = Usage(input=estimate_tokens({"system": request.system, "messages": request.messages}),

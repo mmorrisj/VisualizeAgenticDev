@@ -6,6 +6,7 @@ Each task is a folder under tasks/:
     input/          files given to the model (and to the checks)
     hidden/         files the checks use but the model never sees
     prompts/        one file per prompt variant
+    prompts/harness/ one file per harness variant (spec section 5.2)
     answers/        known-good and known-bad answers (self-test and mock backend)
     checks.py       check(answer_text, task) -> CheckResult
 """
@@ -29,6 +30,27 @@ class Fact(BaseModel):
     kind: Literal["discoverable", "private"]   # private = only the user knows it
 
 
+class HarnessDatabase(BaseModel):
+    path: str                          # where the SQLite file goes in the working directory
+    scripts: list[str]                 # task files run in order to build it
+
+
+class HarnessDeliverable(BaseModel):
+    """What the checks read after a harness session."""
+
+    kind: Literal["message", "file", "new_files"]
+    path: str | None = None            # file: this file in the working directory
+    pattern: str | None = None         # new_files: files matching this glob created during the session
+
+
+class HarnessSpec(BaseModel):
+    """The working directory a harness session starts in (spec section 6.2)."""
+
+    files: dict[str, str]              # path in the working directory -> path in the task folder
+    database: HarnessDatabase | None = None
+    deliverable: HarnessDeliverable
+
+
 class TaskSpec(BaseModel):
     id: str
     title: str
@@ -36,6 +58,7 @@ class TaskSpec(BaseModel):
     context_files: list[str] = []      # files under input/ placed in the one-shot prompt
     facts: list[Fact]
     weights: dict[str, float] = {}     # how sub-checks combine into the score
+    harness: HarnessSpec | None = None
     notes: str = ""
 
 
@@ -62,6 +85,15 @@ class Task:
         path = self.path("prompts", f"{variant}.md")
         if not path.is_file():
             raise KeyError(f"task {self.id} has no prompt variant '{variant}' (have: {self.variants()})")
+        return path.read_text(encoding="utf-8").strip()
+
+    def harness_variants(self) -> list[str]:
+        return sorted(p.stem for p in self.path("prompts", "harness").glob("*.md"))
+
+    def harness_prompt(self, variant: str) -> str:
+        path = self.path("prompts", "harness", f"{variant}.md")
+        if not path.is_file():
+            raise KeyError(f"task {self.id} has no harness variant '{variant}' (have: {self.harness_variants()})")
         return path.read_text(encoding="utf-8").strip()
 
     def answer(self, name: str) -> str:

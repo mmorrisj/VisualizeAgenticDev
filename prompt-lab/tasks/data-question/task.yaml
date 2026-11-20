@@ -13,6 +13,9 @@ facts:
   - id: severity-case
     kind: discoverable
     text: Severity is stored in mixed case (SEV2 and sev2).
+  - id: severity-scope
+    kind: private
+    text: Only SEV1 and SEV2 incidents count.
   - id: by-opened
     kind: private
     text: An incident counts in the quarter it was opened (opened_at), not resolved.
@@ -22,6 +25,10 @@ facts:
   - id: exclude-duplicates
     kind: private
     text: Duplicates are not counted.
+harness:
+  files: {schema.sql: input/schema.sql}
+  database: {path: incidents.db, scripts: [input/schema.sql, input/data.sql]}
+  deliverable: {kind: message}
 notes: >-
   Each plausible mistake gives a different number from the right one (8):
   counting by resolved_at (7), matching service names (9), keeping duplicates

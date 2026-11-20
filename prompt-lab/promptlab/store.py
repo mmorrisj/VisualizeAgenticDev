@@ -10,7 +10,7 @@ import os
 from datetime import datetime, timezone
 from pathlib import Path
 
-from sqlalchemy import JSON, DateTime, Float, Integer, String, Text, create_engine, select
+from sqlalchemy import JSON, DateTime, Float, Integer, String, Text, create_engine, inspect, select, text
 from sqlalchemy.orm import DeclarativeBase, Mapped, Session, mapped_column
 
 from . import LAB_ROOT
@@ -38,7 +38,7 @@ class Run(Base):
     gateway_id: Mapped[str] = mapped_column(String(128), default="")
     served_model: Mapped[str] = mapped_column(String(128), default="")
     repeat: Mapped[int] = mapped_column(Integer, default=1)
-    status: Mapped[str] = mapped_column(String(16))           # ok, refused, max_tokens, error
+    status: Mapped[str] = mapped_column(String(16))           # ok, refused, max_tokens, hit_limit, error
     score: Mapped[float | None] = mapped_column(Float, nullable=True)
     label: Mapped[str] = mapped_column(String(32), default="checked")
     check_details: Mapped[dict] = mapped_column(JSON, default=dict)
@@ -53,6 +53,7 @@ class Run(Base):
     output: Mapped[str] = mapped_column(Text, default="")
     error: Mapped[str] = mapped_column(Text, default="")
     judge: Mapped[dict] = mapped_column(JSON, default=dict)   # judge.judge() result, plus "cross_check"
+    session: Mapped[dict] = mapped_column(JSON, default=dict) # harness mode: requests, tool calls, transcript
 
     @property
     def key(self) -> str:
@@ -67,6 +68,20 @@ class Store:
             Path(url.removeprefix("sqlite:///")).parent.mkdir(parents=True, exist_ok=True)
         self.engine = create_engine(url)
         Base.metadata.create_all(self.engine)
+        self._add_missing_columns()
+
+    def _add_missing_columns(self):
+        """Columns added after a database was created (L3 added `session`).
+
+        Additive only. A schema change that is not a new nullable column needs a
+        real migration tool (Alembic) instead.
+        """
+        existing = {c["name"] for c in inspect(self.engine).get_columns(Run.__tablename__)}
+        with self.engine.begin() as conn:
+            for column in Run.__table__.columns:
+                if column.name not in existing:
+                    kind = column.type.compile(dialect=self.engine.dialect)
+                    conn.execute(text(f'ALTER TABLE {Run.__tablename__} ADD COLUMN "{column.name}" {kind}'))
 
     def add(self, run: Run) -> Run:
         with Session(self.engine, expire_on_commit=False) as session:

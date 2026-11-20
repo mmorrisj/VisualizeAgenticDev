@@ -1,6 +1,7 @@
 """The study pipeline (spec sections 7, 9, 10.1, 12): run, judge, sample for humans, export.
 
-    run     every task x variant x model x repeat in the profile; resumable
+    run     every task x variant x model x repeat in the profile, then its harness
+            sessions; resumable
     judge   the primary judge on every answered run; the cross-check judge on a
             fixed share; self-preference flags
     sample  a fixed sample of judged runs for instructors to score by hand
@@ -22,6 +23,7 @@ from pathlib import Path
 
 from . import LAB_ROOT
 from .config import ModelConfig
+from .harness_adapter import Limits, run_session
 from .judge import judge as judge_answer
 from .judge import load_rubric
 from .profiles import Profile
@@ -59,6 +61,25 @@ def run_study(profile: Profile, models: dict[str, ModelConfig], store: Store,
                     stats["ran"] += 1
                     if on_run:
                         on_run(run)
+    if profile.harness:
+        settings = profile.harness
+        limits = Limits(settings.max_requests, settings.max_input_tokens)
+        for task_id in profile.harness_tasks():
+            available = set(load_task(task_id).harness_variants())
+            for variant in settings.variants:
+                if variant not in available:
+                    stats["missing_variants"].add(f"{task_id}/harness/{variant}")
+                    continue
+                for model_id in profile.harness_models():
+                    for rep in range(1, settings.repeats + 1):
+                        if f"{task_id}--{variant}--{model_id}--{rep}" in done:
+                            stats["skipped_done"] += 1
+                            continue
+                        run = run_session(task_id, variant, models[model_id], repeat=rep, profile=profile.name,
+                                          store=store, limits=limits)
+                        stats["ran"] += 1
+                        if on_run:
+                            on_run(run)
     stats["missing_variants"] = sorted(stats["missing_variants"])
     return stats
 
@@ -205,8 +226,7 @@ def evaluate_predictions(runs: list[Run], models: dict[str, ModelConfig]) -> lis
                                                sum(iv <= ex for iv, _, ex in p5), len(p5)),
                 "rule": "ai-interviewed within 0.1 of informed (contradicted if no better than ai-expanded)",
                 "n": len(p5)})
-    for pid in ("P6", "P7", "P8"):
-        out.append({"id": pid, "outcome": "not evaluated", "rule": "harness mode (phase L3)", "n": 0})
+    out += harness_predictions(runs, models, verdict)
     # P9: newer models vary less across repeats with terse prompts.
     def spread(t, mid):
         scores = cell.get((t, mid, "terse"), [])
@@ -222,6 +242,70 @@ def evaluate_predictions(runs: list[Run], models: dict[str, ModelConfig]) -> lis
                 "rule": "any run the judge scored >= 0.75 while its checks scored < 0.5", "n": lenient})
     for p in out:
         p["note"] = "automatic first reading; an instructor reviews it before publishing"
+    return out
+
+
+def session_tokens(run: Run) -> int | None:
+    """All input and output tokens of a run, if the provider reported both; else None."""
+    tokens = run.tokens or {}
+    parts = [tokens.get(k) for k in ("input", "output")]
+    if not all(isinstance(v, int) for v in parts):
+        return None
+    return sum(parts) + sum(v for k in ("cache_read", "cache_write") if isinstance(v := tokens.get(k), int))
+
+
+def harness_predictions(runs: list[Run], models: dict[str, ModelConfig], verdict) -> list[dict]:
+    """P6 to P8. Hit-limit sessions count with score 0; sessions that errored are left out."""
+    harness = [r for r in runs if r.mode == "harness" and r.score is not None]
+    cell = defaultdict(list)  # (task, model, variant) -> runs
+    for r in harness:
+        cell[(r.task, r.model, r.variant)].append(r)
+    tasks = sorted({r.task for r in harness})
+    families = defaultdict(list)
+    for mid in sorted({r.model for r in harness}, key=lambda m: models[m].generation):
+        families[models[mid].family].append(mid)
+
+    def score(t, mid, v):
+        return _mean([r.score for r in cell.get((t, mid, v), [])])
+
+    def cost(t, mid, v):
+        return _mean([session_tokens(r) for r in cell.get((t, mid, v), [])])
+
+    out = []
+    # P6: newest models close most of the gap by exploring, and pay for it in tokens.
+    p6 = [(score(t, mid, "h-full"), score(t, mid, "h-discoverable-gap"), cost(t, mid, "h-full"),
+           cost(t, mid, "h-discoverable-gap")) for t in tasks for mid in (ladder[-1] for ladder in families.values())]
+    p6 = [x for x in p6 if None not in x]
+    yes = sum(full - gap <= 0.1 and gap_cost > full_cost for full, gap, full_cost, gap_cost in p6)
+    out.append({"id": "P6", "outcome": verdict(yes, len(p6) - yes, len(p6)),
+                "rule": "newest per family, per task: h-discoverable-gap within 0.1 of h-full and more tokens "
+                        "(input + output, same model)", "n": len(p6)})
+    # P7: no exploration recovers what only the user knows.
+    per_model = []
+    for mid in {r.model for r in harness}:
+        full = _mean([score(t, mid, "h-full") for t in tasks])
+        gap = _mean([score(t, mid, "h-private-gap") for t in tasks])
+        if full is not None and gap is not None:
+            per_model.append((full, gap))
+    yes = sum(full - gap >= 0.2 for full, gap in per_model)
+    no = sum(gap >= full for full, gap in per_model)
+    outcome = ("not evaluated" if not per_model else "contradicted" if no else
+               "supported" if yes == len(per_model) else "mixed")
+    out.append({"id": "P7", "outcome": outcome,
+                "rule": "every model, mean over tasks: h-private-gap at least 0.2 below h-full "
+                        "(contradicted if any model scores as well)", "n": len(per_model)})
+    # P8: the oldest model in a family struggles with tools.
+    def profile_of(mid):
+        rs = [r for r in harness if r.model == mid]
+        return (_mean([r.requests for r in rs]), _mean([(r.session or {}).get("tool_calls_failed", 0) for r in rs]),
+                _mean([r.status == "hit_limit" for r in rs]), _mean([r.score for r in rs]))
+    p8 = [(profile_of(ladder[0]), profile_of(ladder[-1])) for ladder in families.values() if len(ladder) > 1]
+    yes = sum(o[0] > n[0] and o[1] > n[1] and o[2] >= n[2] and o[3] < n[3] for o, n in p8)
+    no = sum(o[0] <= n[0] and abs(o[3] - n[3]) <= 0.1 for o, n in p8)
+    out.append({"id": "P8", "outcome": verdict(yes, no, len(p8)),
+                "rule": "oldest vs newest per family: more requests, more failed tool calls, at least as many "
+                        "hit-limit endings, and a lower score (contradicted if as few requests and within 0.1)",
+                "n": len(p8)})
     return out
 
 
@@ -263,6 +347,14 @@ def export(profile: Profile, models: dict[str, ModelConfig], store: Store, out_d
             "tokens": r.tokens, "chars": {"sent": r.chars_sent, "received": r.chars_received},
             "requests": r.requests, "stop": r.stop, "latency_s": r.latency_s, "output_ref": ref, "error": r.error,
         })
+        if r.mode == "harness" and r.session:
+            session_ref = f"outputs/{profile.name}-{created}/{r.key}.session.json"
+            (out_dir / session_ref).write_text(json.dumps(r.session.get("messages", []), indent=1,
+                                                          ensure_ascii=False), encoding="utf-8")
+            data["runs"][-1]["session"] = {
+                **{k: r.session.get(k) for k in ("stop", "limits", "tool_calls", "tool_calls_failed",
+                                                 "tools_used", "deliverable", "per_request")},
+                "transcript_ref": session_ref}
     data["judge_validation"] = judge_validation(runs, human_csv)
     data["predictions"] = evaluate_predictions(runs, models)
     path = out_dir / f"{profile.name}-{created}.json"

@@ -22,6 +22,9 @@ weights:
   facts: 0.6
   length: 0.2
   impact_first: 0.2
+harness:
+  files: {docs/incident-report.md: input/incident-report.md}
+  deliverable: {kind: message}
 notes: >-
   The report is about 740 words, shorter than the spec's 3 to 4 pages, to keep
   class runs fast and cheap.

@@ -26,7 +26,7 @@ from ..tokens import INCLUDED_IN_OUTPUT, NOT_REPORTED, Usage, int_or_none
 from .base import BackendError, Request, Response
 
 STOP_MAP = {"end_turn": "end", "stop_sequence": "end", "max_tokens": "max_tokens",
-            "refusal": "refusal", "tool_use": "end"}
+            "refusal": "refusal", "tool_use": "tool_use"}
 
 
 def normalize_usage(usage) -> Usage:
@@ -78,6 +78,8 @@ class AnthropicBackend:
         params = {"model": model.gateway_id, "max_tokens": model.max_tokens, "messages": request.messages}
         if request.system:
             params["system"] = request.system
+        if request.tools:
+            params["tools"] = request.tools
         if model.effort:
             params["output_config"] = {"effort": model.effort}
         start = time.perf_counter()
@@ -96,7 +98,23 @@ class AnthropicBackend:
             raise BackendError(f"{model.id}: no credentials: set {model.api_key_env} "
                                "or configure the SDK's credentials") from err
         latency = time.perf_counter() - start
-        text = "".join(block.text for block in message.content if getattr(block, "type", "") == "text")
+        content = [content_block(block) for block in message.content]
+        text = "".join(b["text"] for b in content if b["type"] == "text")
         reason = message.stop_reason or ""
         return Response(text=text, usage=normalize_usage(message.usage), stop=STOP_MAP.get(reason, f"other:{reason}"),
-                        latency_s=latency, served_model=getattr(message, "model", "") or "")
+                        latency_s=latency, served_model=getattr(message, "model", "") or "", content=content)
+
+
+def content_block(block) -> dict:
+    """An SDK content block as a plain dict that can be sent back in the next request.
+
+    Text and tool calls are rebuilt with only the fields the API accepts back.
+    Anything else (thinking blocks and their signatures) is kept whole, because
+    the API needs it returned unchanged during tool use.
+    """
+    kind = getattr(block, "type", "")
+    if kind == "text":
+        return {"type": "text", "text": block.text}
+    if kind == "tool_use":
+        return {"type": "tool_use", "id": block.id, "name": block.name, "input": dict(block.input or {})}
+    return block.model_dump(exclude_none=True)

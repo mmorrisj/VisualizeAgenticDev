@@ -1,0 +1,11 @@
+{
+  "note": "Harness mode policy for prompt-lab sessions. Unattended: nothing asks a person. Model-written commands run in a scratch working directory with a scrubbed environment; that contains honest mistakes but is not a security boundary. To confine commands further, set sandbox_prefix (for example a bubblewrap or firejail command).",
+  "mode": "allow",
+  "allow": [],
+  "ask": [],
+  "deny": [],
+  "scrub_env": true,
+  "command_timeout": 30,
+  "max_output_chars": 8000,
+  "sandbox_prefix": []
+}
