@@ -1,0 +1,27 @@
+id: summarize
+title: Summarize an incident report for the on-call manager
+artifact: text
+context_files: [incident-report.md]
+facts:
+  - id: report-facts
+    kind: discoverable
+    text: The ten key facts (hidden/key-facts.yaml) are all in the report.
+  - id: outstanding-work
+    kind: discoverable
+    text: About 400 payments still need manual follow-up.
+  - id: audience
+    kind: private
+    text: The reader is the on-call manager, who needs impact and open work, not the investigation story.
+  - id: length
+    kind: private
+    text: 200 words or fewer.
+  - id: lead-with-impact
+    kind: private
+    text: Start with customer impact (how many payments failed).
+weights:
+  facts: 0.6
+  length: 0.2
+  impact_first: 0.2
+notes: >-
+  The report is about 740 words, shorter than the spec's 3 to 4 pages, to keep
+  class runs fast and cheap.

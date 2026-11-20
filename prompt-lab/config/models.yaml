@@ -1,0 +1,127 @@
+# Models for the Prompt Lab (docs/PROMPT_LAB_SPEC.md, section 3).
+#
+# gateway_id is the exact identifier your endpoint expects. Entries with
+# confirmed: false have not been checked against the secure system's gateway;
+# confirm each one before the study (spec section 15, question 1).
+#
+# Credentials and URLs never go here: base_url_env and api_key_env name the
+# environment variables that hold them.
+
+models:
+  # --- Llama (open weight) -------------------------------------------------
+  - id: llama-3.1-8b
+    display: Llama 3.1 8B
+    gateway_id: llama-3.1-8b-instruct
+    family: llama
+    generation: 1
+    api: openai_compat
+    base_url_env: PROMPTLAB_GATEWAY_URL
+    api_key_env: PROMPTLAB_GATEWAY_KEY
+    max_tokens: 8000
+    context_window: 128000
+    reports_reasoning: false
+
+  - id: llama-3.3-70b
+    display: Llama 3.3 70B
+    gateway_id: llama-3.3-70b-instruct
+    family: llama
+    generation: 2
+    api: openai_compat
+    base_url_env: PROMPTLAB_GATEWAY_URL
+    api_key_env: PROMPTLAB_GATEWAY_KEY
+    max_tokens: 8000
+    context_window: 128000
+    reports_reasoning: false
+
+  - id: llama-4-maverick
+    display: Llama 4 Maverick
+    gateway_id: llama-4-maverick-instruct
+    family: llama
+    generation: 3
+    api: openai_compat
+    base_url_env: PROMPTLAB_GATEWAY_URL
+    api_key_env: PROMPTLAB_GATEWAY_KEY
+    max_tokens: 8000
+    reports_reasoning: false
+
+  # --- OpenAI ------------------------------------------------------------
+  - id: gpt-4
+    display: GPT-4
+    gateway_id: gpt-4
+    family: openai
+    generation: 1
+    api: openai_compat
+    base_url_env: PROMPTLAB_GATEWAY_URL
+    api_key_env: PROMPTLAB_GATEWAY_KEY
+    max_tokens: 4000
+    reports_reasoning: false
+
+  - id: gpt-5.4
+    display: GPT-5.4
+    gateway_id: gpt-5.4
+    family: openai
+    generation: 2
+    api: openai_compat
+    base_url_env: PROMPTLAB_GATEWAY_URL
+    api_key_env: PROMPTLAB_GATEWAY_KEY
+    max_tokens: 16000
+    max_tokens_param: max_completion_tokens
+    reports_reasoning: true
+
+  - id: gpt-5.6-luna
+    display: GPT-5.6 Luna
+    gateway_id: gpt-5.6-luna
+    family: openai
+    generation: 3
+    api: openai_compat
+    base_url_env: PROMPTLAB_GATEWAY_URL
+    api_key_env: PROMPTLAB_GATEWAY_KEY
+    max_tokens: 16000
+    max_tokens_param: max_completion_tokens
+    reports_reasoning: true
+
+  # --- Anthropic ---------------------------------------------------------
+  # If the gateway serves these in the OpenAI-compatible shape, change api to
+  # openai_compat and set gateway_id to the gateway's name for them.
+  - id: sonnet-4.5
+    display: Claude Sonnet 4.5
+    gateway_id: claude-sonnet-4-5
+    family: anthropic
+    generation: 1
+    api: anthropic
+    base_url_env: PROMPTLAB_ANTHROPIC_URL
+    api_key_env: PROMPTLAB_ANTHROPIC_KEY
+    max_tokens: 16000
+    notes: >-
+      Deprecated on Anthropic's API; retires 2026-11-30. Check the gateway
+      still serves it before the study.
+
+  - id: opus-5
+    display: Claude Opus 5
+    gateway_id: claude-opus-5
+    family: anthropic
+    generation: 2
+    api: anthropic
+    base_url_env: PROMPTLAB_ANTHROPIC_URL
+    api_key_env: PROMPTLAB_ANTHROPIC_KEY
+    max_tokens: 16000
+    reports_reasoning: true
+
+  # --- Mock models: development and tests only -------------------------------
+  - id: mock-old
+    display: Mock (needs an informed prompt)
+    gateway_id: mock-old
+    confirmed: true
+    family: mock
+    generation: 1
+    api: mock
+    mock_quality: low
+
+  - id: mock-new
+    display: Mock (good with any prompt)
+    gateway_id: mock-new
+    confirmed: true
+    family: mock
+    generation: 2
+    api: mock
+    mock_quality: high

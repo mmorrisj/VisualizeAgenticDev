@@ -348,7 +348,7 @@ A small FastAPI app with a plain server-rendered page, no front-end build step.
 
 ### 11.5 Dependencies
 
-- The engine: Python 3.10+, `httpx`, `pydantic`, `PyYAML`, `SQLAlchemy`.
+- The engine: Python 3.11+ (the Anthropic SDK's HTTP dependencies need it), `httpx`, `pydantic`, `PyYAML`, `SQLAlchemy`.
 - The app adds `fastapi`, `uvicorn`, and `jinja2`.
 - All pinned in `pyproject.toml` and installed from the internal mirror.
 - The site (`harness-site/`) remains dependency-free and offline. It only reads the committed results file.
