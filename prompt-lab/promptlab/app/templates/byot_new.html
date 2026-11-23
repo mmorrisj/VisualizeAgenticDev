@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% block title %}Bring your own test · Prompt Lab{% endblock %}
+{% block main %}
+{% set step = 1 %}{% include "_steps.html" %}
+<h1>Bring your own test</h1>
+<p class="lead">Use a prompt from your own work. It stays on this server and the internal gateway and is deleted after {{ settings.retention_days }} days.</p>
+{% if replay %}<p class="error">This server is in replay mode, so your own test cannot run here.</p>{% endif %}
+{% if error %}<p class="error" role="alert">{{ error }}</p>{% endif %}
+<form method="post" action="/byot" enctype="multipart/form-data">
+  <label for="prompt">Your prompt</label>
+  <textarea id="prompt" name="prompt" required style="min-height: 10em">{{ values.prompt or "" }}</textarea>
+  <label for="files">Files to attach (optional, text only, up to 3)</label>
+  <input type="file" id="files" name="files" multiple>
+  <fieldset>
+    <legend>A check with a known answer (optional)</legend>
+    <p class="muted">Checks come first when scoring. Without one, results are AI-judged only.</p>
+    {% set kind = values.check_kind or "none" %}
+    <div class="inline">
+      <input type="radio" id="ck-none" name="check_kind" value="none" {% if kind == "none" %}checked{% endif %}><label for="ck-none">No check</label>
+      <input type="radio" id="ck-expected" name="check_kind" value="expected" {% if kind == "expected" %}checked{% endif %}><label for="ck-expected">Expected value</label>
+      <input type="radio" id="ck-phrases" name="check_kind" value="phrases" {% if kind == "phrases" %}checked{% endif %}><label for="ck-phrases">Phrases that must appear</label>
+      {% if settings.allow_command_checks %}<input type="radio" id="ck-command" name="check_kind" value="command" {% if kind == "command" %}checked{% endif %}><label for="ck-command">Command</label>{% endif %}
+    </div>
+    <label for="expected">Expected value (the answer must contain it)</label>
+    <input type="text" id="expected" name="expected" value="{{ values.expected or "" }}">
+    <label for="phrases">Phrases, one per line</label>
+    <textarea id="phrases" name="phrases">{{ values.phrases or "" }}</textarea>
+    {% if settings.allow_command_checks %}
+    <label for="command">Command (exit code 0 passes; the answer is in answer.txt)</label>
+    <input type="text" id="command" name="command" value="{{ values.command or "" }}">
+    {% endif %}
+  </fieldset>
+  <label for="student">Your name or initials (optional)</label>
+  <input type="text" id="student" name="student" maxlength="64" value="{{ values.student or "" }}" autocomplete="off">
+  <p><button type="submit">Assess my prompt</button> <span class="muted">This asks the judge model and can take a little while.</span></p>
+</form>
+{% endblock %}

@@ -5,6 +5,8 @@ from __future__ import annotations
 import itertools
 import json
 from collections.abc import Callable, Iterable
+from concurrent.futures import ThreadPoolExecutor, as_completed
+from typing import TypeVar
 
 from .backends import BackendError, Request, backend_for
 from .config import ModelConfig
@@ -13,18 +15,22 @@ from .tasks import load_task
 from .tokens import Usage
 
 STATUS_FOR_STOP = {"end": "ok", "refusal": "refused", "max_tokens": "max_tokens"}
+OWN = "own"  # the variant name for a student's own prompt in the class kit
+
+T = TypeVar("T")
 
 
 def run_one(task_id: str, variant: str, model: ModelConfig, *, repeat: int = 1,
-            profile: str = "adhoc", store: Store | None = None, backend=None) -> Run:
+            profile: str = "adhoc", store: Store | None = None, backend=None, prompt: str | None = None) -> Run:
     """Run one task with one prompt variant on one model, check it, and store it.
 
     A failed request is stored as status "error" with no score, so failures are
     visible in results rather than silently dropped. A refusal or a truncated
     answer is still checked (it usually scores zero) and keeps its status.
+    `prompt` replaces the variant's text (a student's own prompt, variant "own").
     """
     task = load_task(task_id)
-    user_message = task.build_user_message(variant)
+    user_message = task.build_user_message(variant, prompt)
     request = Request(messages=[{"role": "user", "content": user_message}],
                       meta={"task": task_id, "variant": variant})
     run = Run(profile=profile, mode="one-shot", task=task_id, variant=variant, model=model.id,
@@ -65,3 +71,19 @@ def run_matrix(task_ids: Iterable[str], variants: Iterable[str] | None, models: 
             if on_run:
                 on_run(run)
     return runs
+
+
+def run_parallel(jobs: list[Callable[[], T]], workers: int = 2,
+                 on_done: Callable[[T], None] | None = None) -> list[T]:
+    """Run jobs with at most `workers` at once (spec section 10.2: at most 2 requests per student).
+
+    Backoff on rate limits happens inside the backends. Results come back in job order.
+    """
+    results: list = [None] * len(jobs)
+    with ThreadPoolExecutor(max_workers=max(1, workers)) as pool:
+        futures = {pool.submit(job): i for i, job in enumerate(jobs)}
+        for future in as_completed(futures):
+            results[futures[future]] = value = future.result()
+            if on_done:
+                on_done(value)
+    return results

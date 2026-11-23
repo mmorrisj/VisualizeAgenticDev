@@ -1,0 +1,11 @@
+# The class kit on mock models: for development, CI, and trying the app without a gateway.
+name: class-mock
+tasks: [refactor, data-question]
+variants: [terse, full]
+models: [mock-old, mock-new]
+repeats: 3
+harness:
+  tasks: [data-question]
+  variants: [h-terse, h-full]
+  models: [mock-new]
+judge: null

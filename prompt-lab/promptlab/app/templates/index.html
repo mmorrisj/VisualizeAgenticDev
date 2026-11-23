@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block main %}
+<h1>Prompt Lab</h1>
+<p class="lead">How much does the prompt matter, on which model, and at what token cost?</p>
+<div class="panel">
+  <h2>Class kit</h2>
+  <p>Run two fast tasks on {{ profile.models|join(" and ") }} with a terse prompt, a full prompt, and your own.
+     Your results are drawn over the study's. About {{ profile.repeats }} runs each, a few minutes in total.</p>
+  <a class="button" href="/class">Start a class run</a>
+</div>
+<div class="panel">
+  <h2>Bring your own test</h2>
+  <p>Bring a prompt from your own work. The AI rates how much it states, suggests rewrites (marking anything it made up),
+     and you decide what to run. Then several models answer it and you see what scored better.</p>
+  <a class="button" href="/byot">Start your own test</a>
+  {% if not judge %}<p class="error">No judge model is configured, so this part is unavailable.</p>{% endif %}
+</div>
+{% if not study %}<p class="note">No study results file yet, so your results are drawn without the study behind them.</p>
+{% elif study_synthetic %}<p class="note">The study results on this server are synthetic (mock models). They show how the pages work, not real findings.</p>{% endif %}
+<p class="muted">Your own prompts and files may be real work. They stay on this server and the internal gateway, and own tests are deleted after {{ settings.retention_days }} days.</p>
+{% endblock %}

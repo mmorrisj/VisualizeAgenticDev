@@ -314,17 +314,21 @@ prompt-lab/
 │       └── prompts/              one file per variant, including generated ones;
 │                                 prompts/harness/ holds the four harness variants
 ├── promptlab/                    the engine (Python package)
-│   ├── backends/                 openai_compat, anthropic, local, mock, replay
-│   ├── runner.py                 one-shot and harness runs, limits, retries
+│   ├── backends/                 openai_compat, anthropic, mock (local servers use openai_compat)
+│   ├── runner.py                 one-shot runs, retries, at most N requests at once
 │   ├── harness_adapter.py        drives course/mini-harness
 │   ├── checks.py                 shared check helpers (tests, SQL, mutants, facts)
 │   ├── judge.py                  blind judging, rubric, schema, cross-check
-│   ├── assess.py                 prompt tier assessment for part C
+│   ├── assess.py                 prompt tier assessment and rubric drafting for part C
+│   ├── byot.py                   part C: the flow, scoring, retention, exports
+│   ├── custom_checks.py          part C: expected value, phrases, command
+│   ├── classkit.py               part B: the class run and its results file
+│   ├── replay.py                 replay mode: recorded runs instead of a gateway
 │   ├── tokens.py                 accounting and normalization
 │   ├── store.py                  SQLAlchemy models and storage
-│   ├── export.py                 results file writer (section 12)
+│   ├── study.py                  part A: the study pipeline and the results file (section 12)
+│   ├── app/                      FastAPI app for parts B and C (section 11.4)
 │   └── cli.py                    `prompt-lab` command
-├── app/                          FastAPI app for parts B and C (section 11.4)
 ├── results/                      committed study results
 └── tests/                        engine tests, run against the mock backend
 ```
@@ -357,6 +361,15 @@ A small FastAPI app with a plain server-rendered page, no front-end build step.
 - **Bring your own test:** the section 10.3 flow, one step per screen.
 - **Collector (optional):** accepts class results files and serves one live chart for the projector.
 - Runs on the instructor's machine or an internal host; the gateway URL and credentials come from environment configuration, never from the repository.
+
+As built in phase L4:
+
+- **Location.** The app is the package `promptlab/app/`, not a top-level `app/`, so it installs and imports with the engine. Start it with `prompt-lab serve`. Settings come from `PROMPTLAB_*` environment variables (README).
+- **One process.** Jobs run in threads of the app's process, so it runs as a single worker. Runs are stored as they finish, so a restart loses only the progress counter.
+- **Replay mode** serves whole recorded runs from a results file, harness sessions included, labelled "recorded". It never calls a model, which also means a student's own prompt or test cannot run, and the pages say so.
+- **Part C.** Rewrites keep invented requirements in a separate list. Each is kept by default; the student unticks it to delete it, and must give an agree or disagree verdict on every one. The judge sees the student's own prompt (what they wanted) and the approved rubric, never the model or which prompt produced the answer. Shell-command checks run on the server, so they are off unless the instructor turns them on.
+- **Retention.** Expired part C tests are deleted, with their runs, when the app starts and by `prompt-lab byot purge`.
+- **Access.** There are no accounts. Students' pages live at random addresses, so the app belongs on an internal host.
 
 ### 11.5 Dependencies
 

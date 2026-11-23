@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block title %}Rubric · Prompt Lab{% endblock %}
+{% block main %}
+{% set step = 3 %}{% include "_steps.html" %}
+<h1>How answers will be graded</h1>
+<p class="lead">The AI drafted these criteria from your prompt. Edit them until they say what you care about, then approve.
+   They are fixed before any result exists, so the grading cannot drift toward whatever the models produce.</p>
+{% if error %}<p class="error" role="alert">{{ error }}</p>{% endif %}
+{% if not rubric %}<p class="error">{{ test.error or "The rubric draft did not work." }} Reload the page to try again, or write your own below.</p>{% endif %}
+<form method="post" action="/byot/{{ test.id }}/rubric">
+{% set criteria = (rubric or {}).get("criteria", []) %}
+{% for i in range(5) %}{% set c = criteria[i] if i < criteria|length else {} %}
+<fieldset>
+  <legend>Criterion {{ i + 1 }}{% if i >= 3 %} (optional){% endif %}</legend>
+  <label for="id_{{ i }}">Short id (lowercase letters, digits, hyphens)</label>
+  <input type="text" id="id_{{ i }}" name="id_{{ i }}" value="{{ c.id or "" }}" pattern="[a-z0-9-]{1,32}">
+  <label for="name_{{ i }}">Name</label>
+  <input type="text" id="name_{{ i }}" name="name_{{ i }}" value="{{ c.name or "" }}">
+  <label for="description_{{ i }}">What it checks</label>
+  <input type="text" id="description_{{ i }}" name="description_{{ i }}" value="{{ c.description or "" }}">
+  {% for a in ["1", "3", "5"] %}
+  <label for="anchor{{ a }}_{{ i }}">A score of {{ a }} means</label>
+  <input type="text" id="anchor{{ a }}_{{ i }}" name="anchor{{ a }}_{{ i }}" value="{{ (c.anchors or {}).get(a, "") }}">
+  {% endfor %}
+</fieldset>
+{% endfor %}
+<p><button type="submit">Approve this rubric</button></p>
+</form>
+{% endblock %}

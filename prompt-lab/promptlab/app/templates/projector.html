@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% block head %}<meta http-equiv="refresh" content="10">{% endblock %}
+{% block title %}Projector · Prompt Lab{% endblock %}
+{% block main %}
+<h1>The whole room</h1>
+<p class="lead">{{ students }} results file{{ "" if students == 1 else "s" }} so far. This page refreshes every 10 seconds.</p>
+{% for task, chart in charts.items() %}<h2>{{ task }}</h2>{{ chart }}{% endfor %}
+<table>
+  <thead><tr><th scope="col">Task</th><th scope="col">Prompt</th><th scope="col">Model</th><th scope="col">Runs</th><th scope="col">Mean check score</th></tr></thead>
+  <tbody>{% for r in rows %}<tr><td>{{ r.task }}</td><td>{{ r.variant }}</td><td>{{ r.model }}</td><td>{{ r.n }}</td><td>{{ "%.2f"|format(r.mean) }}</td></tr>{% endfor %}</tbody>
+</table>
+{% endblock %}
