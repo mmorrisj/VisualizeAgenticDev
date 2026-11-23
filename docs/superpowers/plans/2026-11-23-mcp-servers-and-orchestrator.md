@@ -624,7 +624,7 @@ python -m datachallenge run --config configs/guarded.toml [--config ...]
        --out results/ [--repeats 1] [--only q01,q02]
 ```
 
-For each configuration, question and repeat it calls `answer_question`, appends a line to `results/<UTC timestamp>/runs.jsonl` (configuration, question id and type, repeat, final, stop reason, the five scores, tokens by role, number of analysts, turns, seconds taken), and writes the transcripts to `transcripts/<config>-<question>-<repeat>.json`. An exception while answering one question is recorded as stop reason `crashed` with its message, and the run continues. It prints one progress line per question.
+For each configuration, question and repeat it calls `answer_question`, appends a line to `results/<UTC timestamp>/runs.jsonl` (configuration, question id and type, repeat, final, stop reason, the five scores, tokens by role, `analysts` (the list from `Outcome.analysts`: each analyst's datasets, task, final and stop reason, which the verifier plan replays), turns, seconds taken), and writes the transcripts to `transcripts/<config>-<question>-<repeat>.json`. An exception while answering one question is recorded as stop reason `crashed` with its message, and the run continues. It prints one progress line per question.
 
 `report.md`, in this order:
 1. Model, date, number of questions, repeats, configurations, and the name in `confirmed_by`.
