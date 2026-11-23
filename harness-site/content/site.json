@@ -53,6 +53,13 @@
       "activity": "Change a setup. Follow the consequences."
     },
     {
+      "id": "prompt-lab",
+      "page": "sections/prompt-lab.html",
+      "title": "Prompts across model generations",
+      "summary": "Prompt technique, missing information, and token cost, measured on old and new models.",
+      "activity": "Compare models and prompts"
+    },
+    {
       "id": "review",
       "page": "sections/review.html",
       "title": "Final review",

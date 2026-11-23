@@ -1,0 +1,123 @@
+{
+  "id": "prompt-lab",
+  "concept": "Newer models need less prompt technique, but they still need the information only you have. A harness lets a model find what is in the files, at a token cost; it cannot find what is only in your head.",
+  "module_link": "../prompt-lab/README.md",
+  "source_note": "Every chart is built from one Prompt Lab results file, imported with tools/import_prompt_lab.py. Scores come from checks with known answers unless marked AI-judged. Token counts are what each provider reported; the split of harness input into overhead, conversation and tool results is an estimate from the text.",
+  "scope": "Study of {date} · {tasks} tasks · not a benchmark",
+  "synthetic": "Synthetic sample. These numbers come from the lab's mock models, which follow a script. They show how the charts work, not what real models do. The real study replaces this file when it is run.",
+  "tasks_label": "Task",
+  "all_tasks": "All tasks",
+  "variants": {
+    "terse": "Terse",
+    "technique": "Technique only",
+    "informed": "Informed",
+    "full": "Full",
+    "ai-expanded": "AI-expanded",
+    "ai-interviewed": "AI-interviewed",
+    "h-terse": "Terse",
+    "h-discoverable-gap": "Missing what's in the files",
+    "h-private-gap": "Missing what only you know",
+    "h-full": "Full"
+  },
+  "charts": {
+    "sensitivity": {
+      "title": "How much does the prompt matter, model by model?",
+      "intro": "One line per model across the one-shot prompts, from a few words to a full brief. Every run is a dot, so you can see how much repeated runs vary. A flat line means the model barely cares how you ask."
+    },
+    "grid": {
+      "title": "Technique or information?",
+      "intro": "The same four prompts arranged as a grid: prompt technique (a role, steps, a format) across, information (the facts the task needs) down. Darker cells scored higher. Compare a column against a row: which one moves the score?",
+      "readout": "The two numbers under each grid: how far technique and information each moved the score, averaged over the other one.",
+      "axes": {
+        "technique_title": "Technique:",
+        "technique": [
+          "None",
+          "Heavy"
+        ],
+        "information": [
+          "Bare request",
+          "Every fact"
+        ],
+        "effects": [
+          "Technique moved it by",
+          "Information moved it by"
+        ]
+      }
+    },
+    "harness": {
+      "title": "What can a harness find on its own?",
+      "intro": "In harness mode the model works in a folder with tools instead of pasted files. Each prompt leaves something out: the facts that are in the files, the facts only you know, or both. The lower panel shows what each one cost, relative to the full prompt on the same model.",
+      "readout": "Leaving out what is in the files scored {gap} against {full} with the full prompt, at {cost} times the cost. Leaving out what only you know scored {private}.",
+      "limit": "hit limit"
+    },
+    "harness_tokens": {
+      "title": "Where a harness session's tokens go",
+      "intro": "One block is a fixed number of tokens. Most of a session's input is the fixed overhead and the conversation re-sent on every request, not the work itself.",
+      "parts": {
+        "fixed": "Fixed overhead: system prompt and tool definitions",
+        "conversation": "Conversation",
+        "tool_results": "Tool results",
+        "output": "Output",
+        "reasoning": "Reasoning"
+      },
+      "readout": "One block is {per_block} tokens. Input split estimated from the request text; fixed overhead is {fixed_share}% of the input across {requests} requests. Reasoning tokens: {reasoning}.",
+      "none": "No harness sessions for this choice."
+    },
+    "per_correct": {
+      "title": "What does a correct result cost?",
+      "intro": "Everything a set of runs consumed, divided by how many passed their checks. Shown in characters, because a token is a different size in each model family.",
+      "modes": {
+        "one_shot": "One-shot",
+        "harness": "Harness"
+      },
+      "none": "no correct results",
+      "scope_note": "All tasks together; the task filter does not apply to this chart."
+    },
+    "judge": {
+      "title": "Does the AI judge agree with the checks?",
+      "intro": "Each point is one judged run: the checks' score across, the judge's score up. Points on the diagonal agree. Highlighted points are where the judge was lenient (rated a wrong answer well) or harsh. Select one to read the judge's quoted evidence.",
+      "kinds": {
+        "lenient": "Judge lenient: rated a wrong answer well",
+        "harsh": "Judge harsh: rated a correct answer badly",
+        "agree": "No disagreement"
+      },
+      "prompt": "Select a highlighted point to read the judge's quoted evidence.",
+      "summary": "{judged} judged runs: the judge was lenient on {lenient} and harsh on {harsh}.",
+      "validation": "Against instructors' hand scores on {sample} runs, agreement was {humans}."
+    },
+    "predictions": {
+      "title": "The predictions, checked",
+      "intro": "These were written down before the first run. Each outcome is the lab's automatic first reading, with the rule it used; an instructor reviews them before the results are published."
+    }
+  },
+  "predictions_text": {
+    "P1": "Prompt sensitivity shrinks with each newer model in a family.",
+    "P2": "On the newest models, technique scores about the same as terse, while informed scores clearly higher.",
+    "P3": "On the oldest models, technique scores clearly higher than terse.",
+    "P4": "AI-expanded adds requirements nobody asked for, and does not consistently beat informed.",
+    "P5": "AI-interviewed scores at or near informed.",
+    "P6": "In a harness, the newest models nearly close the gap when facts in the files are left out, at a higher token cost.",
+    "P7": "In a harness, every model scores clearly lower when facts only you know are left out.",
+    "P8": "In a harness, the oldest models need more requests, fail more tool calls, and hit the limit more often, for worse results.",
+    "P9": "Newer models vary less across repeated runs, even with terse prompts.",
+    "P10": "The AI judge rates fluent but incorrect answers too highly at least some of the time."
+  },
+  "outcomes": {
+    "supported": "Supported",
+    "contradicted": "Contradicted",
+    "mixed": "Mixed",
+    "not evaluated": "Not evaluated"
+  },
+  "harness_codes": {
+    "h-terse": "A",
+    "h-discoverable-gap": "B",
+    "h-private-gap": "C",
+    "h-full": "D"
+  },
+  "generations": [
+    "Oldest in its family",
+    "Newer",
+    "Newest",
+    "Newest"
+  ]
+}

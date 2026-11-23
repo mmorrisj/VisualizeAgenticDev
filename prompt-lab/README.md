@@ -2,13 +2,12 @@
 
 Measures how prompt quality and model generation affect results and token cost. The full design is in [`../docs/PROMPT_LAB_SPEC.md`](../docs/PROMPT_LAB_SPEC.md). This README is for instructors and maintainers.
 
-**Built so far: phases L1 to L4.**
+**Built: phases L1 to L5.** What remains is running the real study on your gateway.
 - **L1:** the engine, the four tasks with their checks, one-shot runs, token accounting, storage, and the command line.
 - **L2:** the AI-assisted prompt variants, the blind judge, study profiles, and the results file.
 - **L3:** harness mode: sessions through the course's `mini-harness`, with limits and per-request accounting.
 - **L4:** the app: the class kit (part B) with replay mode and a collector, and bring your own test (part C).
-
-Still to come: L5, the site section.
+- **L5:** the site section, "Prompts across model generations", drawn from a results file.
 
 ## Install
 
@@ -109,7 +108,15 @@ Profiles in `config/` say which tasks, variants, models, repeats, and judges eac
    python -m promptlab.cli study export --profile study --human validation/scores.csv
    ```
 
-   Read the `predictions` block before publishing. Each prediction gets an automatic first reading, with the rule printed beside the outcome. An instructor confirms or corrects each one. Then commit `results/study-<date>.json` and its `outputs/` folder; the site reads the newest file.
+   Read the `predictions` block before publishing. Each prediction gets an automatic first reading, with the rule printed beside the outcome. An instructor confirms or corrects each one. Then commit `results/study-<date>.json` and its `outputs/` folder.
+4. **Publish to the site:**
+
+   ```bash
+   python3 ../harness-site/tools/import_prompt_lab.py     # the newest results/study-*.json
+   python3 ../harness-site/tools/check.py
+   ```
+
+   This rewrites `harness-site/content/prompt-lab-results.json`, which the site's section 8 draws. Commit it. The synthetic-sample banner on that page goes away once the imported study is real.
 
 ### The judge
 

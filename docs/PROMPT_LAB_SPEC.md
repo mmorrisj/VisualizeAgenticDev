@@ -449,6 +449,15 @@ A new section in the site, placed with the evolution material, built from the ne
 
 Every chart states the study date, the four-task scope, and "not a benchmark". Cross-family token charts use characters or cost, as section 8.3 requires.
 
+As built in phase L5:
+
+- **Section 8 of 9,** "Prompts across model generations", placed before the final review. All seven charts are built, with a task filter over those that have per-task data.
+- **How the site gets the data.** A static site cannot list a folder to find the newest file, so `harness-site/tools/import_prompt_lab.py` reads one results file and writes the aggregates the page needs to `content/prompt-lab-results.json`. Publishing a study is: export, import, commit.
+- **Synthetic sample.** Until a real study is committed, the content file is a sample from the mock models and the page says so in a banner. This is a provisional answer to open question 5.
+- **Not color alone.** Model generations differ by marker shape, harness prompts by a letter under each bar, and judge disagreements by shape. Each chart has a text alternative, and the main ones a table of the numbers.
+- **Judge against checks.** Runs with the same pair of scores are drawn as one point with a count. A disagreement uses prediction P10's rule (judge at least 0.75 while checks are under 0.5, or the reverse) and opens the judge's quoted evidence, by mouse or keyboard.
+- **Cost per correct result** is shown in characters for every model, with tokens in the table for comparisons within a family. Cost is not shown: no prices are configured yet (open question 3).
+
 ---
 
 ## 15. Open questions for the course owner

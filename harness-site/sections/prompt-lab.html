@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Prompts across model generations | Inside the Harness</title>
+  <script>try{var t=localStorage.getItem('harness-theme');if(t==='light'||t==='dark')document.documentElement.dataset.theme=t}catch(e){}</script>
+  <link rel="stylesheet" href="../assets/css/site.css">
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+  <header class="site-header">
+    <div class="site-header-inner">
+      <a class="site-name" href="../index.html"><svg width="22" height="22" viewBox="0 0 22 22" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="9.5" fill="none" stroke="var(--accent)" stroke-width="1.6" stroke-dasharray="1.5 3" stroke-linecap="round"/><rect x="6.5" y="7.5" width="9" height="7" rx="2" fill="none" stroke="var(--accent-2)" stroke-width="1.8"/></svg>Inside the Harness</a>
+      <nav class="site-nav" aria-label="Sections">
+        <ul>
+          <li><a href="../sections/anatomy.html">Harness anatomy</a></li>
+          <li><a href="../sections/loop.html">The agent loop</a></li>
+          <li><a href="../sections/context.html">The context window</a></li>
+          <li><a href="../sections/tokens.html">Token growth</a></li>
+          <li><a href="../sections/extensions.html">Choosing an extension</a></li>
+          <li><a href="../sections/inside-extensions.html">Inside an extension</a></li>
+          <li><a href="../sections/flows.html">Flow simulations</a></li>
+          <li><a href="../sections/prompt-lab.html">Prompts across models</a></li>
+          <li><a href="../sections/review.html">Final review</a></li>
+        </ul>
+      </nav>
+      <button type="button" class="button" id="theme-toggle">Theme</button>
+    </div>
+  </header>
+
+  <main id="main" class="page">
+    <p class="badge">Section 8 of 9</p>
+    <h1>Prompts across model generations</h1>
+    <p class="concept" data-content="concept"></p>
+    <p class="lab-banner" id="synthetic-banner" role="note" hidden></p>
+
+    <div class="stepper lab-filter">
+      <span class="label-muted" id="task-label">Task</span>
+      <div class="choices" id="task-choices" role="group" aria-labelledby="task-label"></div>
+    </div>
+
+    <section class="section-block" aria-labelledby="sensitivity-title">
+      <h2 id="sensitivity-title"></h2>
+      <p class="chart-scope mono" data-scope></p>
+      <p class="note" id="sensitivity-intro"></p>
+      <div class="visual-frame section-gap" id="sensitivity-scene"></div>
+      <ul class="legend" id="sensitivity-legend"></ul>
+      <details class="lab-numbers"><summary>Show the numbers</summary><div id="sensitivity-table"></div></details>
+    </section>
+
+    <section class="section-block" aria-labelledby="grid-title">
+      <h2 id="grid-title"></h2>
+      <p class="chart-scope mono" data-scope></p>
+      <p class="note" id="grid-intro"></p>
+      <div class="visual-frame section-gap" id="grid-scene"></div>
+      <p class="note" id="grid-readout" aria-live="polite"></p>
+    </section>
+
+    <section class="section-block" aria-labelledby="harness-title">
+      <h2 id="harness-title"></h2>
+      <p class="chart-scope mono" data-scope></p>
+      <p class="note" id="harness-intro"></p>
+      <div class="visual-frame section-gap" id="harness-scene"></div>
+      <ul class="legend" id="harness-legend"></ul>
+      <div class="readout-row" id="harness-readouts" aria-live="polite"></div>
+      <details class="lab-numbers"><summary>Show the numbers</summary><div id="harness-table"></div></details>
+    </section>
+
+    <section class="section-block" aria-labelledby="harness_tokens-title">
+      <h2 id="harness_tokens-title"></h2>
+      <p class="chart-scope mono" data-scope></p>
+      <p class="note" id="harness_tokens-intro"></p>
+      <div class="stepper">
+        <div class="choices" id="tokens-model" role="group" aria-label="Model"></div>
+        <div class="choices" id="tokens-variant" role="group" aria-label="Prompt"></div>
+      </div>
+      <div class="visual-frame section-gap" id="harness_tokens-scene"></div>
+      <ul class="legend" id="harness_tokens-legend"></ul>
+      <p class="note" id="harness_tokens-readout" aria-live="polite"></p>
+    </section>
+
+    <section class="section-block" aria-labelledby="per_correct-title">
+      <h2 id="per_correct-title"></h2>
+      <p class="chart-scope mono" data-scope></p>
+      <p class="note" id="per_correct-intro"></p>
+      <div class="visual-frame section-gap" id="per_correct-scene"></div>
+      <details class="lab-numbers"><summary>Show the numbers</summary><div id="per_correct-table"></div></details>
+    </section>
+
+    <section class="section-block" aria-labelledby="judge-title">
+      <h2 id="judge-title"></h2>
+      <p class="chart-scope mono" data-scope></p>
+      <p class="note" id="judge-intro"></p>
+      <div class="visual-frame section-gap" id="judge-scene"></div>
+      <ul class="legend" id="judge-legend"></ul>
+      <div class="panel" id="judge-evidence" aria-live="polite"></div>
+    </section>
+
+    <section class="section-block" aria-labelledby="predictions-title">
+      <h2 id="predictions-title"></h2>
+      <p class="chart-scope mono" data-scope></p>
+      <p class="note" id="predictions-intro"></p>
+      <div id="predictions-table"></div>
+    </section>
+
+    <section class="section-block panel quiz" aria-labelledby="quiz-heading">
+      <h2 id="quiz-heading">Check your understanding</h2>
+      <div id="quiz" data-quiz="prompt-lab"></div>
+    </section>
+
+    <p class="section-block"><a href="../index.html" data-content="module-link">Go deeper: the Prompt Lab</a></p>
+    <p class="note" id="source-note"></p>
+  </main>
+
+  <footer class="site-footer">
+    <div class="site-footer-inner">
+      <span>Numbers come from the newest Prompt Lab results file, as labelled at the top of the page.</span>
+      <span><a href="../index.html">Course map</a></span>
+    </div>
+  </footer>
+
+  <script type="module" src="../assets/js/prompt-lab.js"></script>
+  <script type="module" src="../assets/js/quiz.js"></script>
+</body>
+</html>

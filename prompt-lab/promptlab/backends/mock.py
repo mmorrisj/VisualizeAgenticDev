@@ -10,7 +10,9 @@ As a model under test it answers from each task's prepared answers
 
 It also plays the lab's other roles (request.meta["role"]): the prompt writer,
 the simulated requester, the invented-requirements check, and the judge. The
-mock judge scores from the run's check score, which only the mock can see.
+mock judge scores from the run's check score, which only the mock can see,
+except that the primary mock judge rates long, fluent, wrong answers well:
+the leniency prediction P10 looks for, scripted so the pipeline shows it.
 
 For bring-your-own tests (part C) there is no task folder. The mock then
 assesses a prompt by its length, drafts a fixed rubric, and answers well when
@@ -111,6 +113,8 @@ class MockBackend:
         base = 3 if check is None else 1 + round(4 * check)
         if model.id.endswith("-2"):  # the cross-check judge is slightly harsher, so agreement is not trivial
             base = max(1, base - 1)
+        elif check is not None and check < 0.5 and len(answer) > 400:
+            base = 4  # the primary mock judge is fooled by long, fluent, wrong answers (prediction P10's pattern)
         rubric = yaml.safe_load(task.read("rubric.yaml"))
         out = {"criteria": [{"id": c["id"], "score": base, "quote": _snippet(answer),
                              "reason": "mock judgement"} for c in rubric["criteria"]]}
