@@ -78,7 +78,15 @@ CONTENT_SCHEMAS = {
     "flows.json": {"id": str, "concept": str, "module_link": str, "source_note": str, "flows": list, "ui": dict},
     "inside-extensions.json": {"id": str, "concept": str, "module_link": str, "source_note": str, "task": str,
                                "lenses": list, "measured": dict, "session": dict, "ledger": dict},
+    "prompt-lab.json": {"id": str, "concept": str, "module_link": str, "source_note": str, "scope": str,
+                        "synthetic": str, "variants": dict, "charts": dict, "predictions_text": dict,
+                        "outcomes": dict, "harness_codes": dict, "generations": list},
+    # Written by tools/import_prompt_lab.py from a Prompt Lab results file.
+    "prompt-lab-results.json": {"source": str, "created": str, "synthetic": bool, "tasks": list, "models": list,
+                                "one_shot": dict, "harness": dict, "per_correct": list, "judge": dict,
+                                "predictions": list},
 }
+PROMPT_LAB_CHARTS = ["sensitivity", "grid", "harness", "harness_tokens", "per_correct", "judge", "predictions"]
 SITE_SECTION_KEYS = {"id": str, "page": str, "title": str, "summary": str}
 STEP_KEYS = {"text": str, "state": dict}
 LOOP_ITEM_KEYS = {"id": str, "role": str, "label": str, "tokens": int}
@@ -210,6 +218,8 @@ def check_content(report: Report) -> None:
             check_inside_extensions(report, path, data)
         if path.name == "flows.json" and isinstance(data, dict):
             check_flows(report, path, data)
+        if path.name == "prompt-lab.json" and isinstance(data, dict):
+            check_prompt_lab(report, path, data)
         if path.name == "quizzes.json" and isinstance(data, dict):
             check_quizzes(report, path, data)
 
@@ -277,6 +287,52 @@ def check_flows(report: Report, path: pathlib.Path, data: dict) -> None:
                     report.error(path, f"flow {fid}: invalid experiment toggle")
         for key, message in flow.get("messages", {}).items():
             check_keys(report, path, message, {"title": str, "text": str, "evidence": str}, f"flow {fid} message {key}")
+
+
+def check_prompt_lab(report: Report, path: pathlib.Path, data: dict) -> None:
+    """The page's text must cover everything the imported results contain, or labels come out blank."""
+    charts = data.get("charts") if isinstance(data.get("charts"), dict) else {}
+    for key in PROMPT_LAB_CHARTS:
+        check_keys(report, path, charts.get(key), {"title": str, "intro": str}, f"charts.{key}")
+    if set(charts) - set(PROMPT_LAB_CHARTS):
+        report.error(path, f"charts has entries the page does not draw: {sorted(set(charts) - set(PROMPT_LAB_CHARTS))}")
+    try:
+        results = json.loads((path.parent / "prompt-lab-results.json").read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return  # reported when that file is checked
+    if not isinstance(results, dict):
+        return
+    where = path.parent / "prompt-lab-results.json"
+    models = {m.get("id") for m in results.get("models", []) if isinstance(m, dict)}
+    variants = set()
+    for mode in ("one_shot", "harness"):
+        block = results.get(mode) if isinstance(results.get(mode), dict) else {}
+        variants |= set(block.get("variants", []))
+        for cell in block.get("cells", []):
+            if cell.get("model") not in models:
+                report.error(where, f"{mode} cell names unknown model '{cell.get('model')}'")
+            if any(not isinstance(s, (int, float)) or not 0 <= s <= 1 for s in cell.get("scores", [])):
+                report.error(where, f"{mode} cell {cell.get('task')}/{cell.get('model')}/{cell.get('variant')} "
+                             "has a score outside 0 to 1")
+    labels = data.get("variants") if isinstance(data.get("variants"), dict) else {}
+    for variant in sorted(variants - set(labels)):
+        report.error(path, f"variants has no label for '{variant}', which the results contain")
+    codes = data.get("harness_codes") if isinstance(data.get("harness_codes"), dict) else {}
+    harness_variants = (results.get("harness") or {}).get("variants", [])
+    for variant in harness_variants:
+        if variant not in codes:
+            report.error(path, f"harness_codes has no letter for '{variant}'")
+    if len({codes.get(v) for v in harness_variants}) != len(harness_variants):
+        report.error(path, "harness_codes letters must be distinct: they tell the bars apart without color")
+    texts = data.get("predictions_text") if isinstance(data.get("predictions_text"), dict) else {}
+    outcomes = data.get("outcomes") if isinstance(data.get("outcomes"), dict) else {}
+    for p in results.get("predictions", []):
+        if p.get("id") not in texts:
+            report.error(path, f"predictions_text has no entry for {p.get('id')}")
+        if p.get("outcome") not in outcomes:
+            report.error(path, f"outcomes has no label for '{p.get('outcome')}'")
+    if results.get("synthetic") and not data.get("synthetic", "").strip():
+        report.error(path, "the results are synthetic, so the page needs its 'synthetic' banner text")
 
 
 def check_quizzes(report: Report, path: pathlib.Path, data: dict) -> None:

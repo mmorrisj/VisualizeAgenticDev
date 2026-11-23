@@ -1080,5 +1080,43 @@ kbd {
 /* Prompts across model generations (prompt-lab.js) */
 .lab-banner { border: 1px solid var(--warning); border-left-width: 6px; border-radius: var(--radius-sm); padding: 10px 14px; background: var(--surface); }
 .chart-scope { color: var(--muted); font-size: 0.82rem; margin: 0 0 4px; }
+.lab-filter { align-items: center; }
+.lab-filter .label-muted { color: var(--muted); font-size: 0.9rem; }
 .lab-table th, .lab-table td { text-align: left; vertical-align: top; }
 .lab-outcome { font-weight: 600; white-space: nowrap; }
+.lab-numbers { margin-top: 12px; }
+.lab-numbers summary { cursor: pointer; color: var(--muted); }
+
+/* Generations: color and marker shape together. 0 oldest, 2 newest. */
+.lab-gen-0 { --lab-c: var(--muted); }
+.lab-gen-1 { --lab-c: var(--accent); }
+.lab-gen-2 { --lab-c: var(--accent-2); }
+.lab-mark { fill: var(--lab-c); stroke: var(--surface); stroke-width: 1.5; }
+.lab-dot { fill: var(--lab-c); fill-opacity: 0.4; }
+.scene .lab-line { fill: none; stroke: var(--lab-c); stroke-width: 2.5; }
+.scene .lab-line.lab-gen-0 { stroke-dasharray: 6 4; }
+
+.scene .lab-cell-bg { fill: var(--surface); stroke: var(--border); }
+.scene .lab-cell { fill: var(--accent-2); stroke: var(--border); }
+.scene .lab-cell-text { font-size: 15px; font-weight: 600; }
+.scene .lab-cell-text.on-dark { fill: var(--bg); }
+.scene .lab-effect { font-size: 12.5px; fill: var(--muted); }
+
+.lab-hbar-0 { fill: var(--role-system); }
+.lab-hbar-1 { fill: var(--role-result); }
+.lab-hbar-2 { fill: var(--role-user); }
+.lab-hbar-3 { fill: var(--accent-2); }
+.scene .lab-limit { fill: var(--danger); font-size: 12px; font-weight: 600; }
+
+.lab-mode-one_shot { fill: var(--accent-2); }
+.lab-mode-harness { fill: var(--accent); fill-opacity: 0.28; stroke: var(--accent); stroke-width: 2; }
+
+.scene .lab-region { fill: var(--danger); fill-opacity: 0.06; stroke: var(--danger); stroke-width: 1; stroke-dasharray: 4 3; }
+.scene .lab-diagonal { stroke: var(--muted); stroke-width: 1; stroke-dasharray: 2 4; }
+.scene .lab-agree circle, .lab-agree-swatch { fill: var(--muted); fill-opacity: 0.45; }
+.scene .lab-disagree path, .lab-disagree-swatch { fill: var(--danger); }
+.scene .lab-disagree { cursor: pointer; }
+.scene .lab-disagree[aria-pressed="true"] path { stroke: var(--text); stroke-width: 3; }
+.scene .lab-disagree:focus-visible { outline: 3px solid var(--focus); outline-offset: 4px; }
+.scene .lab-bubble-count { font-size: 12px; font-weight: 700; pointer-events: none; }
+.scene .lab-disagree .lab-bubble-count { fill: var(--bg); }
