@@ -1,0 +1,2198 @@
+{
+ "generated_by": "tools/import_prompt_lab.py",
+ "source": "mock-study-2026-11-23.json",
+ "created": "2026-11-23",
+ "profile": "mock-study",
+ "synthetic": true,
+ "note": "Classroom demonstration on four tasks; not a benchmark.",
+ "tasks": [
+  "data-question",
+  "refactor",
+  "summarize",
+  "write-tests"
+ ],
+ "models": [
+  {
+   "id": "mock-old",
+   "display": "Mock (needs an informed prompt)",
+   "family": "mock",
+   "generation": 1
+  },
+  {
+   "id": "mock-new",
+   "display": "Mock (good with any prompt)",
+   "family": "mock",
+   "generation": 2
+  }
+ ],
+ "judges": {
+  "primary": "mock-judge",
+  "cross_check": "mock-judge-2",
+  "cross_check_share": 0.2
+ },
+ "one_shot": {
+  "variants": [
+   "terse",
+   "technique",
+   "informed",
+   "full"
+  ],
+  "cells": [
+   {
+    "task": "data-question",
+    "model": "mock-new",
+    "variant": "full",
+    "scores": [
+     1.0,
+     1.0
+    ]
+   },
+   {
+    "task": "data-question",
+    "model": "mock-new",
+    "variant": "informed",
+    "scores": [
+     1.0,
+     1.0
+    ]
+   },
+   {
+    "task": "data-question",
+    "model": "mock-new",
+    "variant": "technique",
+    "scores": [
+     1.0,
+     1.0
+    ]
+   },
+   {
+    "task": "data-question",
+    "model": "mock-new",
+    "variant": "terse",
+    "scores": [
+     1.0,
+     1.0
+    ]
+   },
+   {
+    "task": "data-question",
+    "model": "mock-old",
+    "variant": "full",
+    "scores": [
+     1.0,
+     1.0
+    ]
+   },
+   {
+    "task": "data-question",
+    "model": "mock-old",
+    "variant": "informed",
+    "scores": [
+     1.0,
+     1.0
+    ]
+   },
+   {
+    "task": "data-question",
+    "model": "mock-old",
+    "variant": "technique",
+    "scores": [
+     0.0,
+     0.0
+    ]
+   },
+   {
+    "task": "data-question",
+    "model": "mock-old",
+    "variant": "terse",
+    "scores": [
+     0.0,
+     0.0
+    ]
+   },
+   {
+    "task": "refactor",
+    "model": "mock-new",
+    "variant": "full",
+    "scores": [
+     1.0,
+     1.0
+    ]
+   },
+   {
+    "task": "refactor",
+    "model": "mock-new",
+    "variant": "informed",
+    "scores": [
+     1.0,
+     1.0
+    ]
+   },
+   {
+    "task": "refactor",
+    "model": "mock-new",
+    "variant": "technique",
+    "scores": [
+     1.0,
+     1.0
+    ]
+   },
+   {
+    "task": "refactor",
+    "model": "mock-new",
+    "variant": "terse",
+    "scores": [
+     1.0,
+     1.0
+    ]
+   },
+   {
+    "task": "refactor",
+    "model": "mock-old",
+    "variant": "full",
+    "scores": [
+     1.0,
+     1.0
+    ]
+   },
+   {
+    "task": "refactor",
+    "model": "mock-old",
+    "variant": "informed",
+    "scores": [
+     1.0,
+     1.0
+    ]
+   },
+   {
+    "task": "refactor",
+    "model": "mock-old",
+    "variant": "technique",
+    "scores": [
+     0.25,
+     0.25
+    ]
+   },
+   {
+    "task": "refactor",
+    "model": "mock-old",
+    "variant": "terse",
+    "scores": [
+     0.25,
+     0.25
+    ]
+   },
+   {
+    "task": "summarize",
+    "model": "mock-new",
+    "variant": "full",
+    "scores": [
+     1.0,
+     1.0
+    ]
+   },
+   {
+    "task": "summarize",
+    "model": "mock-new",
+    "variant": "informed",
+    "scores": [
+     1.0,
+     1.0
+    ]
+   },
+   {
+    "task": "summarize",
+    "model": "mock-new",
+    "variant": "technique",
+    "scores": [
+     1.0,
+     1.0
+    ]
+   },
+   {
+    "task": "summarize",
+    "model": "mock-new",
+    "variant": "terse",
+    "scores": [
+     1.0,
+     1.0
+    ]
+   },
+   {
+    "task": "summarize",
+    "model": "mock-old",
+    "variant": "full",
+    "scores": [
+     1.0,
+     1.0
+    ]
+   },
+   {
+    "task": "summarize",
+    "model": "mock-old",
+    "variant": "informed",
+    "scores": [
+     1.0,
+     1.0
+    ]
+   },
+   {
+    "task": "summarize",
+    "model": "mock-old",
+    "variant": "technique",
+    "scores": [
+     0.38,
+     0.38
+    ]
+   },
+   {
+    "task": "summarize",
+    "model": "mock-old",
+    "variant": "terse",
+    "scores": [
+     0.38,
+     0.38
+    ]
+   },
+   {
+    "task": "write-tests",
+    "model": "mock-new",
+    "variant": "full",
+    "scores": [
+     1.0,
+     1.0
+    ]
+   },
+   {
+    "task": "write-tests",
+    "model": "mock-new",
+    "variant": "informed",
+    "scores": [
+     1.0,
+     1.0
+    ]
+   },
+   {
+    "task": "write-tests",
+    "model": "mock-new",
+    "variant": "technique",
+    "scores": [
+     1.0,
+     1.0
+    ]
+   },
+   {
+    "task": "write-tests",
+    "model": "mock-new",
+    "variant": "terse",
+    "scores": [
+     1.0,
+     1.0
+    ]
+   },
+   {
+    "task": "write-tests",
+    "model": "mock-old",
+    "variant": "full",
+    "scores": [
+     1.0,
+     1.0
+    ]
+   },
+   {
+    "task": "write-tests",
+    "model": "mock-old",
+    "variant": "informed",
+    "scores": [
+     1.0,
+     1.0
+    ]
+   },
+   {
+    "task": "write-tests",
+    "model": "mock-old",
+    "variant": "technique",
+    "scores": [
+     0.0,
+     0.0
+    ]
+   },
+   {
+    "task": "write-tests",
+    "model": "mock-old",
+    "variant": "terse",
+    "scores": [
+     0.0,
+     0.0
+    ]
+   }
+  ]
+ },
+ "harness": {
+  "variants": [
+   "h-terse",
+   "h-discoverable-gap",
+   "h-private-gap",
+   "h-full"
+  ],
+  "cells": [
+   {
+    "task": "data-question",
+    "model": "mock-new",
+    "variant": "h-discoverable-gap",
+    "scores": [
+     1.0
+    ],
+    "requests": 6,
+    "hit_limit": 0,
+    "runs": 1,
+    "failed_calls": 0,
+    "tokens": 5597,
+    "chars": 22412,
+    "split": {
+     "fixed": 2712,
+     "conversation": 1083,
+     "tool_results": 801,
+     "output": 302,
+     "reasoning": null
+    }
+   },
+   {
+    "task": "data-question",
+    "model": "mock-new",
+    "variant": "h-full",
+    "scores": [
+     1.0
+    ],
+    "requests": 4,
+    "hit_limit": 0,
+    "runs": 1,
+    "failed_calls": 0,
+    "tokens": 3432,
+    "chars": 13744,
+    "split": {
+     "fixed": 1808,
+     "conversation": 724,
+     "tool_results": 371,
+     "output": 211,
+     "reasoning": null
+    }
+   },
+   {
+    "task": "data-question",
+    "model": "mock-new",
+    "variant": "h-private-gap",
+    "scores": [
+     0.0
+    ],
+    "requests": 4,
+    "hit_limit": 0,
+    "runs": 1,
+    "failed_calls": 0,
+    "tokens": 3161,
+    "chars": 12653,
+    "split": {
+     "fixed": 1808,
+     "conversation": 516,
+     "tool_results": 371,
+     "output": 148,
+     "reasoning": null
+    }
+   },
+   {
+    "task": "data-question",
+    "model": "mock-new",
+    "variant": "h-terse",
+    "scores": [
+     0.0
+    ],
+    "requests": 6,
+    "hit_limit": 0,
+    "runs": 1,
+    "failed_calls": 0,
+    "tokens": 5173,
+    "chars": 20705,
+    "split": {
+     "fixed": 2712,
+     "conversation": 723,
+     "tool_results": 801,
+     "output": 239,
+     "reasoning": null
+    }
+   },
+   {
+    "task": "data-question",
+    "model": "mock-old",
+    "variant": "h-discoverable-gap",
+    "scores": [
+     0.0
+    ],
+    "requests": 25,
+    "hit_limit": 1,
+    "runs": 1,
+    "failed_calls": 1,
+    "tokens": 37208,
+    "chars": 148908,
+    "split": {
+     "fixed": 11300,
+     "conversation": 11646,
+     "tool_results": 1956,
+     "output": 828,
+     "reasoning": null
+    }
+   },
+   {
+    "task": "data-question",
+    "model": "mock-old",
+    "variant": "h-full",
+    "scores": [
+     1.0
+    ],
+    "requests": 7,
+    "hit_limit": 0,
+    "runs": 1,
+    "failed_calls": 1,
+    "tokens": 7077,
+    "chars": 28327,
+    "split": {
+     "fixed": 3164,
+     "conversation": 1663,
+     "tool_results": 945,
+     "output": 338,
+     "reasoning": null
+    }
+   },
+   {
+    "task": "data-question",
+    "model": "mock-old",
+    "variant": "h-private-gap",
+    "scores": [
+     0.0
+    ],
+    "requests": 5,
+    "hit_limit": 0,
+    "runs": 1,
+    "failed_calls": 1,
+    "tokens": 4144,
+    "chars": 16587,
+    "split": {
+     "fixed": 2260,
+     "conversation": 734,
+     "tool_results": 467,
+     "output": 184,
+     "reasoning": null
+    }
+   },
+   {
+    "task": "data-question",
+    "model": "mock-old",
+    "variant": "h-terse",
+    "scores": [
+     0.0
+    ],
+    "requests": 25,
+    "hit_limit": 1,
+    "runs": 1,
+    "failed_calls": 1,
+    "tokens": 35700,
+    "chars": 142858,
+    "split": {
+     "fixed": 11300,
+     "conversation": 10146,
+     "tool_results": 1956,
+     "output": 828,
+     "reasoning": null
+    }
+   },
+   {
+    "task": "refactor",
+    "model": "mock-new",
+    "variant": "h-discoverable-gap",
+    "scores": [
+     1.0
+    ],
+    "requests": 7,
+    "hit_limit": 0,
+    "runs": 1,
+    "failed_calls": 0,
+    "tokens": 10490,
+    "chars": 41991,
+    "split": {
+     "fixed": 2709,
+     "conversation": 1699,
+     "tool_results": 4083,
+     "output": 795,
+     "reasoning": null
+    }
+   },
+   {
+    "task": "refactor",
+    "model": "mock-new",
+    "variant": "h-full",
+    "scores": [
+     1.0
+    ],
+    "requests": 5,
+    "hit_limit": 0,
+    "runs": 1,
+    "failed_calls": 0,
+    "tokens": 7200,
+    "chars": 28816,
+    "split": {
+     "fixed": 1935,
+     "conversation": 1744,
+     "tool_results": 2160,
+     "output": 715,
+     "reasoning": null
+    }
+   },
+   {
+    "task": "refactor",
+    "model": "mock-new",
+    "variant": "h-private-gap",
+    "scores": [
+     0.25
+    ],
+    "requests": 5,
+    "hit_limit": 0,
+    "runs": 1,
+    "failed_calls": 0,
+    "tokens": 6433,
+    "chars": 25748,
+    "split": {
+     "fixed": 1935,
+     "conversation": 1204,
+     "tool_results": 2160,
+     "output": 491,
+     "reasoning": null
+    }
+   },
+   {
+    "task": "refactor",
+    "model": "mock-new",
+    "variant": "h-terse",
+    "scores": [
+     0.25
+    ],
+    "requests": 7,
+    "hit_limit": 0,
+    "runs": 1,
+    "failed_calls": 0,
+    "tokens": 9650,
+    "chars": 38625,
+    "split": {
+     "fixed": 2709,
+     "conversation": 1089,
+     "tool_results": 4083,
+     "output": 571,
+     "reasoning": null
+    }
+   },
+   {
+    "task": "refactor",
+    "model": "mock-old",
+    "variant": "h-discoverable-gap",
+    "scores": [
+     0.0
+    ],
+    "requests": 25,
+    "hit_limit": 1,
+    "runs": 1,
+    "failed_calls": 1,
+    "tokens": 34632,
+    "chars": 138586,
+    "split": {
+     "fixed": 9675,
+     "conversation": 10896,
+     "tool_results": 1932,
+     "output": 828,
+     "reasoning": null
+    }
+   },
+   {
+    "task": "refactor",
+    "model": "mock-old",
+    "variant": "h-full",
+    "scores": [
+     1.0
+    ],
+    "requests": 8,
+    "hit_limit": 0,
+    "runs": 1,
+    "failed_calls": 1,
+    "tokens": 12567,
+    "chars": 50291,
+    "split": {
+     "fixed": 3096,
+     "conversation": 2884,
+     "tool_results": 4244,
+     "output": 831,
+     "reasoning": null
+    }
+   },
+   {
+    "task": "refactor",
+    "model": "mock-old",
+    "variant": "h-private-gap",
+    "scores": [
+     0.25
+    ],
+    "requests": 6,
+    "hit_limit": 0,
+    "runs": 1,
+    "failed_calls": 1,
+    "tokens": 7469,
+    "chars": 29901,
+    "split": {
+     "fixed": 2322,
+     "conversation": 1486,
+     "tool_results": 2275,
+     "output": 527,
+     "reasoning": null
+    }
+   },
+   {
+    "task": "refactor",
+    "model": "mock-old",
+    "variant": "h-terse",
+    "scores": [
+     0.0
+    ],
+    "requests": 25,
+    "hit_limit": 1,
+    "runs": 1,
+    "failed_calls": 1,
+    "tokens": 33232,
+    "chars": 132986,
+    "split": {
+     "fixed": 9675,
+     "conversation": 9521,
+     "tool_results": 1932,
+     "output": 828,
+     "reasoning": null
+    }
+   },
+   {
+    "task": "summarize",
+    "model": "mock-new",
+    "variant": "h-discoverable-gap",
+    "scores": [
+     1.0
+    ],
+    "requests": 5,
+    "hit_limit": 0,
+    "runs": 1,
+    "failed_calls": 0,
+    "tokens": 7403,
+    "chars": 29632,
+    "split": {
+     "fixed": 1935,
+     "conversation": 692,
+     "tool_results": 3866,
+     "output": 405,
+     "reasoning": null
+    }
+   },
+   {
+    "task": "summarize",
+    "model": "mock-new",
+    "variant": "h-full",
+    "scores": [
+     1.0
+    ],
+    "requests": 3,
+    "hit_limit": 0,
+    "runs": 1,
+    "failed_calls": 0,
+    "tokens": 3358,
+    "chars": 13445,
+    "split": {
+     "fixed": 1161,
+     "conversation": 487,
+     "tool_results": 1200,
+     "output": 325,
+     "reasoning": null
+    }
+   },
+   {
+    "task": "summarize",
+    "model": "mock-new",
+    "variant": "h-private-gap",
+    "scores": [
+     0.38
+    ],
+    "requests": 3,
+    "hit_limit": 0,
+    "runs": 1,
+    "failed_calls": 0,
+    "tokens": 3200,
+    "chars": 12814,
+    "split": {
+     "fixed": 1161,
+     "conversation": 289,
+     "tool_results": 1200,
+     "output": 368,
+     "reasoning": null
+    }
+   },
+   {
+    "task": "summarize",
+    "model": "mock-new",
+    "variant": "h-terse",
+    "scores": [
+     0.38
+    ],
+    "requests": 5,
+    "hit_limit": 0,
+    "runs": 1,
+    "failed_calls": 0,
+    "tokens": 7185,
+    "chars": 28755,
+    "split": {
+     "fixed": 1935,
+     "conversation": 432,
+     "tool_results": 3866,
+     "output": 448,
+     "reasoning": null
+    }
+   },
+   {
+    "task": "summarize",
+    "model": "mock-old",
+    "variant": "h-discoverable-gap",
+    "scores": [
+     0.0
+    ],
+    "requests": 25,
+    "hit_limit": 1,
+    "runs": 1,
+    "failed_calls": 1,
+    "tokens": 34883,
+    "chars": 139586,
+    "split": {
+     "fixed": 9675,
+     "conversation": 11046,
+     "tool_results": 1932,
+     "output": 828,
+     "reasoning": null
+    }
+   },
+   {
+    "task": "summarize",
+    "model": "mock-old",
+    "variant": "h-full",
+    "scores": [
+     1.0
+    ],
+    "requests": 6,
+    "hit_limit": 0,
+    "runs": 1,
+    "failed_calls": 1,
+    "tokens": 8771,
+    "chars": 35109,
+    "split": {
+     "fixed": 2322,
+     "conversation": 1299,
+     "tool_results": 3981,
+     "output": 441,
+     "reasoning": null
+    }
+   },
+   {
+    "task": "summarize",
+    "model": "mock-old",
+    "variant": "h-private-gap",
+    "scores": [
+     0.38
+    ],
+    "requests": 4,
+    "hit_limit": 0,
+    "runs": 1,
+    "failed_calls": 1,
+    "tokens": 3998,
+    "chars": 16008,
+    "split": {
+     "fixed": 1548,
+     "conversation": 455,
+     "tool_results": 1269,
+     "output": 404,
+     "reasoning": null
+    }
+   },
+   {
+    "task": "summarize",
+    "model": "mock-old",
+    "variant": "h-terse",
+    "scores": [
+     0.0
+    ],
+    "requests": 25,
+    "hit_limit": 1,
+    "runs": 1,
+    "failed_calls": 1,
+    "tokens": 33570,
+    "chars": 134336,
+    "split": {
+     "fixed": 9675,
+     "conversation": 9746,
+     "tool_results": 1932,
+     "output": 828,
+     "reasoning": null
+    }
+   },
+   {
+    "task": "write-tests",
+    "model": "mock-new",
+    "variant": "h-discoverable-gap",
+    "scores": [
+     1.0
+    ],
+    "requests": 6,
+    "hit_limit": 0,
+    "runs": 1,
+    "failed_calls": 0,
+    "tokens": 5531,
+    "chars": 22142,
+    "split": {
+     "fixed": 2328,
+     "conversation": 1203,
+     "tool_results": 821,
+     "output": 495,
+     "reasoning": null
+    }
+   },
+   {
+    "task": "write-tests",
+    "model": "mock-new",
+    "variant": "h-full",
+    "scores": [
+     1.0
+    ],
+    "requests": 4,
+    "hit_limit": 0,
+    "runs": 1,
+    "failed_calls": 0,
+    "tokens": 3642,
+    "chars": 14582,
+    "split": {
+     "fixed": 1552,
+     "conversation": 1030,
+     "tool_results": 337,
+     "output": 415,
+     "reasoning": null
+    }
+   },
+   {
+    "task": "write-tests",
+    "model": "mock-new",
+    "variant": "h-private-gap",
+    "scores": [
+     0.0
+    ],
+    "requests": 4,
+    "hit_limit": 0,
+    "runs": 1,
+    "failed_calls": 0,
+    "tokens": 2966,
+    "chars": 11872,
+    "split": {
+     "fixed": 1552,
+     "conversation": 533,
+     "tool_results": 337,
+     "output": 238,
+     "reasoning": null
+    }
+   },
+   {
+    "task": "write-tests",
+    "model": "mock-new",
+    "variant": "h-terse",
+    "scores": [
+     0.0
+    ],
+    "requests": 6,
+    "hit_limit": 0,
+    "runs": 1,
+    "failed_calls": 0,
+    "tokens": 4839,
+    "chars": 19374,
+    "split": {
+     "fixed": 2328,
+     "conversation": 696,
+     "tool_results": 821,
+     "output": 318,
+     "reasoning": null
+    }
+   },
+   {
+    "task": "write-tests",
+    "model": "mock-old",
+    "variant": "h-discoverable-gap",
+    "scores": [
+     0.0
+    ],
+    "requests": 25,
+    "hit_limit": 1,
+    "runs": 1,
+    "failed_calls": 1,
+    "tokens": 34349,
+    "chars": 137427,
+    "split": {
+     "fixed": 9700,
+     "conversation": 10971,
+     "tool_results": 1680,
+     "output": 828,
+     "reasoning": null
+    }
+   },
+   {
+    "task": "write-tests",
+    "model": "mock-old",
+    "variant": "h-full",
+    "scores": [
+     1.0
+    ],
+    "requests": 7,
+    "hit_limit": 0,
+    "runs": 1,
+    "failed_calls": 1,
+    "tokens": 7117,
+    "chars": 28495,
+    "split": {
+     "fixed": 2716,
+     "conversation": 1966,
+     "tool_results": 965,
+     "output": 531,
+     "reasoning": null
+    }
+   },
+   {
+    "task": "write-tests",
+    "model": "mock-old",
+    "variant": "h-private-gap",
+    "scores": [
+     0.0
+    ],
+    "requests": 5,
+    "hit_limit": 0,
+    "runs": 1,
+    "failed_calls": 1,
+    "tokens": 3855,
+    "chars": 15432,
+    "split": {
+     "fixed": 1940,
+     "conversation": 726,
+     "tool_results": 433,
+     "output": 274,
+     "reasoning": null
+    }
+   },
+   {
+    "task": "write-tests",
+    "model": "mock-old",
+    "variant": "h-terse",
+    "scores": [
+     0.0
+    ],
+    "requests": 25,
+    "hit_limit": 1,
+    "runs": 1,
+    "failed_calls": 1,
+    "tokens": 32931,
+    "chars": 131802,
+    "split": {
+     "fixed": 9700,
+     "conversation": 9596,
+     "tool_results": 1680,
+     "output": 828,
+     "reasoning": null
+    }
+   }
+  ]
+ },
+ "per_correct": [
+  {
+   "model": "mock-old",
+   "one_shot": {
+    "runs": 32,
+    "correct": 16,
+    "tokens": 30750,
+    "chars": 117862,
+    "tokens_per_correct": 1922,
+    "chars_per_correct": 7366
+   },
+   "harness": {
+    "runs": 16,
+    "correct": 4,
+    "tokens": 331503,
+    "chars": 1326639,
+    "tokens_per_correct": 82876,
+    "chars_per_correct": 331660
+   }
+  },
+  {
+   "model": "mock-new",
+   "one_shot": {
+    "runs": 32,
+    "correct": 32,
+    "tokens": 32434,
+    "chars": 124602,
+    "tokens_per_correct": 1014,
+    "chars_per_correct": 3894
+   },
+   "harness": {
+    "runs": 16,
+    "correct": 8,
+    "tokens": 89260,
+    "chars": 357310,
+    "tokens_per_correct": 11158,
+    "chars_per_correct": 44664
+   }
+  }
+ ],
+ "judge": {
+  "rule": {
+   "high": 0.75,
+   "low": 0.5
+  },
+  "points": [
+   {
+    "id": "data-question--terse--mock-old--1",
+    "task": "data-question",
+    "model": "mock-old",
+    "variant": "terse",
+    "mode": "one-shot",
+    "check": 0.0,
+    "judge": 0.0,
+    "disagree": null
+   },
+   {
+    "id": "data-question--terse--mock-old--2",
+    "task": "data-question",
+    "model": "mock-old",
+    "variant": "terse",
+    "mode": "one-shot",
+    "check": 0.0,
+    "judge": 0.0,
+    "disagree": null
+   },
+   {
+    "id": "data-question--terse--mock-new--1",
+    "task": "data-question",
+    "model": "mock-new",
+    "variant": "terse",
+    "mode": "one-shot",
+    "check": 1.0,
+    "judge": 1.0,
+    "disagree": null
+   },
+   {
+    "id": "data-question--terse--mock-new--2",
+    "task": "data-question",
+    "model": "mock-new",
+    "variant": "terse",
+    "mode": "one-shot",
+    "check": 1.0,
+    "judge": 1.0,
+    "disagree": null
+   },
+   {
+    "id": "data-question--technique--mock-old--1",
+    "task": "data-question",
+    "model": "mock-old",
+    "variant": "technique",
+    "mode": "one-shot",
+    "check": 0.0,
+    "judge": 0.0,
+    "disagree": null
+   },
+   {
+    "id": "data-question--technique--mock-old--2",
+    "task": "data-question",
+    "model": "mock-old",
+    "variant": "technique",
+    "mode": "one-shot",
+    "check": 0.0,
+    "judge": 0.0,
+    "disagree": null
+   },
+   {
+    "id": "data-question--technique--mock-new--1",
+    "task": "data-question",
+    "model": "mock-new",
+    "variant": "technique",
+    "mode": "one-shot",
+    "check": 1.0,
+    "judge": 1.0,
+    "disagree": null
+   },
+   {
+    "id": "data-question--technique--mock-new--2",
+    "task": "data-question",
+    "model": "mock-new",
+    "variant": "technique",
+    "mode": "one-shot",
+    "check": 1.0,
+    "judge": 1.0,
+    "disagree": null
+   },
+   {
+    "id": "data-question--informed--mock-old--1",
+    "task": "data-question",
+    "model": "mock-old",
+    "variant": "informed",
+    "mode": "one-shot",
+    "check": 1.0,
+    "judge": 1.0,
+    "disagree": null
+   },
+   {
+    "id": "data-question--informed--mock-old--2",
+    "task": "data-question",
+    "model": "mock-old",
+    "variant": "informed",
+    "mode": "one-shot",
+    "check": 1.0,
+    "judge": 1.0,
+    "disagree": null
+   },
+   {
+    "id": "data-question--informed--mock-new--1",
+    "task": "data-question",
+    "model": "mock-new",
+    "variant": "informed",
+    "mode": "one-shot",
+    "check": 1.0,
+    "judge": 1.0,
+    "disagree": null
+   },
+   {
+    "id": "data-question--informed--mock-new--2",
+    "task": "data-question",
+    "model": "mock-new",
+    "variant": "informed",
+    "mode": "one-shot",
+    "check": 1.0,
+    "judge": 1.0,
+    "disagree": null
+   },
+   {
+    "id": "data-question--full--mock-old--1",
+    "task": "data-question",
+    "model": "mock-old",
+    "variant": "full",
+    "mode": "one-shot",
+    "check": 1.0,
+    "judge": 1.0,
+    "disagree": null
+   },
+   {
+    "id": "data-question--full--mock-old--2",
+    "task": "data-question",
+    "model": "mock-old",
+    "variant": "full",
+    "mode": "one-shot",
+    "check": 1.0,
+    "judge": 1.0,
+    "disagree": null
+   },
+   {
+    "id": "data-question--full--mock-new--1",
+    "task": "data-question",
+    "model": "mock-new",
+    "variant": "full",
+    "mode": "one-shot",
+    "check": 1.0,
+    "judge": 1.0,
+    "disagree": null
+   },
+   {
+    "id": "data-question--full--mock-new--2",
+    "task": "data-question",
+    "model": "mock-new",
+    "variant": "full",
+    "mode": "one-shot",
+    "check": 1.0,
+    "judge": 1.0,
+    "disagree": null
+   },
+   {
+    "id": "refactor--terse--mock-old--1",
+    "task": "refactor",
+    "model": "mock-old",
+    "variant": "terse",
+    "mode": "one-shot",
+    "check": 0.25,
+    "judge": 0.75,
+    "disagree": "lenient",
+    "evidence": [
+     {
+      "criterion": "clarity",
+      "score": 4,
+      "quote": "Simplified version using floats and Python's round():",
+      "reason": "mock judgement"
+     },
+     {
+      "criterion": "scope",
+      "score": 4,
+      "quote": "Simplified version using floats and Python's round():",
+      "reason": "mock judgement"
+     },
+     {
+      "criterion": "risk",
+      "score": 4,
+      "quote": "Simplified version using floats and Python's round():",
+      "reason": "mock judgement"
+     }
+    ]
+   },
+   {
+    "id": "refactor--terse--mock-old--2",
+    "task": "refactor",
+    "model": "mock-old",
+    "variant": "terse",
+    "mode": "one-shot",
+    "check": 0.25,
+    "judge": 0.75,
+    "disagree": "lenient",
+    "evidence": [
+     {
+      "criterion": "clarity",
+      "score": 4,
+      "quote": "Simplified version using floats and Python's round():",
+      "reason": "mock judgement"
+     },
+     {
+      "criterion": "scope",
+      "score": 4,
+      "quote": "Simplified version using floats and Python's round():",
+      "reason": "mock judgement"
+     },
+     {
+      "criterion": "risk",
+      "score": 4,
+      "quote": "Simplified version using floats and Python's round():",
+      "reason": "mock judgement"
+     }
+    ]
+   },
+   {
+    "id": "refactor--terse--mock-new--1",
+    "task": "refactor",
+    "model": "mock-new",
+    "variant": "terse",
+    "mode": "one-shot",
+    "check": 1.0,
+    "judge": 1.0,
+    "disagree": null
+   },
+   {
+    "id": "refactor--terse--mock-new--2",
+    "task": "refactor",
+    "model": "mock-new",
+    "variant": "terse",
+    "mode": "one-shot",
+    "check": 1.0,
+    "judge": 1.0,
+    "disagree": null
+   },
+   {
+    "id": "refactor--technique--mock-old--1",
+    "task": "refactor",
+    "model": "mock-old",
+    "variant": "technique",
+    "mode": "one-shot",
+    "check": 0.25,
+    "judge": 0.75,
+    "disagree": "lenient",
+    "evidence": [
+     {
+      "criterion": "clarity",
+      "score": 4,
+      "quote": "Simplified version using floats and Python's round():",
+      "reason": "mock judgement"
+     },
+     {
+      "criterion": "scope",
+      "score": 4,
+      "quote": "Simplified version using floats and Python's round():",
+      "reason": "mock judgement"
+     },
+     {
+      "criterion": "risk",
+      "score": 4,
+      "quote": "Simplified version using floats and Python's round():",
+      "reason": "mock judgement"
+     }
+    ]
+   },
+   {
+    "id": "refactor--technique--mock-old--2",
+    "task": "refactor",
+    "model": "mock-old",
+    "variant": "technique",
+    "mode": "one-shot",
+    "check": 0.25,
+    "judge": 0.75,
+    "disagree": "lenient",
+    "evidence": [
+     {
+      "criterion": "clarity",
+      "score": 4,
+      "quote": "Simplified version using floats and Python's round():",
+      "reason": "mock judgement"
+     },
+     {
+      "criterion": "scope",
+      "score": 4,
+      "quote": "Simplified version using floats and Python's round():",
+      "reason": "mock judgement"
+     },
+     {
+      "criterion": "risk",
+      "score": 4,
+      "quote": "Simplified version using floats and Python's round():",
+      "reason": "mock judgement"
+     }
+    ]
+   },
+   {
+    "id": "refactor--technique--mock-new--1",
+    "task": "refactor",
+    "model": "mock-new",
+    "variant": "technique",
+    "mode": "one-shot",
+    "check": 1.0,
+    "judge": 1.0,
+    "disagree": null
+   },
+   {
+    "id": "refactor--technique--mock-new--2",
+    "task": "refactor",
+    "model": "mock-new",
+    "variant": "technique",
+    "mode": "one-shot",
+    "check": 1.0,
+    "judge": 1.0,
+    "disagree": null
+   },
+   {
+    "id": "refactor--informed--mock-old--1",
+    "task": "refactor",
+    "model": "mock-old",
+    "variant": "informed",
+    "mode": "one-shot",
+    "check": 1.0,
+    "judge": 1.0,
+    "disagree": null
+   },
+   {
+    "id": "refactor--informed--mock-old--2",
+    "task": "refactor",
+    "model": "mock-old",
+    "variant": "informed",
+    "mode": "one-shot",
+    "check": 1.0,
+    "judge": 1.0,
+    "disagree": null
+   },
+   {
+    "id": "refactor--informed--mock-new--1",
+    "task": "refactor",
+    "model": "mock-new",
+    "variant": "informed",
+    "mode": "one-shot",
+    "check": 1.0,
+    "judge": 1.0,
+    "disagree": null
+   },
+   {
+    "id": "refactor--informed--mock-new--2",
+    "task": "refactor",
+    "model": "mock-new",
+    "variant": "informed",
+    "mode": "one-shot",
+    "check": 1.0,
+    "judge": 1.0,
+    "disagree": null
+   },
+   {
+    "id": "refactor--full--mock-old--1",
+    "task": "refactor",
+    "model": "mock-old",
+    "variant": "full",
+    "mode": "one-shot",
+    "check": 1.0,
+    "judge": 1.0,
+    "disagree": null
+   },
+   {
+    "id": "refactor--full--mock-old--2",
+    "task": "refactor",
+    "model": "mock-old",
+    "variant": "full",
+    "mode": "one-shot",
+    "check": 1.0,
+    "judge": 1.0,
+    "disagree": null
+   },
+   {
+    "id": "refactor--full--mock-new--1",
+    "task": "refactor",
+    "model": "mock-new",
+    "variant": "full",
+    "mode": "one-shot",
+    "check": 1.0,
+    "judge": 1.0,
+    "disagree": null
+   },
+   {
+    "id": "refactor--full--mock-new--2",
+    "task": "refactor",
+    "model": "mock-new",
+    "variant": "full",
+    "mode": "one-shot",
+    "check": 1.0,
+    "judge": 1.0,
+    "disagree": null
+   },
+   {
+    "id": "summarize--terse--mock-old--1",
+    "task": "summarize",
+    "model": "mock-old",
+    "variant": "terse",
+    "mode": "one-shot",
+    "check": 0.38,
+    "judge": 0.75,
+    "disagree": "lenient",
+    "evidence": [
+     {
+      "criterion": "audience",
+      "score": 4,
+      "quote": "Incident Summary",
+      "reason": "mock judgement"
+     },
+     {
+      "criterion": "faithful",
+      "score": 4,
+      "quote": "Incident Summary",
+      "reason": "mock judgement"
+     },
+     {
+      "criterion": "concise",
+      "score": 4,
+      "quote": "Incident Summary",
+      "reason": "mock judgement"
+     }
+    ]
+   },
+   {
+    "id": "summarize--terse--mock-old--2",
+    "task": "summarize",
+    "model": "mock-old",
+    "variant": "terse",
+    "mode": "one-shot",
+    "check": 0.38,
+    "judge": 0.75,
+    "disagree": "lenient",
+    "evidence": [
+     {
+      "criterion": "audience",
+      "score": 4,
+      "quote": "Incident Summary",
+      "reason": "mock judgement"
+     },
+     {
+      "criterion": "faithful",
+      "score": 4,
+      "quote": "Incident Summary",
+      "reason": "mock judgement"
+     },
+     {
+      "criterion": "concise",
+      "score": 4,
+      "quote": "Incident Summary",
+      "reason": "mock judgement"
+     }
+    ]
+   },
+   {
+    "id": "summarize--terse--mock-new--1",
+    "task": "summarize",
+    "model": "mock-new",
+    "variant": "terse",
+    "mode": "one-shot",
+    "check": 1.0,
+    "judge": 1.0,
+    "disagree": null
+   },
+   {
+    "id": "summarize--terse--mock-new--2",
+    "task": "summarize",
+    "model": "mock-new",
+    "variant": "terse",
+    "mode": "one-shot",
+    "check": 1.0,
+    "judge": 1.0,
+    "disagree": null
+   },
+   {
+    "id": "summarize--technique--mock-old--1",
+    "task": "summarize",
+    "model": "mock-old",
+    "variant": "technique",
+    "mode": "one-shot",
+    "check": 0.38,
+    "judge": 0.75,
+    "disagree": "lenient",
+    "evidence": [
+     {
+      "criterion": "audience",
+      "score": 4,
+      "quote": "Incident Summary",
+      "reason": "mock judgement"
+     },
+     {
+      "criterion": "faithful",
+      "score": 4,
+      "quote": "Incident Summary",
+      "reason": "mock judgement"
+     },
+     {
+      "criterion": "concise",
+      "score": 4,
+      "quote": "Incident Summary",
+      "reason": "mock judgement"
+     }
+    ]
+   },
+   {
+    "id": "summarize--technique--mock-old--2",
+    "task": "summarize",
+    "model": "mock-old",
+    "variant": "technique",
+    "mode": "one-shot",
+    "check": 0.38,
+    "judge": 0.75,
+    "disagree": "lenient",
+    "evidence": [
+     {
+      "criterion": "audience",
+      "score": 4,
+      "quote": "Incident Summary",
+      "reason": "mock judgement"
+     },
+     {
+      "criterion": "faithful",
+      "score": 4,
+      "quote": "Incident Summary",
+      "reason": "mock judgement"
+     },
+     {
+      "criterion": "concise",
+      "score": 4,
+      "quote": "Incident Summary",
+      "reason": "mock judgement"
+     }
+    ]
+   },
+   {
+    "id": "summarize--technique--mock-new--1",
+    "task": "summarize",
+    "model": "mock-new",
+    "variant": "technique",
+    "mode": "one-shot",
+    "check": 1.0,
+    "judge": 1.0,
+    "disagree": null
+   },
+   {
+    "id": "summarize--technique--mock-new--2",
+    "task": "summarize",
+    "model": "mock-new",
+    "variant": "technique",
+    "mode": "one-shot",
+    "check": 1.0,
+    "judge": 1.0,
+    "disagree": null
+   },
+   {
+    "id": "summarize--informed--mock-old--1",
+    "task": "summarize",
+    "model": "mock-old",
+    "variant": "informed",
+    "mode": "one-shot",
+    "check": 1.0,
+    "judge": 1.0,
+    "disagree": null
+   },
+   {
+    "id": "summarize--informed--mock-old--2",
+    "task": "summarize",
+    "model": "mock-old",
+    "variant": "informed",
+    "mode": "one-shot",
+    "check": 1.0,
+    "judge": 1.0,
+    "disagree": null
+   },
+   {
+    "id": "summarize--informed--mock-new--1",
+    "task": "summarize",
+    "model": "mock-new",
+    "variant": "informed",
+    "mode": "one-shot",
+    "check": 1.0,
+    "judge": 1.0,
+    "disagree": null
+   },
+   {
+    "id": "summarize--informed--mock-new--2",
+    "task": "summarize",
+    "model": "mock-new",
+    "variant": "informed",
+    "mode": "one-shot",
+    "check": 1.0,
+    "judge": 1.0,
+    "disagree": null
+   },
+   {
+    "id": "summarize--full--mock-old--1",
+    "task": "summarize",
+    "model": "mock-old",
+    "variant": "full",
+    "mode": "one-shot",
+    "check": 1.0,
+    "judge": 1.0,
+    "disagree": null
+   },
+   {
+    "id": "summarize--full--mock-old--2",
+    "task": "summarize",
+    "model": "mock-old",
+    "variant": "full",
+    "mode": "one-shot",
+    "check": 1.0,
+    "judge": 1.0,
+    "disagree": null
+   },
+   {
+    "id": "summarize--full--mock-new--1",
+    "task": "summarize",
+    "model": "mock-new",
+    "variant": "full",
+    "mode": "one-shot",
+    "check": 1.0,
+    "judge": 1.0,
+    "disagree": null
+   },
+   {
+    "id": "summarize--full--mock-new--2",
+    "task": "summarize",
+    "model": "mock-new",
+    "variant": "full",
+    "mode": "one-shot",
+    "check": 1.0,
+    "judge": 1.0,
+    "disagree": null
+   },
+   {
+    "id": "write-tests--terse--mock-old--1",
+    "task": "write-tests",
+    "model": "mock-old",
+    "variant": "terse",
+    "mode": "one-shot",
+    "check": 0.0,
+    "judge": 0.0,
+    "disagree": null
+   },
+   {
+    "id": "write-tests--terse--mock-old--2",
+    "task": "write-tests",
+    "model": "mock-old",
+    "variant": "terse",
+    "mode": "one-shot",
+    "check": 0.0,
+    "judge": 0.0,
+    "disagree": null
+   },
+   {
+    "id": "write-tests--terse--mock-new--1",
+    "task": "write-tests",
+    "model": "mock-new",
+    "variant": "terse",
+    "mode": "one-shot",
+    "check": 1.0,
+    "judge": 1.0,
+    "disagree": null
+   },
+   {
+    "id": "write-tests--terse--mock-new--2",
+    "task": "write-tests",
+    "model": "mock-new",
+    "variant": "terse",
+    "mode": "one-shot",
+    "check": 1.0,
+    "judge": 1.0,
+    "disagree": null
+   },
+   {
+    "id": "write-tests--technique--mock-old--1",
+    "task": "write-tests",
+    "model": "mock-old",
+    "variant": "technique",
+    "mode": "one-shot",
+    "check": 0.0,
+    "judge": 0.0,
+    "disagree": null
+   },
+   {
+    "id": "write-tests--technique--mock-old--2",
+    "task": "write-tests",
+    "model": "mock-old",
+    "variant": "technique",
+    "mode": "one-shot",
+    "check": 0.0,
+    "judge": 0.0,
+    "disagree": null
+   },
+   {
+    "id": "write-tests--technique--mock-new--1",
+    "task": "write-tests",
+    "model": "mock-new",
+    "variant": "technique",
+    "mode": "one-shot",
+    "check": 1.0,
+    "judge": 1.0,
+    "disagree": null
+   },
+   {
+    "id": "write-tests--technique--mock-new--2",
+    "task": "write-tests",
+    "model": "mock-new",
+    "variant": "technique",
+    "mode": "one-shot",
+    "check": 1.0,
+    "judge": 1.0,
+    "disagree": null
+   },
+   {
+    "id": "write-tests--informed--mock-old--1",
+    "task": "write-tests",
+    "model": "mock-old",
+    "variant": "informed",
+    "mode": "one-shot",
+    "check": 1.0,
+    "judge": 1.0,
+    "disagree": null
+   },
+   {
+    "id": "write-tests--informed--mock-old--2",
+    "task": "write-tests",
+    "model": "mock-old",
+    "variant": "informed",
+    "mode": "one-shot",
+    "check": 1.0,
+    "judge": 1.0,
+    "disagree": null
+   },
+   {
+    "id": "write-tests--informed--mock-new--1",
+    "task": "write-tests",
+    "model": "mock-new",
+    "variant": "informed",
+    "mode": "one-shot",
+    "check": 1.0,
+    "judge": 1.0,
+    "disagree": null
+   },
+   {
+    "id": "write-tests--informed--mock-new--2",
+    "task": "write-tests",
+    "model": "mock-new",
+    "variant": "informed",
+    "mode": "one-shot",
+    "check": 1.0,
+    "judge": 1.0,
+    "disagree": null
+   },
+   {
+    "id": "write-tests--full--mock-old--1",
+    "task": "write-tests",
+    "model": "mock-old",
+    "variant": "full",
+    "mode": "one-shot",
+    "check": 1.0,
+    "judge": 1.0,
+    "disagree": null
+   },
+   {
+    "id": "write-tests--full--mock-old--2",
+    "task": "write-tests",
+    "model": "mock-old",
+    "variant": "full",
+    "mode": "one-shot",
+    "check": 1.0,
+    "judge": 1.0,
+    "disagree": null
+   },
+   {
+    "id": "write-tests--full--mock-new--1",
+    "task": "write-tests",
+    "model": "mock-new",
+    "variant": "full",
+    "mode": "one-shot",
+    "check": 1.0,
+    "judge": 1.0,
+    "disagree": null
+   },
+   {
+    "id": "write-tests--full--mock-new--2",
+    "task": "write-tests",
+    "model": "mock-new",
+    "variant": "full",
+    "mode": "one-shot",
+    "check": 1.0,
+    "judge": 1.0,
+    "disagree": null
+   },
+   {
+    "id": "data-question--h-terse--mock-new--1",
+    "task": "data-question",
+    "model": "mock-new",
+    "variant": "h-terse",
+    "mode": "harness",
+    "check": 0.0,
+    "judge": 0.0,
+    "disagree": null
+   },
+   {
+    "id": "data-question--h-discoverable-gap--mock-new--1",
+    "task": "data-question",
+    "model": "mock-new",
+    "variant": "h-discoverable-gap",
+    "mode": "harness",
+    "check": 1.0,
+    "judge": 1.0,
+    "disagree": null
+   },
+   {
+    "id": "data-question--h-private-gap--mock-old--1",
+    "task": "data-question",
+    "model": "mock-old",
+    "variant": "h-private-gap",
+    "mode": "harness",
+    "check": 0.0,
+    "judge": 0.0,
+    "disagree": null
+   },
+   {
+    "id": "data-question--h-private-gap--mock-new--1",
+    "task": "data-question",
+    "model": "mock-new",
+    "variant": "h-private-gap",
+    "mode": "harness",
+    "check": 0.0,
+    "judge": 0.0,
+    "disagree": null
+   },
+   {
+    "id": "data-question--h-full--mock-old--1",
+    "task": "data-question",
+    "model": "mock-old",
+    "variant": "h-full",
+    "mode": "harness",
+    "check": 1.0,
+    "judge": 1.0,
+    "disagree": null
+   },
+   {
+    "id": "data-question--h-full--mock-new--1",
+    "task": "data-question",
+    "model": "mock-new",
+    "variant": "h-full",
+    "mode": "harness",
+    "check": 1.0,
+    "judge": 1.0,
+    "disagree": null
+   },
+   {
+    "id": "refactor--h-discoverable-gap--mock-new--1",
+    "task": "refactor",
+    "model": "mock-new",
+    "variant": "h-discoverable-gap",
+    "mode": "harness",
+    "check": 1.0,
+    "judge": 1.0,
+    "disagree": null
+   },
+   {
+    "id": "refactor--h-full--mock-old--1",
+    "task": "refactor",
+    "model": "mock-old",
+    "variant": "h-full",
+    "mode": "harness",
+    "check": 1.0,
+    "judge": 1.0,
+    "disagree": null
+   },
+   {
+    "id": "refactor--h-full--mock-new--1",
+    "task": "refactor",
+    "model": "mock-new",
+    "variant": "h-full",
+    "mode": "harness",
+    "check": 1.0,
+    "judge": 1.0,
+    "disagree": null
+   },
+   {
+    "id": "summarize--h-terse--mock-new--1",
+    "task": "summarize",
+    "model": "mock-new",
+    "variant": "h-terse",
+    "mode": "harness",
+    "check": 0.38,
+    "judge": 0.75,
+    "disagree": "lenient",
+    "evidence": [
+     {
+      "criterion": "audience",
+      "score": 4,
+      "quote": "Incident Summary",
+      "reason": "mock judgement"
+     },
+     {
+      "criterion": "faithful",
+      "score": 4,
+      "quote": "Incident Summary",
+      "reason": "mock judgement"
+     },
+     {
+      "criterion": "concise",
+      "score": 4,
+      "quote": "Incident Summary",
+      "reason": "mock judgement"
+     }
+    ]
+   },
+   {
+    "id": "summarize--h-discoverable-gap--mock-new--1",
+    "task": "summarize",
+    "model": "mock-new",
+    "variant": "h-discoverable-gap",
+    "mode": "harness",
+    "check": 1.0,
+    "judge": 1.0,
+    "disagree": null
+   },
+   {
+    "id": "summarize--h-private-gap--mock-old--1",
+    "task": "summarize",
+    "model": "mock-old",
+    "variant": "h-private-gap",
+    "mode": "harness",
+    "check": 0.38,
+    "judge": 0.75,
+    "disagree": "lenient",
+    "evidence": [
+     {
+      "criterion": "audience",
+      "score": 4,
+      "quote": "Incident Summary",
+      "reason": "mock judgement"
+     },
+     {
+      "criterion": "faithful",
+      "score": 4,
+      "quote": "Incident Summary",
+      "reason": "mock judgement"
+     },
+     {
+      "criterion": "concise",
+      "score": 4,
+      "quote": "Incident Summary",
+      "reason": "mock judgement"
+     }
+    ]
+   },
+   {
+    "id": "summarize--h-private-gap--mock-new--1",
+    "task": "summarize",
+    "model": "mock-new",
+    "variant": "h-private-gap",
+    "mode": "harness",
+    "check": 0.38,
+    "judge": 0.75,
+    "disagree": "lenient",
+    "evidence": [
+     {
+      "criterion": "audience",
+      "score": 4,
+      "quote": "Incident Summary",
+      "reason": "mock judgement"
+     },
+     {
+      "criterion": "faithful",
+      "score": 4,
+      "quote": "Incident Summary",
+      "reason": "mock judgement"
+     },
+     {
+      "criterion": "concise",
+      "score": 4,
+      "quote": "Incident Summary",
+      "reason": "mock judgement"
+     }
+    ]
+   },
+   {
+    "id": "summarize--h-full--mock-old--1",
+    "task": "summarize",
+    "model": "mock-old",
+    "variant": "h-full",
+    "mode": "harness",
+    "check": 1.0,
+    "judge": 1.0,
+    "disagree": null
+   },
+   {
+    "id": "summarize--h-full--mock-new--1",
+    "task": "summarize",
+    "model": "mock-new",
+    "variant": "h-full",
+    "mode": "harness",
+    "check": 1.0,
+    "judge": 1.0,
+    "disagree": null
+   },
+   {
+    "id": "write-tests--h-terse--mock-new--1",
+    "task": "write-tests",
+    "model": "mock-new",
+    "variant": "h-terse",
+    "mode": "harness",
+    "check": 0.0,
+    "judge": 0.0,
+    "disagree": null
+   },
+   {
+    "id": "write-tests--h-discoverable-gap--mock-new--1",
+    "task": "write-tests",
+    "model": "mock-new",
+    "variant": "h-discoverable-gap",
+    "mode": "harness",
+    "check": 1.0,
+    "judge": 1.0,
+    "disagree": null
+   },
+   {
+    "id": "write-tests--h-private-gap--mock-old--1",
+    "task": "write-tests",
+    "model": "mock-old",
+    "variant": "h-private-gap",
+    "mode": "harness",
+    "check": 0.0,
+    "judge": 0.0,
+    "disagree": null
+   },
+   {
+    "id": "write-tests--h-private-gap--mock-new--1",
+    "task": "write-tests",
+    "model": "mock-new",
+    "variant": "h-private-gap",
+    "mode": "harness",
+    "check": 0.0,
+    "judge": 0.0,
+    "disagree": null
+   },
+   {
+    "id": "write-tests--h-full--mock-old--1",
+    "task": "write-tests",
+    "model": "mock-old",
+    "variant": "h-full",
+    "mode": "harness",
+    "check": 1.0,
+    "judge": 1.0,
+    "disagree": null
+   },
+   {
+    "id": "write-tests--h-full--mock-new--1",
+    "task": "write-tests",
+    "model": "mock-new",
+    "variant": "h-full",
+    "mode": "harness",
+    "check": 1.0,
+    "judge": 1.0,
+    "disagree": null
+   }
+  ],
+  "validation": {
+   "sample": 0,
+   "agreement_with_humans": null,
+   "agreement_with_checks": 0.8705882352941177
+  }
+ },
+ "predictions": [
+  {
+   "id": "P1",
+   "outcome": "supported",
+   "rule": "per task, newer model's best-minus-worst one-shot score vs the previous model in its family",
+   "n": 4
+  },
+  {
+   "id": "P2",
+   "outcome": "contradicted",
+   "rule": "newest per family: |technique - terse| < 0.1 and informed beats both by >= 0.2",
+   "n": 4
+  },
+  {
+   "id": "P3",
+   "outcome": "contradicted",
+   "rule": "oldest per family: technique beats terse by >= 0.1",
+   "n": 4
+  },
+  {
+   "id": "P4",
+   "outcome": "not evaluated",
+   "rule": "confirmed invented requirements > 0 and ai-expanded scores no higher than informed",
+   "n": 0
+  },
+  {
+   "id": "P5",
+   "outcome": "not evaluated",
+   "rule": "ai-interviewed within 0.1 of informed (contradicted if no better than ai-expanded)",
+   "n": 0
+  },
+  {
+   "id": "P6",
+   "outcome": "supported",
+   "rule": "newest per family, per task: h-discoverable-gap within 0.1 of h-full and more tokens (input + output, same model)",
+   "n": 4
+  },
+  {
+   "id": "P7",
+   "outcome": "supported",
+   "rule": "every model, mean over tasks: h-private-gap at least 0.2 below h-full (contradicted if any model scores as well)",
+   "n": 2
+  },
+  {
+   "id": "P8",
+   "outcome": "supported",
+   "rule": "oldest vs newest per family: more requests, more failed tool calls, at least as many hit-limit endings, and a lower score (contradicted if as few requests and within 0.1)",
+   "n": 1
+  },
+  {
+   "id": "P9",
+   "outcome": "mixed",
+   "rule": "spread across repeats of terse runs: newer vs previous model in family",
+   "n": 4
+  },
+  {
+   "id": "P10",
+   "outcome": "supported",
+   "rule": "any run the judge scored >= 0.75 while its checks scored < 0.5",
+   "n": 8
+  }
+ ]
+}

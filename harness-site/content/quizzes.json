@@ -11,6 +11,7 @@
       "ext-formatter",
       "inside-subagent-return",
       "review-rm-build",
+      "lab-private-gap",
       "flows-retention"
     ]
   },
@@ -400,6 +401,42 @@
       ],
       "answer": 1,
       "explanation": "Egress controls transport across a boundary. Internal gateway or endpoint body logs, local transcripts, and content-enabled telemetry need their own access and retention review."
+    },
+    {
+      "id": "lab-technique",
+      "section": "prompt-lab",
+      "prompt": "On the newest models, which change to a terse prompt is most likely to raise the score?",
+      "choices": [
+        "Adding a role, numbered steps, and a strict output template.",
+        "Adding the facts the task depends on, in plain sentences.",
+        "Repeating the request in capital letters to stress it."
+      ],
+      "answer": 1,
+      "explanation": "The study predicts that technique matters less with each model generation, while information still matters: a newer model can follow a plain request, but it cannot guess facts it was never given."
+    },
+    {
+      "id": "lab-private-gap",
+      "section": "prompt-lab",
+      "prompt": "In a harness, the prompt leaves out that is_bulk is called by other services. Why does exploring not help?",
+      "choices": [
+        "The harness hides the callers.py file from the model's tools.",
+        "Nothing in the working folder says it, so no search can find it.",
+        "The model runs out of requests before it opens billing.py."
+      ],
+      "answer": 1,
+      "explanation": "A harness turns missing information that is in the files into a token cost: the model reads and searches until it finds it. Information that exists only in your head is not in any file, so the model cannot recover it."
+    },
+    {
+      "id": "lab-per-correct",
+      "section": "prompt-lab",
+      "prompt": "Why compare models by characters per correct result rather than by tokens per run?",
+      "choices": [
+        "Characters are cheaper to count than tokens across a long session.",
+        "Token sizes differ by family, and failed runs still cost something.",
+        "Providers never report token counts for harness sessions at all."
+      ],
+      "answer": 1,
+      "explanation": "Each family's tokenizer splits text differently, so a token is not a common unit. Dividing everything consumed by the runs that passed also charges a model for its failures."
     }
   ]
 }
